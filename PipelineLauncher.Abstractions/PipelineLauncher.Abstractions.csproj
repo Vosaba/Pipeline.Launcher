@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netcoreapp2.1;netstandard2.0</TargetFrameworks>
+    <LangVersion>Latest</LangVersion>
+    <RootNamespace>PipelineLauncher.Abstractions</RootNamespace>
+    <Authors>Leonid Abasov</Authors>
+    <NeutralLanguage>en</NeutralLanguage>
+    <PackageId>PipelineLauncher.Abstractions</PackageId>
+    <Company>Abasov Software</Company>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>0.0.2</Version>
+    <Product>PipelineLauncher.Abstractions</Product>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile></DocumentationFile>
+  </PropertyGroup>
+
+</Project>

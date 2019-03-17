@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2020
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PipelineLauncher", "Pipeline\PipelineLauncher.csproj", "{EF7BD99A-D1B8-412F-89C5-FB65148EB25D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pipeline.Tests", "Pipeline.Tests\Pipeline.Tests.csproj", "{9999BCE3-FEAC-44EE-A5D7-EC5BB224EAC0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PipelineLauncher.Abstractions", "PipelineLauncher.Abstractions\PipelineLauncher.Abstractions.csproj", "{C612EA79-2BBC-4E42-AD12-562DD58BD510}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EF7BD99A-D1B8-412F-89C5-FB65148EB25D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EF7BD99A-D1B8-412F-89C5-FB65148EB25D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EF7BD99A-D1B8-412F-89C5-FB65148EB25D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EF7BD99A-D1B8-412F-89C5-FB65148EB25D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9999BCE3-FEAC-44EE-A5D7-EC5BB224EAC0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9999BCE3-FEAC-44EE-A5D7-EC5BB224EAC0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9999BCE3-FEAC-44EE-A5D7-EC5BB224EAC0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9999BCE3-FEAC-44EE-A5D7-EC5BB224EAC0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C612EA79-2BBC-4E42-AD12-562DD58BD510}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C612EA79-2BBC-4E42-AD12-562DD58BD510}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C612EA79-2BBC-4E42-AD12-562DD58BD510}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C612EA79-2BBC-4E42-AD12-562DD58BD510}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B1DA007B-00DD-48CD-BC47-0ECD52DCE063}
+	EndGlobalSection
+	GlobalSection(CodealikeProperties) = postSolution
+		SolutionGuid = cb096b27-3da5-48b2-ad9f-16365eaa9872
+	EndGlobalSection
+EndGlobal
