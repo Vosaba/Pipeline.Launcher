@@ -10,9 +10,9 @@ namespace PipelineLauncher.PipelineJobs
     {
         public abstract Task<IEnumerable<TOutput>> PerformAsync(TInput[] param, CancellationToken cancellationToken);
 
-        public IEnumerable<object> InternalPerform(object[] param, CancellationToken cancellationToken)
+        public virtual IEnumerable<object> InternalPerform(object[] @params, CancellationToken cancellationToken)
         {
-            var result = PerformAsync(param.Cast<TInput>().ToArray(), cancellationToken).Result;
+            var result = PerformAsync(@params.Cast<TInput>().ToArray(), cancellationToken).Result;
 
             var internalResult = result as TOutput[] ?? result.ToArray();
             foreach (var res in internalResult)

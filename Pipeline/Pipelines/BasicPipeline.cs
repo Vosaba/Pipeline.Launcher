@@ -108,7 +108,7 @@ namespace PipelineLauncher.Pipelines
 
                         syncJob.InternalPerform(fullInput
                                 .Where(e => !(e is StageSkipObject skip) || skip.CanProcess(syncJob))
-                                .Select(e => e is StageSkipObject skip ? skip.Item : e).ToArray(), _cancellationToken);
+                                .Select(e => e is StageSkipObject skip ? skip.Item : e).ToArray(), _cancellationToken).ToArray();
 
                         foreach (var item in fullInput.Where(e => e is StageSkipObject))
                         {

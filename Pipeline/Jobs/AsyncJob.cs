@@ -57,7 +57,6 @@ namespace PipelineLauncher.Jobs
         {
             throw new NonParamException(new SkipToResult(typeof(TSkipToJob)));
         }
-
     }
 
     public abstract class AsyncJob<TInput> : AsyncJob<TInput, TInput>

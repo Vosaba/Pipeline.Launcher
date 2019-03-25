@@ -10,7 +10,7 @@ namespace PipelineLauncher.PipelineJobs
     {
         public abstract Task<TOutput> PerformAsync(TInput param, CancellationToken cancellationToken);
 
-        public object InternalPerform(object param, CancellationToken cancellationToken)
+        public virtual object InternalPerform(object param, CancellationToken cancellationToken)
         {
             try
             {

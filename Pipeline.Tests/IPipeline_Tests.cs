@@ -69,7 +69,7 @@ namespace PipelineLauncher.Tests
                 return $"Processed by:  '{{{string.Join("}, {", ProcessedBy.ToArray())}}}'; Result: '{Value}'";
             }
         }
-        
+
         public class Stage1 : Job<Item>
         {
             public override IEnumerable<Item> Perform(Item[] items)
@@ -91,19 +91,21 @@ namespace PipelineLauncher.Tests
             }
         }
 
-        public class Stage2 : Job<Item>
+        public class Stage2 : AsyncJob<Item>
         {
-            public override IEnumerable<Item> Perform(Item[] items)
+            public override Item Perform(Item item)
             {
-                foreach (var item in items)
-                {
-                    item.Value = item.Value + "2->";
-                    Thread.Sleep(1000);
+                item.Value = item.Value + "2->";
+                Thread.Sleep(1000);
 
-                    item.ProcessedBy.Add(Thread.CurrentThread.ManagedThreadId);
-                }
+                item.ProcessedBy.Add(Thread.CurrentThread.ManagedThreadId);
 
-                return items;
+                return item;
+            }
+
+            public override bool Condition(Item item)
+            {
+                return item.Value != "Item#0->1->";
             }
 
             public override String ToString()
@@ -112,23 +114,75 @@ namespace PipelineLauncher.Tests
             }
         }
 
-        public class Stage3 : Job<Item>
+        public class Stage2Analog : AsyncJob<Item>
         {
-        public override IEnumerable<Item> Perform(Item[] items)
-        {
-            foreach (var item in items)
+            public override Item Perform(Item item)
             {
-                item.Value = item.Value + "3->";
+                item.Value = item.Value + "2analog->";
                 Thread.Sleep(1000);
 
                 item.ProcessedBy.Add(Thread.CurrentThread.ManagedThreadId);
+
+                return item;
             }
 
-            return items;
+            public override bool Condition(Item item)
+            {
+                return item.Value == "Item#0->1->";
+            }
+
+            public override String ToString()
+            {
+                return "Stage2Analog";
+            }
         }
+
+        public class Stage3 : Job<Item>
+        {
+            public override IEnumerable<Item> Perform(Item[] items)
+            {
+                foreach (var item in items)
+                {
+                    item.Value = item.Value + "3->";
+                    Thread.Sleep(1000);
+
+                    item.ProcessedBy.Add(Thread.CurrentThread.ManagedThreadId);
+                }
+
+                return items;
+            }
+
+            public override bool Condition(Item input) => input.Value!= "Item#0->1->2->" && input.Value != "Item#1->1->2->" && input.Value != "Item#2->1->2->";
+
             public override string ToString()
             {
                 return "Stage3";
+            }
+        }
+
+        public class Stage3Analog : Job<Item>
+        {
+            public override IEnumerable<Item> Perform(Item[] items)
+            {
+                foreach (var item in items)
+                {
+                    item.Value = item.Value + "3analog->";
+                    Thread.Sleep(1000);
+
+                    item.ProcessedBy.Add(Thread.CurrentThread.ManagedThreadId);
+                }
+
+                return items;
+            }
+
+            public override bool Condition(Item input)
+            {
+                return input.Value == "Item#0->1->2->" || input.Value == "Item#1->1->2->" || input.Value == "Item#2->1->2->";
+            }
+
+            public override string ToString()
+            {
+                return "Stage3Analog";
             }
         }
 
@@ -156,7 +210,7 @@ namespace PipelineLauncher.Tests
             }
         }
 
-       
+
 
         [Fact]
         public async Task IPipeline_Assert_Creation()
@@ -168,11 +222,11 @@ namespace PipelineLauncher.Tests
             var stageSetup = new PipelineFrom<Item>()
                 .Stage(new Stage1())
                 .Stage(new Stage2())
-                .Stage(new Stage3())
+                .Stage<Stage3>()
                 .Stage(new Stage4());
 
             Stopwatch stopWatch = new Stopwatch();
-            
+
             //Make pipeline from stageSetup
             var pipeline = stageSetup.From<Item>();
 
