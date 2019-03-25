@@ -38,30 +38,57 @@ namespace PipelineLauncher.Pipelines
 
         #region Generic Stages
 
-        public StageSetup<TInput, TOutput> Stage<TPipelineJob, TOutput>() where TPipelineJob : PipelineJob<TInput, TOutput>
-            => CreateNewStage<TOutput>(GetJobService.GetJobInstance<TPipelineJob>());
+        public StageSetup<TInput, TOutput> Stage<TJob, TOutput>()
+            where TJob : Job<TInput, TOutput>
+            => CreateNewStage<TOutput>(GetJobService.GetJobInstance<TJob>());
 
-        public StageSetup<TInput, TOutput> Stage<TPipelineJob, TPipelineJob2, TOutput>()
-            where TPipelineJob : PipelineJob<TInput, TOutput>
-            where TPipelineJob2 : PipelineJob<TInput, TOutput>
-            => Stage(GetJobService.GetJobInstance<TPipelineJob>(), GetJobService.GetJobInstance<TPipelineJob2>());
+        public StageSetup<TInput, TInput> Stage<TJob>()
+            where TJob : Job<TInput, TInput>
+            => CreateNewStage<TInput>(GetJobService.GetJobInstance<TJob>());
 
-        public StageSetup<TInput, TOutput> Stage<TPipelineJob, TPipelineJob2, TPipelineJob3, TOutput>()
-            where TPipelineJob : PipelineJob<TInput, TOutput>
-            where TPipelineJob2 : PipelineJob<TInput, TOutput>
-            where TPipelineJob3 : PipelineJob<TInput, TOutput>
-            => Stage(GetJobService.GetJobInstance<TPipelineJob>(), GetJobService.GetJobInstance<TPipelineJob2>(), GetJobService.GetJobInstance<TPipelineJob3>());
+        public StageSetup<TInput, TOutput> Stage<TJob, TJob2, TOutput>()
+            where TJob : Job<TInput, TOutput>
+            where TJob2 : Job<TInput, TOutput>
+            => Stage(GetJobService.GetJobInstance<TJob>(), GetJobService.GetJobInstance<TJob2>());
 
-        public StageSetup<TInput, TOutput> Stage<TPipelineJob, TPipelineJob2, TPipelineJob3, TPipelineJob4, TOutput>()
-            where TPipelineJob : PipelineJob<TInput, TOutput>
-            where TPipelineJob2 : PipelineJob<TInput, TOutput>
-            where TPipelineJob3 : PipelineJob<TInput, TOutput>
-            where TPipelineJob4 : PipelineJob<TInput, TOutput>
-            => Stage(GetJobService.GetJobInstance<TPipelineJob>(), GetJobService.GetJobInstance<TPipelineJob2>(), GetJobService.GetJobInstance<TPipelineJob3>(), GetJobService.GetJobInstance<TPipelineJob4>());
+        public StageSetup<TInput, TOutput> Stage<TJob, TJob2, TJob3, TOutput>()
+            where TJob : Job<TInput, TOutput>
+            where TJob2 : Job<TInput, TOutput>
+            where TJob3 : Job<TInput, TOutput>
+            => Stage(GetJobService.GetJobInstance<TJob>(), GetJobService.GetJobInstance<TJob2>(), GetJobService.GetJobInstance<TJob3>());
 
+        public StageSetup<TInput, TOutput> Stage<TJob, TJob2, TJob3, TJob4, TOutput>()
+            where TJob : Job<TInput, TOutput>
+            where TJob2 : Job<TInput, TOutput>
+            where TJob3 : Job<TInput, TOutput>
+            where TJob4 : Job<TInput, TOutput>
+            => Stage(GetJobService.GetJobInstance<TJob>(), GetJobService.GetJobInstance<TJob2>(), GetJobService.GetJobInstance<TJob3>(), GetJobService.GetJobInstance<TJob4>());
 
-        public StageSetup<TInput, TInput> Stage<TPipelineJob>() where TPipelineJob : PipelineJob<TInput, TInput>
-            => CreateNewStage<TInput>(GetJobService.GetJobInstance<TPipelineJob>());
+        public StageSetup<TInput, TOutput> AsyncStage<TAsyncJob, TOutput>()
+            where TAsyncJob : AsyncJob<TInput, TOutput>
+            => CreateNewStage<TOutput>(GetJobService.GetJobInstance<TAsyncJob>());
+
+        public StageSetup<TInput, TInput> AsyncStage<TAsyncJob>()
+            where TAsyncJob : AsyncJob<TInput, TInput>
+            => CreateNewStage<TInput>(GetJobService.GetJobInstance<TAsyncJob>());
+
+        public StageSetup<TInput, TOutput> AsyncStage<TAsyncJob, TAsyncJob2, TOutput>()
+            where TAsyncJob : AsyncJob<TInput, TOutput>
+            where TAsyncJob2 : AsyncJob<TInput, TOutput>
+            => AsyncStage(GetJobService.GetJobInstance<TAsyncJob>(), GetJobService.GetJobInstance<TAsyncJob2>());
+
+        public StageSetup<TInput, TOutput> AsyncStage<TAsyncJob, TAsyncJob2, TAsyncJob3, TOutput>()
+            where TAsyncJob : AsyncJob<TInput, TOutput>
+            where TAsyncJob2 : AsyncJob<TInput, TOutput>
+            where TAsyncJob3 : AsyncJob<TInput, TOutput>
+            => AsyncStage(GetJobService.GetJobInstance<TAsyncJob>(), GetJobService.GetJobInstance<TAsyncJob2>(), GetJobService.GetJobInstance<TAsyncJob3>());
+
+        public StageSetup<TInput, TOutput> AsyncStage<TAsyncJob, TAsyncJob2, TAsyncJob3, TAsyncJob4, TOutput>()
+            where TAsyncJob : AsyncJob<TInput, TOutput>
+            where TAsyncJob2 : AsyncJob<TInput, TOutput>
+            where TAsyncJob3 : AsyncJob<TInput, TOutput>
+            where TAsyncJob4 : AsyncJob<TInput, TOutput>
+            => AsyncStage(GetJobService.GetJobInstance<TAsyncJob>(), GetJobService.GetJobInstance<TAsyncJob2>(), GetJobService.GetJobInstance<TAsyncJob3>(), GetJobService.GetJobInstance<TAsyncJob4>());
 
         #endregion
 
@@ -70,33 +97,21 @@ namespace PipelineLauncher.Pipelines
         public StageSetup<TInput, TOutput> Stage<TOutput>(Job<TInput, TOutput> job)
             => CreateNewStage<TOutput>(job);
 
-        public StageSetup<TInput, TOutput> Stage<TOutput>(AsyncJob<TInput, TOutput> asyncJob)
-            => CreateNewStage<TOutput>(asyncJob);
-
-        public StageSetup<TInput, TOutput> Stage<TOutput>(Func<TInput, TOutput> func)
-            => Stage(new AsyncLambdaJob<TInput, TOutput>(func));
-
         public StageSetup<TInput, TOutput> Stage<TOutput>(Func<IEnumerable<TInput>, IEnumerable<TOutput>> func)
             => Stage(new LambdaJob<TInput, TOutput>(func));
 
-        public StageSetup<TInput, TOutput> Stage<TOutput>(params PipelineJob<TInput, TOutput>[] pipelineJobs)
-        {
-            switch (pipelineJobs.FirstOrDefault())
-            {
-                case Job<TInput, TOutput> _:
-                    return Stage(pipelineJobs.Cast<Job<TInput, TOutput>>().ToArray());
-                case AsyncJob<TInput, TOutput> _:
-                    return Stage(pipelineJobs.Cast<AsyncJob<TInput, TOutput>>().ToArray());
-                default:
-                    throw new ArgumentException($"Jobs can't be recognized: '{pipelineJobs}'");
-            }
-        }
-
-        public StageSetup<TInput, TOutput> Stage<TOutput>(params AsyncJob<TInput, TOutput>[] asyncJobs)
-            => Stage(new ConditionAsyncJob<TInput, TOutput>(asyncJobs));
-
         public StageSetup<TInput, TOutput> Stage<TOutput>(params Job<TInput, TOutput>[] jobs)
             => Stage(new ConditionJob<TInput, TOutput>(jobs));
+
+        public StageSetup<TInput, TOutput> AsyncStage<TOutput>(AsyncJob<TInput, TOutput> asyncJob)
+            => CreateNewStage<TOutput>(asyncJob);
+
+        public StageSetup<TInput, TOutput> AsyncStage<TOutput>(Func<TInput, TOutput> func)
+            => AsyncStage(new AsyncLambdaJob<TInput, TOutput>(func));
+
+        public StageSetup<TInput, TOutput> AsyncStage<TOutput>(params AsyncJob<TInput, TOutput>[] asyncJobs)
+            => AsyncStage(new ConditionAsyncJob<TInput, TOutput>(asyncJobs));
+
         #endregion
 
         public static IPipeline<TInput, TOutput> To<TOutput>(IStageSetup stageSetup, CancellationToken cancellationToken)

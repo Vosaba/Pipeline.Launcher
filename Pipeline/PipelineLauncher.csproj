@@ -9,12 +9,12 @@
     <PackageId>PipelineLauncher</PackageId>
     <Company>Abasov Software</Company>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.6.2</Version>
+    <Version>0.6.4</Version>
     <Product>PipelineLauncher</Product>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="PipelineLauncher.Abstractions" Version="0.0.2" />
+    <PackageReference Include="PipelineLauncher.Abstractions" Version="0.0.3" />
   </ItemGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">

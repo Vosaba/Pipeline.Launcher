@@ -43,33 +43,61 @@ namespace PipelineLauncher.Stages
 
         #region Generic Stages
 
-        public StageSetup<TOutput, TNexTOutput> Stage<TPipelineJob, TNexTOutput>() 
-            where TPipelineJob : PipelineJob<TOutput, TNexTOutput>
-            => CreateNextStage<TNexTOutput>(GetJobService.GetJobInstance<TPipelineJob>());
+        public StageSetup<TOutput, TNexTOutput> Stage<TJob, TNexTOutput>()
+            where TJob : Job<TOutput, TNexTOutput>
+            => CreateNextStage<TNexTOutput>(GetJobService.GetJobInstance<TJob>());
 
-        public StageSetup<TOutput, TNexTOutput> Stage<TPipelineJob, TPipelineJob2, TNexTOutput>()
-            where TPipelineJob : PipelineJob<TOutput, TNexTOutput>
-            where TPipelineJob2 : PipelineJob<TOutput, TNexTOutput>
-            => Stage(GetJobService.GetJobInstance<TPipelineJob>(), GetJobService.GetJobInstance<TPipelineJob2>());
+        public StageSetup<TOutput, TOutput> Stage<TJob>()
+            where TJob : Job<TOutput, TOutput>
+            => CreateNextStage<TOutput>(GetJobService.GetJobInstance<TJob>());
 
-        public StageSetup<TOutput, TNexTOutput> Stage<TPipelineJob, TPipelineJob2, TPipelineJob3, TNexTOutput>()
-            where TPipelineJob : PipelineJob<TOutput, TNexTOutput>
-            where TPipelineJob2 : PipelineJob<TOutput, TNexTOutput>
-            where TPipelineJob3 : PipelineJob<TOutput, TNexTOutput>
-            => Stage(GetJobService.GetJobInstance<TPipelineJob>(), GetJobService.GetJobInstance<TPipelineJob2>(), GetJobService.GetJobInstance<TPipelineJob3>());
+        public StageSetup<TOutput, TNexTOutput> Stage<TJob, TJob2, TNexTOutput>()
+            where TJob : Job<TOutput, TNexTOutput>
+            where TJob2 : Job<TOutput, TNexTOutput>
+            => Stage(GetJobService.GetJobInstance<TJob>(), GetJobService.GetJobInstance<TJob2>());
 
-        public StageSetup<TOutput, TNexTOutput> Stage<TPipelineJob, TPipelineJob2, TPipelineJob3, TPipelineJob4, TNexTOutput>()
-            where TPipelineJob : PipelineJob<TOutput, TNexTOutput>
-            where TPipelineJob2 : PipelineJob<TOutput, TNexTOutput>
-            where TPipelineJob3 : PipelineJob<TOutput, TNexTOutput>
-            where TPipelineJob4 : PipelineJob<TOutput, TNexTOutput>
-            => Stage(GetJobService.GetJobInstance<TPipelineJob>(), GetJobService.GetJobInstance<TPipelineJob2>(), GetJobService.GetJobInstance<TPipelineJob3>(), GetJobService.GetJobInstance<TPipelineJob4>());
+        public StageSetup<TOutput, TNexTOutput> Stage<TJob, TJob2, TJob3, TNexTOutput>()
+            where TJob : Job<TOutput, TNexTOutput>
+            where TJob2 : Job<TOutput, TNexTOutput>
+            where TJob3 : Job<TOutput, TNexTOutput>
+            => Stage(GetJobService.GetJobInstance<TJob>(), GetJobService.GetJobInstance<TJob2>(), GetJobService.GetJobInstance<TJob3>());
 
-        public StageSetup<TOutput, TOutput> Stage<TPipelineJob>() where TPipelineJob : PipelineJob<TOutput, TOutput>
-            => CreateNextStage<TOutput>(GetJobService.GetJobInstance<TPipelineJob>());
+        public StageSetup<TOutput, TNexTOutput> Stage<TJob, TJob2, TJob3, TJob4, TNexTOutput>()
+            where TJob : Job<TOutput, TNexTOutput>
+            where TJob2 : Job<TOutput, TNexTOutput>
+            where TJob3 : Job<TOutput, TNexTOutput>
+            where TJob4 : Job<TOutput, TNexTOutput>
+            => Stage(GetJobService.GetJobInstance<TJob>(), GetJobService.GetJobInstance<TJob2>(), GetJobService.GetJobInstance<TJob3>(), GetJobService.GetJobInstance<TJob4>());
 
-        public StageSetup<TOutput, TNexTOutput> MapAs<TNexTOutput>() where TNexTOutput : class 
-            => Stage(output => output as TNexTOutput);
+        public StageSetup<TOutput, TOutput> AsyncStage<TAsyncJob>()
+            where TAsyncJob : AsyncJob<TOutput, TOutput>
+            => CreateNextStage<TOutput>(GetJobService.GetJobInstance<TAsyncJob>());
+
+        public StageSetup<TOutput, TNexTOutput> AsyncStage<TAsyncJob, TNexTOutput>()
+            where TAsyncJob : AsyncJob<TOutput, TNexTOutput>
+            => CreateNextStage<TNexTOutput>(GetJobService.GetJobInstance<TAsyncJob>());
+        
+        public StageSetup<TOutput, TNexTOutput> AsyncStage<TAsyncJob, TAsyncJob2, TNexTOutput>()
+            where TAsyncJob : AsyncJob<TOutput, TNexTOutput>
+            where TAsyncJob2 : AsyncJob<TOutput, TNexTOutput>
+            => AsyncStage(GetJobService.GetJobInstance<TAsyncJob>(), GetJobService.GetJobInstance<TAsyncJob2>());
+
+        public StageSetup<TOutput, TNexTOutput> AsyncStage<TAsyncJob, TAsyncJob2, TAsyncJob3, TNexTOutput>()
+            where TAsyncJob : AsyncJob<TOutput, TNexTOutput>
+            where TAsyncJob2 : AsyncJob<TOutput, TNexTOutput>
+            where TAsyncJob3 : AsyncJob<TOutput, TNexTOutput>
+            => AsyncStage(GetJobService.GetJobInstance<TAsyncJob>(), GetJobService.GetJobInstance<TAsyncJob2>(), GetJobService.GetJobInstance<TAsyncJob3>());
+
+        public StageSetup<TOutput, TNexTOutput> AsyncStage<TAsyncJob, TAsyncJob2, TAsyncJob3, TAsyncJob4, TNexTOutput>()
+            where TAsyncJob : AsyncJob<TOutput, TNexTOutput>
+            where TAsyncJob2 : AsyncJob<TOutput, TNexTOutput>
+            where TAsyncJob3 : AsyncJob<TOutput, TNexTOutput>
+            where TAsyncJob4 : AsyncJob<TOutput, TNexTOutput>
+            => AsyncStage(GetJobService.GetJobInstance<TAsyncJob>(), GetJobService.GetJobInstance<TAsyncJob2>(), GetJobService.GetJobInstance<TAsyncJob3>(), GetJobService.GetJobInstance<TAsyncJob4>());
+
+        public StageSetup<TOutput, TNexTOutput> MapAs<TNexTOutput>()
+            where TNexTOutput : class 
+            => AsyncStage(output => output as TNexTOutput);
 
         #endregion
 
@@ -78,33 +106,20 @@ namespace PipelineLauncher.Stages
         public StageSetup<TOutput, TNexTOutput> Stage<TNexTOutput>(Job<TOutput, TNexTOutput> job)
             => CreateNextStage<TNexTOutput>(job);
 
-        public StageSetup<TOutput, TNexTOutput> Stage<TNexTOutput>(AsyncJob<TOutput, TNexTOutput> asyncJob)
-            => CreateNextStage<TNexTOutput>(asyncJob);
-
-        public StageSetup<TOutput, TNexTOutput> Stage<TNexTOutput>(Func<TOutput, TNexTOutput> func)
-            => Stage(new AsyncLambdaJob<TOutput, TNexTOutput>(func));
-
         public StageSetup<TOutput, TNexTOutput> Stage<TNexTOutput>(Func<IEnumerable<TOutput>, IEnumerable<TNexTOutput>> func)
             => Stage(new LambdaJob<TOutput, TNexTOutput>(func));
 
-        public StageSetup<TOutput, TNexTOutput> Stage<TNexTOutput>(params PipelineJob<TOutput, TNexTOutput>[] pipelineJobs)
-        {
-            switch (pipelineJobs.FirstOrDefault())
-            {
-                case Job<TOutput, TNexTOutput> _:
-                    return Stage(pipelineJobs.Cast<Job<TOutput, TNexTOutput>>().ToArray());
-                case AsyncJob<TOutput, TNexTOutput> _:
-                    return Stage(pipelineJobs.Cast<AsyncJob<TOutput, TNexTOutput>>().ToArray());
-                default: 
-                    throw new ArgumentException($"Jobs can't be recognized: '{pipelineJobs}'");
-            }
-        }
-
-        public StageSetup<TOutput, TNexTOutput> Stage<TNexTOutput>(params AsyncJob<TOutput, TNexTOutput>[] asyncJobs)
-            => Stage(new ConditionAsyncJob<TOutput, TNexTOutput>(asyncJobs));
-
         public StageSetup<TOutput, TNexTOutput> Stage<TNexTOutput>(params Job<TOutput, TNexTOutput>[] jobs)
             => Stage(new ConditionJob<TOutput, TNexTOutput>(jobs));
+
+        public StageSetup<TOutput, TNexTOutput> AsyncStage<TNexTOutput>(AsyncJob<TOutput, TNexTOutput> asyncJob)
+            => CreateNextStage<TNexTOutput>(asyncJob);
+
+        public StageSetup<TOutput, TNexTOutput> AsyncStage<TNexTOutput>(Func<TOutput, TNexTOutput> func)
+            => AsyncStage(new AsyncLambdaJob<TOutput, TNexTOutput>(func));
+
+        public StageSetup<TOutput, TNexTOutput> AsyncStage<TNexTOutput>(params AsyncJob<TOutput, TNexTOutput>[] asyncJobs)
+            => AsyncStage(new ConditionAsyncJob<TOutput, TNexTOutput>(asyncJobs));
 
         #endregion
 
@@ -127,7 +142,6 @@ namespace PipelineLauncher.Stages
                 throw new Exception(
                     $"Stages config didn't expected '{typeof(TFirstInput).Name}' as input");
             }
-                
         }
 
         public IPipeline<TFirstInput, TOutput> From<TFirstInput>()
