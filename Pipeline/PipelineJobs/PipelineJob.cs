@@ -8,7 +8,10 @@ using PipelineLauncher.Dto;
 
 namespace PipelineLauncher.PipelineJobs
 {
-    public abstract class PipelineJob<TInput, TOutput> : IPipelineJob
+    public abstract class PipelineJob<TInput>{
+    }
+
+    public abstract class PipelineJob<TInput, TOutput>: PipelineJob<TInput>, IPipelineJob
     {
         protected PipelineJob()
         {
@@ -22,18 +25,18 @@ namespace PipelineLauncher.PipelineJobs
             Output = new BlockingQueue<object>();
         }
 
-        protected void NonParamResult(PipelineFilterResult result, object param, CancellationToken cancellationToken)
+        protected void NonOutputResult(PipelineFilterResult result, object output, CancellationToken cancellationToken)
         {
             switch (result)
             {
-                case KeepResult _:
-                    Output.Add(param, cancellationToken);
+                case RemoveResult _:
+                    Output.Add(output, cancellationToken);
                     break;
                 case SkipResult _:
-                    Output.Add(new StageSkipObject(param), cancellationToken);
+                    Output.Add(new StageSkipObject(output), cancellationToken);
                     break;
                 case SkipToResult skipTo:
-                    Output.Add(new StageSkipObject(param, skipTo.JobType), cancellationToken);
+                    Output.Add(new StageSkipObject(output, skipTo.JobType), cancellationToken);
                     break;
             }
         }

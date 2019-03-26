@@ -7,24 +7,24 @@ namespace PipelineLauncher.Jobs
 {
     internal class ConditionJob<TInput, TOutput> : Job<TInput, TOutput>
     {
-        private readonly Job<TInput, TOutput>[] _pipelineJobs;
+        private readonly Job<TInput, TOutput>[] _jobs;
 
-        public ConditionJob(params Job<TInput, TOutput>[] pipelineJobs)
+        public ConditionJob(params Job<TInput, TOutput>[] jobs)
         {
-            _pipelineJobs = pipelineJobs;
+            _jobs = jobs;
         }
 
-        public override IEnumerable<object> InternalPerform(object[] @params, CancellationToken cancellationToken)
+        public override IEnumerable<object> InternalExecute(object[] input, CancellationToken cancellationToken)
         {
-            var workParams = @params.Cast<TInput>().ToArray();
+            var workParams = input.Cast<TInput>().ToArray();
 
-            foreach (var job in _pipelineJobs)
+            foreach (var job in _jobs)
             {
                 var acceptableParam = workParams.Where(e => job.Condition(e)).ToArray();
 
                 if (acceptableParam.Any())
                 {
-                    var result = job.PerformAsync(acceptableParam, cancellationToken).Result;
+                    var result = job.ExecuteAsync(acceptableParam, cancellationToken).Result;
 
                     var internalResult = result as TOutput[] ?? result.ToArray();
                     foreach (var res in internalResult)

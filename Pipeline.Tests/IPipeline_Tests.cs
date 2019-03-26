@@ -30,7 +30,7 @@ namespace PipelineLauncher.Tests
 
         public class CustomPipelineFilter : FilterService<Item>
         {
-            public override PipelineFilterResult Perform(Item t)
+            public override PipelineFilterResult Filter(Item t)
             {
                 Thread.Sleep(300);
                 t.Value = t.Value + "FILTER->";
@@ -50,7 +50,8 @@ namespace PipelineLauncher.Tests
                 return Keep();
             }
         }
-        //[PipelineFilter(typeof(CustomPipelineFilter))]\
+
+        //[PipelineFilter(typeof(CustomPipelineFilter))]
 
 
 
@@ -72,7 +73,7 @@ namespace PipelineLauncher.Tests
 
         public class Stage1 : Job<Item>
         {
-            public override IEnumerable<Item> Perform(Item[] items)
+            public override IEnumerable<Item> Execute(Item[] items)
             {
                 foreach (var item in items)
                 {
@@ -93,14 +94,14 @@ namespace PipelineLauncher.Tests
 
         public class Stage2 : AsyncJob<Item>
         {
-            public override Item Perform(Item item)
+            public override Item Execute(Item input)
             {
-                item.Value = item.Value + "2->";
+                input.Value = input.Value + "2->";
                 Thread.Sleep(1000);
 
-                item.ProcessedBy.Add(Thread.CurrentThread.ManagedThreadId);
+                input.ProcessedBy.Add(Thread.CurrentThread.ManagedThreadId);
 
-                return item;
+                return input;
             }
 
             public override bool Condition(Item item)
@@ -116,14 +117,15 @@ namespace PipelineLauncher.Tests
 
         public class Stage2Analog : AsyncJob<Item>
         {
-            public override Item Perform(Item item)
+            public override Item Execute(Item input)
             {
-                item.Value = item.Value + "2analog->";
+                input.Value = input.Value + "2analog->";
                 Thread.Sleep(1000);
 
-                item.ProcessedBy.Add(Thread.CurrentThread.ManagedThreadId);
+                input.ProcessedBy.Add(Thread.CurrentThread.ManagedThreadId);
 
-                return item;
+
+                return input;
             }
 
             public override bool Condition(Item item)
@@ -139,7 +141,7 @@ namespace PipelineLauncher.Tests
 
         public class Stage3 : Job<Item>
         {
-            public override IEnumerable<Item> Perform(Item[] items)
+            public override IEnumerable<Item> Execute(Item[] items)
             {
                 foreach (var item in items)
                 {
@@ -162,7 +164,7 @@ namespace PipelineLauncher.Tests
 
         public class Stage3Analog : Job<Item>
         {
-            public override IEnumerable<Item> Perform(Item[] items)
+            public override IEnumerable<Item> Execute(Item[] items)
             {
                 foreach (var item in items)
                 {
@@ -188,7 +190,7 @@ namespace PipelineLauncher.Tests
 
         public class Stage4 : Job<Item, string>
         {
-            public override IEnumerable<string> Perform(Item[] items)
+            public override IEnumerable<string> Execute(Item[] items)
             {
                 foreach (var item in items)
                 {
@@ -201,6 +203,15 @@ namespace PipelineLauncher.Tests
                 return items.Select(e => e.Value);
             }
         }
+
+        public class Stage4string : Job<string>
+        {
+            public override IEnumerable<string> Execute(string[] items)
+            {
+                return items;
+            }
+        }
+
 
         public class JobService : IJobService
         {
@@ -221,7 +232,7 @@ namespace PipelineLauncher.Tests
             //Configure stages
             var stageSetup = new PipelineFrom<Item>()
                 .Stage(new Stage1())
-                .Stage(new Stage2())
+                .AsyncStage(new Stage2())
                 .Stage<Stage3>()
                 .Stage(new Stage4());
 
@@ -253,17 +264,17 @@ namespace PipelineLauncher.Tests
             var cancel = new CancellationTokenSource();
 
             var stageSetup = new PipelineFrom<(bool isHold, Item item)>(new JobService())
-                .Stage(i => i.item)
+                .AsyncStage(i => i.item)
                 .Stage<Stage1, Item>()
-                .Stage(item =>
+                .AsyncStage(item =>
                 {
                     item.Value = item.Value + "AsyncLambda->";
 
                     item.ProcessedBy.Add(Thread.CurrentThread.ManagedThreadId);
                     return item;
                 })
-                .Stage<Stage2>()
-                .Stage(item =>
+                .AsyncStage<Stage2>()
+                .AsyncStage(item =>
                 {
                     item.Value = item.Value + "Lambda->";
                     Thread.Sleep(500);
@@ -322,8 +333,8 @@ namespace PipelineLauncher.Tests
             string h = "";
 
             var setup = new Pipelines.PipelineFrom<string>(null)
-                .Stage((string i) => int.Parse(i))
-                .Stage(i => i / Math.PI)
+                .AsyncStage((string i) => int.Parse(i))
+                .AsyncStage(i => i / Math.PI)
                 .Stage(i => i.ToString());
 
             //var pipeline = Pipeline.Create<String>(setup);

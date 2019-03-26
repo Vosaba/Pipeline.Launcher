@@ -4,7 +4,7 @@ namespace PipelineLauncher.Abstractions.Pipeline
 {
     public interface IPipelineJobAsync : IPipelineJob
     {
-        object InternalPerform(object param, CancellationToken cancellationToken);
+        object InternalExecute(object input, CancellationToken cancellationToken);
 
         int MaxDegreeOfParallelism { get; }
     }

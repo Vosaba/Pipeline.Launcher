@@ -8,19 +8,19 @@ namespace PipelineLauncher.PipelineJobs
 {
     public abstract class PipelineJobAsync<TInput, TOutput> : PipelineJob<TInput, TOutput>, IPipelineJobAsync
     {
-        public abstract Task<TOutput> PerformAsync(TInput param, CancellationToken cancellationToken);
+        public abstract Task<TOutput> ExecuteAsync(TInput input, CancellationToken cancellationToken);
 
-        public virtual object InternalPerform(object param, CancellationToken cancellationToken)
+        public virtual object InternalExecute(object input, CancellationToken cancellationToken)
         {
             try
             {
-                var result = PerformAsync((TInput)param, cancellationToken).Result;
+                var result = ExecuteAsync((TInput)input, cancellationToken).Result;
                 Output.Add(result, cancellationToken);
                 return result;
             }
             catch (NonParamException e)
             {
-                NonParamResult(e.Result, param, cancellationToken);
+                NonOutputResult(e.Result, input, cancellationToken);
                 return null;
             }
         }

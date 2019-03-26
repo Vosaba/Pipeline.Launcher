@@ -12,7 +12,7 @@ namespace PipelineLauncher.Tests
     {
         class ParseFromString : AsyncJob<String, int>
         {
-            public override int Perform(string param)
+            public override int Execute(string input)
             {
                 throw new NotImplementedException();
             }
@@ -20,7 +20,7 @@ namespace PipelineLauncher.Tests
 
         class DivideByPI : AsyncJob<int, Double>
         {
-            public override double Perform(int param)
+            public override double Execute(int input)
             {
                 throw new NotImplementedException();
             }
@@ -28,7 +28,7 @@ namespace PipelineLauncher.Tests
 
         class Format : AsyncJob<Double, String>
         {
-            public override string Perform(double param)
+            public override string Execute(double input)
             {
                 throw new NotImplementedException();
             }
@@ -37,9 +37,9 @@ namespace PipelineLauncher.Tests
         private static StageSetup<double, string> ConfigStages()
         {
             var setup = new Pipelines.PipelineFrom<string>(null)
-                .Stage(new ParseFromString())
-                .Stage(new DivideByPI())
-                .Stage(new Format());
+                .AsyncStage(new ParseFromString())
+                .AsyncStage(new DivideByPI())
+                .AsyncStage(new Format());
 
             return setup;
         }

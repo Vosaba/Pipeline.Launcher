@@ -15,16 +15,16 @@ namespace PipelineLauncher.Jobs
         }
 
 
-        public override object InternalPerform(object param, CancellationToken cancellationToken)
+        public override object InternalExecute(object input, CancellationToken cancellationToken)
         {
             try
             {
-                var workParam = (TInput) param;
+                var param = (TInput) input;
 
-                var firstAcceptableJob = _pipelineJobs.FirstOrDefault(e => e.Condition(workParam));
+                var firstAcceptableJob = _pipelineJobs.FirstOrDefault(e => e.Condition(param));
                 if(firstAcceptableJob != null)
                 {
-                    var result = firstAcceptableJob.PerformAsync(workParam, cancellationToken).Result;
+                    var result = firstAcceptableJob.ExecuteAsync(param, cancellationToken).Result;
                     Output.Add(result, cancellationToken);
                     return result;
                 }
@@ -33,7 +33,7 @@ namespace PipelineLauncher.Jobs
             }
             catch (NonParamException e)
             {
-                NonParamResult(e.Result, param, cancellationToken);
+                NonOutputResult(e.Result, input, cancellationToken);
                 return null;
             }
         }

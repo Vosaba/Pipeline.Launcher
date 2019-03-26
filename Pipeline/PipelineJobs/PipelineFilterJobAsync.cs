@@ -16,24 +16,26 @@ namespace PipelineLauncher.PipelineJobs
             _pipelineFilter = pipelineFilter;
         }
 
-        public object InternalPerform(object param, CancellationToken cancellationToken)
+        public object InternalExecute(object input, CancellationToken cancellationToken)
         {
-            var result = _pipelineFilter.Perform(param);
+            var result = _pipelineFilter.Execute(input);
 
             switch (result)
             {
+                case RemoveResult _:
+                    break;
                 case KeepResult _:
-                    Output.Add(param, cancellationToken);
+                    Output.Add(input, cancellationToken);
                     break;
                 case SkipResult _:
-                    Output.Add(new StageSkipObject(param), cancellationToken);
+                    Output.Add(new StageSkipObject(input), cancellationToken);
                     break;
                 case SkipToResult skipTo:
-                    Output.Add(new StageSkipObject(param, skipTo.JobType), cancellationToken);
+                    Output.Add(new StageSkipObject(input, skipTo.JobType), cancellationToken);
                     break;
             }
             
-            return param;
+            return input;
         }
 
         public int MaxDegreeOfParallelism => Environment.ProcessorCount;

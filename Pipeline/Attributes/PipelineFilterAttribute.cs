@@ -1,20 +1,21 @@
 ﻿using System;
 using PipelineLauncher.Abstractions.Pipeline;
+using PipelineLauncher.PipelineJobs;
 
 namespace PipelineLauncher.Attributes
 {
     public abstract class FilterService
     {
-        internal abstract PipelineFilterResult InternalPerform(object param);
+        internal abstract PipelineFilterResult Filter(object param);
     }
 
     public abstract class FilterService<TInput> : FilterService
     {
-        public abstract PipelineFilterResult Perform(TInput param);
+        public abstract PipelineFilterResult Filter(TInput param);
 
-        internal override PipelineFilterResult InternalPerform(object param)
+        internal override PipelineFilterResult Filter(object param)
         {
-            return Perform((TInput) param);
+            return Filter((TInput) param);
         }
 
         public PipelineFilterResult Keep()
@@ -32,7 +33,7 @@ namespace PipelineLauncher.Attributes
             return new SkipResult();
         }
 
-        public PipelineFilterResult SkipTo<TSkipToJob>() where TSkipToJob : IPipelineJob
+        public PipelineFilterResult SkipTo<TSkipToJob>() where TSkipToJob : PipelineJob<TInput>
         {
             return new SkipToResult(typeof(TSkipToJob));
         }
@@ -44,7 +45,7 @@ namespace PipelineLauncher.Attributes
         private readonly FilterService _filter;
         public PipelineFilterAttribute(Type filter)
         {
-            if (filter.BaseType.BaseType != typeof(FilterService))
+            if (filter.BaseType != null && (filter.BaseType != typeof(FilterService) && filter.BaseType.BaseType != typeof(FilterService)))
             {
                 throw new Exception($"'{filter.Name}' not implements '{nameof(FilterService)}'");
             }
@@ -52,9 +53,9 @@ namespace PipelineLauncher.Attributes
             _filter = (FilterService)Activator.CreateInstance(filter);
         }
 
-        public PipelineFilterResult Perform(object param)
+        public PipelineFilterResult Execute(object param)
         {
-            return _filter.InternalPerform(param);
+            return _filter.Filter(param);
         }
     }
 }

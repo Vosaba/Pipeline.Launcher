@@ -20,27 +20,22 @@ namespace PipelineLauncher.Jobs
         /// <summary>
         /// Performs the job using the specified param.
         /// </summary>
-        /// <param name="param">The param.</param>
+        /// <param name="input">The param.</param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public override async Task<TOutput> PerformAsync(TInput param, CancellationToken cancellationToken)
+        public override async Task<TOutput> ExecuteAsync(TInput input, CancellationToken cancellationToken)
         {
-            return await PerformAsync(param);
+            return await ExecuteAsync(input);
         }
 
-        public virtual Task<TOutput> PerformAsync(TInput param)
+        public virtual Task<TOutput> ExecuteAsync(TInput input)
         {
-            return Task.FromResult(Perform(param));
+            return Task.FromResult(Execute(input));
         }
 
-        public virtual TOutput Perform(TInput param)
+        public virtual TOutput Execute(TInput input)
         {
-            throw new NotImplementedException($"Neither of {nameof(Perform)} methods, are not implemented");
-        }
-
-        public TOutput Keep()
-        {
-            throw new NonParamException(new KeepResult());
+            throw new NotImplementedException($"Neither of {nameof(Execute)} methods, are not implemented");
         }
 
         public TOutput Remove()
@@ -53,7 +48,7 @@ namespace PipelineLauncher.Jobs
             throw new NonParamException(new SkipResult());
         }
 
-        public TOutput SkipTo<TSkipToJob>() where TSkipToJob : IPipelineJob
+        public TOutput SkipTo<TSkipToJob>() where TSkipToJob : PipelineJob<TOutput>
         {
             throw new NonParamException(new SkipToResult(typeof(TSkipToJob)));
         }

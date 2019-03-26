@@ -10,9 +10,9 @@ namespace PipelineLauncher.Tests
     {
         class Simple : AsyncJob<Int32, String>
         {
-            public  override string Perform(int param)
+            public  override string Execute(int input)
             {
-                return "My number is : " + param;
+                return "My number is : " + input;
             }
         }
 
@@ -25,7 +25,7 @@ namespace PipelineLauncher.Tests
             {
                 Assert.Equal(job.Output.Count, i);
 
-                job.InternalPerform(i, new CancellationToken(false));
+                job.InternalExecute(i, new CancellationToken(false));
 
                 Assert.Equal(job.Output.Count, i+1);
             }

@@ -11,9 +11,9 @@ namespace PipelineLauncher.Jobs
             _func = func;
         }
 
-        public override TOutput Perform(TInput param)
+        public override TOutput Execute(TInput input)
         {
-            return _func(param);
+            return _func(input);
         }
     }
 }

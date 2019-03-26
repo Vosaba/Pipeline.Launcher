@@ -8,19 +8,19 @@ namespace PipelineLauncher.Jobs
 {
     public abstract class Job<TInput, TOutput> : PipelineJobSync<TInput, TOutput>
     {
-        public override async Task<IEnumerable<TOutput>> PerformAsync(TInput[] param, CancellationToken cancellationToken)
+        public override async Task<IEnumerable<TOutput>> ExecuteAsync(TInput[] input, CancellationToken cancellationToken)
         {
-            return await PerformAsync(param);
+            return await ExecuteAsync(input);
         }
 
-         public virtual Task<IEnumerable<TOutput>> PerformAsync(TInput[] param)
+         public virtual Task<IEnumerable<TOutput>> ExecuteAsync(TInput[] input)
          {
-             return Task.FromResult(Perform(param));
+             return Task.FromResult(Execute(input));
          }
 
-        public virtual IEnumerable<TOutput> Perform(TInput[] param)
+        public virtual IEnumerable<TOutput> Execute(TInput[] param)
         {
-            throw new NotImplementedException($"Neither of {nameof(Perform)} methods, are not implemented");
+            throw new NotImplementedException($"Neither of {nameof(Execute)} methods, are not implemented");
         }
     }
 

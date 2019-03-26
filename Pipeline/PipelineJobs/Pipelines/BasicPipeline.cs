@@ -91,13 +91,13 @@ namespace PipelineLauncher.Pipelines
                                 switch (item)
                                 {
                                     case StageSkipObject skipFilter when skipFilter.CanProcess(asyncJob):
-                                        asyncJob.InternalPerform(skipFilter.Item, _cancellationToken);
+                                        asyncJob.InternalExecute(skipFilter.Item, _cancellationToken);
                                         break;
                                     case StageSkipObject _:
                                         asyncJob.Output.Add(item, _cancellationToken);
                                         break;
                                     default:
-                                        asyncJob.InternalPerform(item, _cancellationToken);
+                                        asyncJob.InternalExecute(item, _cancellationToken);
                                         break;
                                 }
                             });
@@ -106,7 +106,7 @@ namespace PipelineLauncher.Pipelines
 
                         var fullInput = input.GetElements(_cancellationToken).ToArray();
 
-                        syncJob.InternalPerform(fullInput
+                        syncJob.InternalExecute(fullInput
                                 .Where(e => !(e is StageSkipObject skip) || skip.CanProcess(syncJob))
                                 .Select(e => e is StageSkipObject skip ? skip.Item : e).ToArray(), _cancellationToken).ToArray();
 

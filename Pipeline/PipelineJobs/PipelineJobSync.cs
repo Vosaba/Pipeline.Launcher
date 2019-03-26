@@ -8,19 +8,19 @@ namespace PipelineLauncher.PipelineJobs
 {
     public abstract class PipelineJobSync<TInput, TOutput> : PipelineJob<TInput, TOutput>, IPipelineJobSync
     {
-        public abstract Task<IEnumerable<TOutput>> PerformAsync(TInput[] param, CancellationToken cancellationToken);
+        public abstract Task<IEnumerable<TOutput>> ExecuteAsync(TInput[] input, CancellationToken cancellationToken);
 
-        public virtual IEnumerable<object> InternalPerform(object[] @params, CancellationToken cancellationToken)
+        public virtual IEnumerable<object> InternalExecute(object[] input, CancellationToken cancellationToken)
         {
-            var result = PerformAsync(@params.Cast<TInput>().ToArray(), cancellationToken).Result;
+            var output = ExecuteAsync(input.Cast<TInput>().ToArray(), cancellationToken).Result;
 
-            var internalResult = result as TOutput[] ?? result.ToArray();
-            foreach (var res in internalResult)
+            var castedOutput = output as TOutput[] ?? output.ToArray();
+            foreach (var cOutput in castedOutput)
             {
-                Output.Add(res, cancellationToken);
+                Output.Add(cOutput, cancellationToken);
             }
 
-            return internalResult.Cast<object>();
+            return castedOutput.Cast<object>();
         }
     }
 }
