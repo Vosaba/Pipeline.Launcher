@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading;
 using PipelineLauncher.Abstractions.Pipeline;
 using PipelineLauncher.Abstractions.Services;
+using PipelineLauncher.Dataflow;
 
 namespace PipelineLauncher.Pipelines
 {
@@ -40,11 +41,11 @@ namespace PipelineLauncher.Pipelines
 
         public StageSetup<TInput, TOutput> Stage<TJob, TOutput>()
             where TJob : Job<TInput, TOutput>
-            => CreateNewStage<TOutput>(GetJobService.GetJobInstance<TJob>());
+            => CreateNextStage<TOutput>(GetJobService.GetJobInstance<TJob>());
 
         public StageSetup<TInput, TInput> Stage<TJob>()
             where TJob : Job<TInput, TInput>
-            => CreateNewStage<TInput>(GetJobService.GetJobInstance<TJob>());
+            => CreateNextStage<TInput>(GetJobService.GetJobInstance<TJob>());
 
         public StageSetup<TInput, TOutput> Stage<TJob, TJob2, TOutput>()
             where TJob : Job<TInput, TOutput>
@@ -66,11 +67,11 @@ namespace PipelineLauncher.Pipelines
 
         public StageSetup<TInput, TOutput> AsyncStage<TAsyncJob, TOutput>()
             where TAsyncJob : AsyncJob<TInput, TOutput>
-            => CreateNewStage<TOutput>(GetJobService.GetJobInstance<TAsyncJob>());
+            => CreateNextStageAsync<TOutput>(GetJobService.GetJobInstance<TAsyncJob>());
 
         public StageSetup<TInput, TInput> AsyncStage<TAsyncJob>()
             where TAsyncJob : AsyncJob<TInput, TInput>
-            => CreateNewStage<TInput>(GetJobService.GetJobInstance<TAsyncJob>());
+            => CreateNextStageAsync<TInput>(GetJobService.GetJobInstance<TAsyncJob>());
 
         public StageSetup<TInput, TOutput> AsyncStage<TAsyncJob, TAsyncJob2, TOutput>()
             where TAsyncJob : AsyncJob<TInput, TOutput>
@@ -95,7 +96,7 @@ namespace PipelineLauncher.Pipelines
         #region Nongeneric Stages
 
         public StageSetup<TInput, TOutput> Stage<TOutput>(Job<TInput, TOutput> job)
-            => CreateNewStage<TOutput>(job);
+            => CreateNextStage<TOutput>(job);
 
         public StageSetup<TInput, TOutput> Stage<TOutput>(Func<IEnumerable<TInput>, IEnumerable<TOutput>> func)
             => Stage(new LambdaJob<TInput, TOutput>(func));
@@ -104,7 +105,7 @@ namespace PipelineLauncher.Pipelines
             => Stage(new ConditionJob<TInput, TOutput>(jobs));
 
         public StageSetup<TInput, TOutput> AsyncStage<TOutput>(AsyncJob<TInput, TOutput> asyncJob)
-            => CreateNewStage<TOutput>(asyncJob);
+            => CreateNextStageAsync<TOutput>(asyncJob);
 
         public StageSetup<TInput, TOutput> AsyncStage<TOutput>(Func<TInput, TOutput> func)
             => AsyncStage(new AsyncLambdaJob<TInput, TOutput>(func));
@@ -114,53 +115,83 @@ namespace PipelineLauncher.Pipelines
 
         #endregion
 
-        public static IPipeline<TInput, TOutput> To<TOutput>(IStageSetup stageSetup, CancellationToken cancellationToken)
+        //public static IPipeline<TInput, TOutput> To<TOutput>(IStageSetup stageSetup, CancellationToken cancellationToken)
+        //{
+        //    var lastJobType = stageSetup.Current.Job.GetType();
+
+        //    if (lastJobType.BaseType != null && lastJobType.BaseType.GenericTypeArguments[1] != typeof(TOutput))
+        //    {
+        //        throw new Exception($"PipelineSetup result should be: {lastJobType.BaseType.GenericTypeArguments[1].Name}");
+        //    }
+
+        //    var firstJobType = stageSetup.GetFirstStage().Job.GetType();
+
+        //    if (firstJobType.BaseType != null && firstJobType.BaseType.GenericTypeArguments[0] != typeof(TInput))
+        //    {
+        //        throw new Exception($"Pipeline input should be: {firstJobType.BaseType.GenericTypeArguments[0].Name}");
+        //    }
+
+        //    return new BasicPipeline<TInput, TOutput>(stageSetup.GetFirstStage(), cancellationToken);
+        //}
+
+        //public static IPipeline<TInput, TOutput> To<TOutput>(IStageSetup stageSetup)
+        //    => To<TOutput>(stageSetup, CancellationToken.None);
+
+        private StageSetup<TInput, TOutput> CreateNextStage<TOutput>(Job<TInput, TOutput> job)
         {
-            var lastJobType = stageSetup.Current.Job.GetType();
-
-            if (lastJobType.BaseType != null && lastJobType.BaseType.GenericTypeArguments[1] != typeof(TOutput))
+            var nextBlock = new TransformManyToManyBlock<TInput, TOutput>((e, target) =>
             {
-                throw new Exception($"PipelineSetup result should be: {lastJobType.BaseType.GenericTypeArguments[1].Name}");
-            }
+                foreach (var result in job.Execute(e))
+                {
+                    target.TryAdd(result);
+                }
 
-            var firstJobType = stageSetup.GetFirstStage().Job.GetType();
+                target.CompleteAdding();
+            });
 
-            if (firstJobType.BaseType != null && firstJobType.BaseType.GenericTypeArguments[0] != typeof(TInput))
-            {
-                throw new Exception($"Pipeline input should be: {firstJobType.BaseType.GenericTypeArguments[0].Name}");
-            }
 
-            return new BasicPipeline<TInput, TOutput>(stageSetup.ToEnumerable(), cancellationToken);
+            return CreateNextBlock<TOutput>(nextBlock);
         }
 
-        public static IPipeline<TInput, TOutput> To<TOutput>(IStageSetup stageSetup)
-            => To<TOutput>(stageSetup, CancellationToken.None);
-
-        private StageSetup<TInput, TOutput> CreateNewStage<TOutput>(IPipelineJob job)
+        private StageSetup<TInput, TOutput> CreateNextStageAsync<TOutput>(AsyncJob<TInput, TOutput> asyncJob)
         {
-            var attributes = job.GetType().GetCustomAttributes(typeof(PipelineFilterAttribute), true);
+            var nextBlock = new TransformBlock<TInput, TOutput>(e => asyncJob.Execute(e));
 
-            if (attributes.Length > 0)
-            {
-                return CreateFilterStage<TOutput>(job, attributes);
-            }
-
-            return new StageSetup<TInput, TOutput>(new Stage(job), _jobService);
+            return CreateNextBlock<TOutput>(nextBlock);
         }
 
-        private StageSetup<TInput, TOutput> CreateFilterStage<TOutput>(IPipelineJob job, object[] attributes)
+        private StageSetup<TInput, TOutput> CreateNextBlock<TOutput>(ITarget<TInput, TOutput> executionBlock)
         {
-            var attribute = attributes[0] as PipelineFilterAttribute;
 
-            var stage = new Stage(new PipelineFilterJobAsync<TOutput>(attribute));
-
-            stage.Next = new Stage(job)
-            {
-                Previous = stage
-            };
-
-            // Wrap the new stage with a setup
-            return new StageSetup<TInput, TOutput>(stage.Next, _jobService);
+            return AppendStage(
+                new Stage<TInput, TOutput>(executionBlock)
+                {
+                    Previous = null
+                });
         }
+
+        public StageSetup<TInput, TOutput> AppendStage<TOutput>(IStage<TInput, TOutput> stage)
+        {
+
+
+            return new StageSetup<TInput, TOutput>(stage, _jobService);
+        }
+
+        //private StageSetup<TInput, TOutput> CreateFilterStage<TOutput>(IPipelineJob job, object[] attributes)
+        //{
+        //    var attribute = attributes[0] as PipelineFilterAttribute;
+
+        //    var stage = new Stage(new PipelineFilterJobAsync<TOutput>(attribute));
+
+        //    stage.Next = new[]{
+        //        new Stage(job)
+        //        {
+        //            Previous = new []{stage}
+        //        }
+        //    };
+
+        //    // Wrap the new stage with a setup
+        //    return new StageSetup<TInput, TOutput>(stage.Next.First(), _jobService);
+        //}
     }
 }

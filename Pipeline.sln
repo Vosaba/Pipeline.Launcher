@@ -7,7 +7,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PipelineLauncher", "Pipelin
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pipeline.Tests", "Pipeline.Tests\Pipeline.Tests.csproj", "{9999BCE3-FEAC-44EE-A5D7-EC5BB224EAC0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PipelineLauncher.Abstractions", "PipelineLauncher.Abstractions\PipelineLauncher.Abstractions.csproj", "{C612EA79-2BBC-4E42-AD12-562DD58BD510}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PipelineLauncher.Abstractions", "PipelineLauncher.Abstractions\PipelineLauncher.Abstractions.csproj", "{C612EA79-2BBC-4E42-AD12-562DD58BD510}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PipelineLauncher.Dataflow", "PipelineLauncher.Dataflow\PipelineLauncher.Dataflow.csproj", "{1902B9B6-03DF-4114-A9EE-DBDECEC97C93}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,10 @@ Global
 		{C612EA79-2BBC-4E42-AD12-562DD58BD510}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C612EA79-2BBC-4E42-AD12-562DD58BD510}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C612EA79-2BBC-4E42-AD12-562DD58BD510}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1902B9B6-03DF-4114-A9EE-DBDECEC97C93}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1902B9B6-03DF-4114-A9EE-DBDECEC97C93}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1902B9B6-03DF-4114-A9EE-DBDECEC97C93}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1902B9B6-03DF-4114-A9EE-DBDECEC97C93}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

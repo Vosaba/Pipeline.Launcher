@@ -124,7 +124,6 @@ namespace PipelineLauncher.Tests
 
                 input.ProcessedBy.Add(Thread.CurrentThread.ManagedThreadId);
 
-
                 return input;
             }
 
@@ -139,11 +138,11 @@ namespace PipelineLauncher.Tests
             }
         }
 
-        public class Stage3 : Job<Item>
+        public class Stage3 : AsyncJob<Item, string>
         {
-            public override IEnumerable<Item> Execute(Item[] items)
+            public override string Execute(Item item)
             {
-                foreach (var item in items)
+                //foreach (var item in items)
                 {
                     item.Value = item.Value + "3->";
                     Thread.Sleep(1000);
@@ -151,7 +150,7 @@ namespace PipelineLauncher.Tests
                     item.ProcessedBy.Add(Thread.CurrentThread.ManagedThreadId);
                 }
 
-                return items;
+                return item.Value; //.Select(e=>e.Value);
             }
 
             public override bool Condition(Item input) => input.Value!= "Item#0->1->2->" && input.Value != "Item#1->1->2->" && input.Value != "Item#2->1->2->";
@@ -162,11 +161,11 @@ namespace PipelineLauncher.Tests
             }
         }
 
-        public class Stage3Analog : Job<Item>
+        public class Stage3Analog : AsyncJob<Item, string>
         {
-            public override IEnumerable<Item> Execute(Item[] items)
+            public override string Execute(Item item)
             {
-                foreach (var item in items)
+                //foreach (var item in items)
                 {
                     item.Value = item.Value + "3analog->";
                     Thread.Sleep(1000);
@@ -174,7 +173,7 @@ namespace PipelineLauncher.Tests
                     item.ProcessedBy.Add(Thread.CurrentThread.ManagedThreadId);
                 }
 
-                return items;
+                return item.Value;//.Select(e => e.Value);
             }
 
             public override bool Condition(Item input)
@@ -204,11 +203,18 @@ namespace PipelineLauncher.Tests
             }
         }
 
-        public class Stage4string : Job<string>
+        public class Stage4string : AsyncJob<string>
         {
-            public override IEnumerable<string> Execute(string[] items)
+            public override string Execute(string item)
             {
-                return items;
+                //for (var index = 0; index < items.Length; index++)
+                //{
+                //    var item = items[index];
+                //    item = item + "4->";
+                //    Thread.Sleep(1000);
+                //}
+
+                return item+"->4";
             }
         }
 
@@ -230,11 +236,23 @@ namespace PipelineLauncher.Tests
             List<Item> input = MakeInput(6);
 
             //Configure stages
-            var stageSetup = new PipelineFrom<Item>()
-                .Stage(new Stage1())
+            var stageSetup = new PipelineFrom<Item>(new JobService())
                 .AsyncStage(new Stage2())
-                .Stage<Stage3>()
-                .Stage(new Stage4());
+                //.AsyncStage(new Stage2())
+                //.Stage<Stage3>()
+                //.Stage(new Stage4())
+                .Branch(
+                    root => root.AsyncStage<Stage3, string>((f) => false),
+                    //.Stage<Stage4string>()
+                    //.Stage<Stage4string>()
+                    //.Stage<Stage4string>(),
+                    root => root.AsyncStage<Stage3Analog, string>((f) => true)
+                                .AsyncStage<Stage4string>()
+                )
+                //.AsyncStage((string e) => e+"f")
+                .AsyncStage<Stage4string>()
+                .AsyncStage<Stage4string>()
+                .AsyncStage<Stage4string>();
 
             Stopwatch stopWatch = new Stopwatch();
 
@@ -282,8 +300,8 @@ namespace PipelineLauncher.Tests
                     item.ProcessedBy.Add(Thread.CurrentThread.ManagedThreadId);
                     return item;
                 })
-                .Stage(new Stage3())
-                .Stage<Stage4, string>();
+                .AsyncStage(new Stage3())
+                ;
 
 
 

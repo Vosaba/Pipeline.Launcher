@@ -1,7 +1,14 @@
 ﻿namespace PipelineLauncher.Stages
 {
-    public interface IStageSetup
+    public interface IStageSetup<in TInput>
     {
-        IStage Current { get; }
+        IStage<TInput> Current { get; }
+
+    }// : IStageSetup
+
+
+    public interface IStageSetup<TInput, TOutput> : IStageSetup<TInput>
+    {
+        new IStage<TInput, TOutput> Current { get; }
     }
 }

@@ -1,29 +1,41 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using PipelineLauncher.Abstractions.Collections;
 using PipelineLauncher.Abstractions.Pipeline;
+using PipelineLauncher.Dataflow;
 using PipelineLauncher.Dto;
+using PipelineLauncher.Stages;
 
 namespace PipelineLauncher.Pipelines
 {
-    internal class BasicPipeline<TInput, TOutput> : IPipeline<TInput, TOutput>
+    internal class BasicPipeline<TInput, TLastInput, TOutput> : IPipeline<TInput, TOutput>
     {
-        private readonly IEnumerable<IPipelineJob> _jobs;
+        private readonly ITarget<TInput> _firstBlock;
+        private readonly ITarget<TLastInput,TOutput> _lastBlock;
+
         private readonly CancellationToken _cancellationToken;
 
-        internal BasicPipeline(IEnumerable<IPipelineJob> jobs)
+        private readonly List<IExecutionBlock> _blocks = new List<IExecutionBlock>();
+        private ITarget<TInput> _startTask;
+        public Task<TOutput> EndTask;
+
+        internal BasicPipeline(ITarget<TInput> firstBlock, ITarget<TLastInput, TOutput> lastBlock)
         {
-            _jobs = jobs;
+            _firstBlock = firstBlock;
+            _lastBlock = lastBlock;
         }
 
-        internal BasicPipeline(IEnumerable<IPipelineJob> jobs, CancellationToken cancellationToken)
-            : this(jobs)
+        internal BasicPipeline(ITarget<TInput> firstBlock, ITarget<TLastInput,TOutput> lastBlock, CancellationToken cancellationToken)
+            : this(firstBlock, lastBlock)
         {
             _cancellationToken = cancellationToken;
         }
+
+
 
         public TOutput Run(TInput input)
         {
@@ -42,34 +54,84 @@ namespace PipelineLauncher.Pipelines
 
         public async Task<IEnumerable<TOutput>> RunAsync(IEnumerable<TInput> input)
         {
-            var tasks = new HashSet<Task>();
-            var stages = Inline(input.ToQueue(_cancellationToken), _jobs.ToArray()).ToArray();
-
-            foreach (var stage in stages)
+            foreach (var i in input)
             {
-                tasks.Add(Task.Run(() => ExecuteStage(stage.Key, stage.Value), _cancellationToken));
+                _firstBlock.TryAdd(i);
             }
 
-            await Task.WhenAll(tasks.ToArray());
-            return stages.Last().Value.Output.GetElements(_cancellationToken)
-                .Where(e => !(e is StageSkipObject)).Cast<TOutput>().ToList();
+            _firstBlock.CompleteAdding();
+
+            var result = new List<TOutput>();
+
+            var consuming = new ActionBlock<TOutput>((e) => result.Add(e));
+
+            _lastBlock.LinkTo(consuming);
+            await consuming.ExecutionTask;
+
+            return null;
+            //var tasks = new HashSet<Task>();
+            //KeyValuePair<IEnumerable<IQueue<object>>, IPipelineJob>[] stages = Inline(_rootStage, new[]{input.ToQueue(_cancellationToken)}).ToArray();
+
+            //foreach (var stage in stages)
+            //{
+            //    //tasks.Add(Task.Run(() => ExecuteStage(stage.Key, stage.Value), _cancellationToken));
+            //}
+
+            //await Task.WhenAll(tasks.ToArray());
+            //return stages.Last().Value.Output.GetElements(_cancellationToken)
+            //    .Where(e => !(e is StageSkipObject)).Cast<TOutput>().ToList();
         }
 
-        private IEnumerable<KeyValuePair<IQueue<object>, IPipelineJob>> Inline(IQueue<object> firstQueue, IReadOnlyList<IPipelineJob> jobs)
-        {
-            if(!jobs.Any())
-                yield break;
+        //private void MakeDataFlow(IStage stage)
+        //{
+        //    switch (stage)
+        //    {
+        //       case  
+        //    }
+        //}
 
-            var lastJob = jobs[0];
-            yield return new KeyValuePair<IQueue<object>, IPipelineJob>(firstQueue, lastJob);
+        //private IEnumerable<KeyValuePair<IEnumerable<IQueue<object>>, IPipelineJob>> Inline(IStage stage,
+        //    IEnumerable<IQueue<object>> firstQueue)
+        //{
+        //    var result = new List<KeyValuePair<IEnumerable<IQueue<object>>, IPipelineJob>>();
 
-            foreach (var pipelineJob in jobs.Skip(1))
-            {
-                lastJob.InitOutput();
-                yield return new KeyValuePair<IQueue<object>, IPipelineJob>(lastJob.Output, pipelineJob);
-                lastJob = pipelineJob;
-            }
-        }
+        //    Inline(stage, result, firstQueue);
+
+        //    return result;
+        //}
+
+        //private void Inline(IStage stage, IList<KeyValuePair<IEnumerable<IQueue<object>>, IPipelineJob>> result, IEnumerable<IQueue<object>> firstQueue = null)
+        //{
+        //    if (firstQueue != null)
+        //    {
+        //        result.Add(new KeyValuePair<IEnumerable<IQueue<object>>, IPipelineJob>(firstQueue, stage.Job));
+        //    }
+        //    else if(stage.Previous != null)
+        //    {
+        //        foreach (var previousStage in stage.Previous)
+        //        {
+        //            previousStage.Job.InitOutput();
+        //        }
+
+                
+        //    }
+
+        //    if (stage.Next != null)
+        //    {
+        //        foreach (IStage nextStage in stage.Next)
+        //        {
+        //            nextStage.Job.InitOutput();
+
+        //            Inline(nextStage, result, nextStage.Previous.Select(e => e.Job.Output));
+        //        }
+
+        //        result.Add(new KeyValuePair<IEnumerable<IQueue<object>>, IPipelineJob>(new []{stage.Job.Output}, stage.Job));
+        //    }
+        //    else
+        //    {
+        //        //return new KeyValuePair<IEnumerable<IQueue<object>>, IPipelineJob>(stage.Previous.Select(e => e.Job.Output), stage.Job);
+        //    }
+        //}
 
         private void ExecuteStage(IQueue<object> input, IPipelineJob job)
         {
