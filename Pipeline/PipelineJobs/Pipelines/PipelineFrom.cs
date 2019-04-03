@@ -47,21 +47,21 @@ namespace PipelineLauncher.Pipelines
             => CreateNewStage<TInput>(GetJobService.GetJobInstance<TJob>());
 
         public StageSetup<TInput, TOutput> Stage<TJob, TJob2, TOutput>()
-            where TJob : Job<TInput, TOutput>
-            where TJob2 : Job<TInput, TOutput>
+            where TJob : JobVariant<TInput, TOutput>
+            where TJob2 : JobVariant<TInput, TOutput>
             => Stage(GetJobService.GetJobInstance<TJob>(), GetJobService.GetJobInstance<TJob2>());
 
         public StageSetup<TInput, TOutput> Stage<TJob, TJob2, TJob3, TOutput>()
-            where TJob : Job<TInput, TOutput>
-            where TJob2 : Job<TInput, TOutput>
-            where TJob3 : Job<TInput, TOutput>
+            where TJob : JobVariant<TInput, TOutput>
+            where TJob2 : JobVariant<TInput, TOutput>
+            where TJob3 : JobVariant<TInput, TOutput>
             => Stage(GetJobService.GetJobInstance<TJob>(), GetJobService.GetJobInstance<TJob2>(), GetJobService.GetJobInstance<TJob3>());
 
         public StageSetup<TInput, TOutput> Stage<TJob, TJob2, TJob3, TJob4, TOutput>()
-            where TJob : Job<TInput, TOutput>
-            where TJob2 : Job<TInput, TOutput>
-            where TJob3 : Job<TInput, TOutput>
-            where TJob4 : Job<TInput, TOutput>
+            where TJob : JobVariant<TInput, TOutput>
+            where TJob2 : JobVariant<TInput, TOutput>
+            where TJob3 : JobVariant<TInput, TOutput>
+            where TJob4 : JobVariant<TInput, TOutput>
             => Stage(GetJobService.GetJobInstance<TJob>(), GetJobService.GetJobInstance<TJob2>(), GetJobService.GetJobInstance<TJob3>(), GetJobService.GetJobInstance<TJob4>());
 
         public StageSetup<TInput, TOutput> AsyncStage<TAsyncJob, TOutput>()
@@ -73,21 +73,21 @@ namespace PipelineLauncher.Pipelines
             => CreateNewStage<TInput>(GetJobService.GetJobInstance<TAsyncJob>());
 
         public StageSetup<TInput, TOutput> AsyncStage<TAsyncJob, TAsyncJob2, TOutput>()
-            where TAsyncJob : AsyncJob<TInput, TOutput>
-            where TAsyncJob2 : AsyncJob<TInput, TOutput>
+            where TAsyncJob : AsyncJobVariant<TInput, TOutput>
+            where TAsyncJob2 : AsyncJobVariant<TInput, TOutput>
             => AsyncStage(GetJobService.GetJobInstance<TAsyncJob>(), GetJobService.GetJobInstance<TAsyncJob2>());
 
         public StageSetup<TInput, TOutput> AsyncStage<TAsyncJob, TAsyncJob2, TAsyncJob3, TOutput>()
-            where TAsyncJob : AsyncJob<TInput, TOutput>
-            where TAsyncJob2 : AsyncJob<TInput, TOutput>
-            where TAsyncJob3 : AsyncJob<TInput, TOutput>
+            where TAsyncJob : AsyncJobVariant<TInput, TOutput>
+            where TAsyncJob2 : AsyncJobVariant<TInput, TOutput>
+            where TAsyncJob3 : AsyncJobVariant<TInput, TOutput>
             => AsyncStage(GetJobService.GetJobInstance<TAsyncJob>(), GetJobService.GetJobInstance<TAsyncJob2>(), GetJobService.GetJobInstance<TAsyncJob3>());
 
         public StageSetup<TInput, TOutput> AsyncStage<TAsyncJob, TAsyncJob2, TAsyncJob3, TAsyncJob4, TOutput>()
-            where TAsyncJob : AsyncJob<TInput, TOutput>
-            where TAsyncJob2 : AsyncJob<TInput, TOutput>
-            where TAsyncJob3 : AsyncJob<TInput, TOutput>
-            where TAsyncJob4 : AsyncJob<TInput, TOutput>
+            where TAsyncJob : AsyncJobVariant<TInput, TOutput>
+            where TAsyncJob2 : AsyncJobVariant<TInput, TOutput>
+            where TAsyncJob3 : AsyncJobVariant<TInput, TOutput>
+            where TAsyncJob4 : AsyncJobVariant<TInput, TOutput>
             => AsyncStage(GetJobService.GetJobInstance<TAsyncJob>(), GetJobService.GetJobInstance<TAsyncJob2>(), GetJobService.GetJobInstance<TAsyncJob3>(), GetJobService.GetJobInstance<TAsyncJob4>());
 
         #endregion
@@ -100,7 +100,7 @@ namespace PipelineLauncher.Pipelines
         public StageSetup<TInput, TOutput> Stage<TOutput>(Func<IEnumerable<TInput>, IEnumerable<TOutput>> func)
             => Stage(new LambdaJob<TInput, TOutput>(func));
 
-        public StageSetup<TInput, TOutput> Stage<TOutput>(params Job<TInput, TOutput>[] jobs)
+        public StageSetup<TInput, TOutput> Stage<TOutput>(params JobVariant<TInput, TOutput>[] jobs)
             => Stage(new ConditionJob<TInput, TOutput>(jobs));
 
         public StageSetup<TInput, TOutput> AsyncStage<TOutput>(AsyncJob<TInput, TOutput> asyncJob)
@@ -109,7 +109,7 @@ namespace PipelineLauncher.Pipelines
         public StageSetup<TInput, TOutput> AsyncStage<TOutput>(Func<TInput, TOutput> func)
             => AsyncStage(new AsyncLambdaJob<TInput, TOutput>(func));
 
-        public StageSetup<TInput, TOutput> AsyncStage<TOutput>(params AsyncJob<TInput, TOutput>[] asyncJobs)
+        public StageSetup<TInput, TOutput> AsyncStage<TOutput>(params AsyncJobVariant<TInput, TOutput>[] asyncJobs)
             => AsyncStage(new ConditionAsyncJob<TInput, TOutput>(asyncJobs));
 
         #endregion

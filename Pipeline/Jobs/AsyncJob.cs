@@ -57,4 +57,14 @@ namespace PipelineLauncher.Jobs
     public abstract class AsyncJob<TInput> : AsyncJob<TInput, TInput>
     {
     }
+
+    public abstract class AsyncJobVariant<TInput, TOutput>: AsyncJob<TInput, TOutput>
+    {
+        public abstract bool Condition(TInput input);
+    }
+
+    public abstract class AsyncJobVariant<TInput> : AsyncJobVariant<TInput, TInput>
+    {
+
+    }
 }

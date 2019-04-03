@@ -19,6 +19,18 @@ using Xunit.Sdk;
 
 namespace PipelineLauncher.Tests
 {
+    internal static class Helpers2
+    {
+        private static object ServiceProvider = null;
+
+        public static StageSetup<TOutput, TNext> MssCallStage<TInput, TOutput, TNext>(
+            this StageSetup<TInput, TOutput> stage,  Func<TOutput, dynamic, TNext> msFunc)
+        {
+
+
+            return stage.AsyncStage(item => msFunc(item, null));
+        }
+    }
     public class IPipeline_Tests
     {
         private readonly ITestOutputHelper output;
@@ -30,6 +42,11 @@ namespace PipelineLauncher.Tests
 
         public class CustomPipelineFilter : FilterService<Item>
         {
+            public CustomPipelineFilter(string h)
+            {
+                
+            }
+
             public override PipelineFilterResult Filter(Item t)
             {
                 Thread.Sleep(300);
@@ -92,7 +109,7 @@ namespace PipelineLauncher.Tests
             }
         }
 
-        public class Stage2 : AsyncJob<Item>
+        public class Stage2 : AsyncJobVariant<Item>
         {
             public override Item Execute(Item input)
             {
@@ -115,7 +132,7 @@ namespace PipelineLauncher.Tests
             }
         }
 
-        public class Stage2Analog : AsyncJob<Item>
+        public class Stage2Analog : AsyncJobVariant<Item>
         {
             public override Item Execute(Item input)
             {
@@ -139,7 +156,7 @@ namespace PipelineLauncher.Tests
             }
         }
 
-        public class Stage3 : Job<Item>
+        public class Stage3 : JobVariant<Item>
         {
             public override IEnumerable<Item> Execute(Item[] items)
             {
@@ -177,7 +194,7 @@ namespace PipelineLauncher.Tests
                 return items;
             }
 
-            public override bool Condition(Item input)
+            public bool Condition(Item input)
             {
                 return input.Value == "Item#0->1->2->" || input.Value == "Item#1->1->2->" || input.Value == "Item#2->1->2->";
             }
@@ -232,9 +249,10 @@ namespace PipelineLauncher.Tests
             //Configure stages
             var stageSetup = new PipelineFrom<Item>()
                 .Stage(new Stage1())
-                .AsyncStage(new Stage2())
-                .Stage<Stage3>()
-                .Stage(new Stage4());
+                .AsyncStage(new Stage2(), new Stage2Analog())
+                .Stage<Stage3, Item>()
+                .MssCallStage((item, o) => (string) o.Call(item))
+                .Stage(new Stage4string());
 
             Stopwatch stopWatch = new Stopwatch();
 

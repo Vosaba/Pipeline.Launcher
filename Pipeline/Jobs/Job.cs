@@ -26,4 +26,14 @@ namespace PipelineLauncher.Jobs
 
     public abstract class Job<TInput> : Job<TInput, TInput>
     {}
+
+    public abstract class JobVariant<TInput, TOutput> : Job<TInput, TOutput>
+    {
+        public abstract bool Condition(TInput input);
+    }
+
+    public abstract class JobVariant<TInput> : JobVariant<TInput, TInput>
+    {
+
+    }
 }

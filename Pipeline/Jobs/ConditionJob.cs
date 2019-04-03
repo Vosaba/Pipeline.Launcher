@@ -7,9 +7,9 @@ namespace PipelineLauncher.Jobs
 {
     internal class ConditionJob<TInput, TOutput> : Job<TInput, TOutput>
     {
-        private readonly Job<TInput, TOutput>[] _jobs;
+        private readonly JobVariant<TInput, TOutput>[] _jobs;
 
-        public ConditionJob(params Job<TInput, TOutput>[] jobs)
+        public ConditionJob(params JobVariant<TInput, TOutput>[] jobs)
         {
             _jobs = jobs;
         }

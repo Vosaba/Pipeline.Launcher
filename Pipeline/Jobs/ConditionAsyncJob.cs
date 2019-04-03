@@ -7,9 +7,9 @@ namespace PipelineLauncher.Jobs
 {
     internal class ConditionAsyncJob<TInput, TOutput> : AsyncJob<TInput, TOutput>
     {
-        private readonly AsyncJob<TInput, TOutput>[] _pipelineJobs;
+        private readonly AsyncJobVariant<TInput, TOutput>[] _pipelineJobs;
 
-        public ConditionAsyncJob(params AsyncJob<TInput, TOutput>[] pipelineJobs)
+        public ConditionAsyncJob(params AsyncJobVariant<TInput, TOutput>[] pipelineJobs)
         {
             _pipelineJobs = pipelineJobs;
         }

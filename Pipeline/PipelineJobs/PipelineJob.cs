@@ -43,7 +43,7 @@ namespace PipelineLauncher.PipelineJobs
 
         public Type AcceptedType => typeof(TInput);
 
-        public virtual bool Condition(TInput input) => true;
+        //public virtual bool Condition(TInput input) => true;
 
     }
 }
