@@ -13,13 +13,13 @@
     <Product>PipelineLauncher</Product>
   </PropertyGroup>
 
-  <!--<ItemGroup>
-    <PackageReference Include="PipelineLauncher.Abstractions" Version="0.0.3" />
-  </ItemGroup>-->
-
   <ItemGroup>
-    <ProjectReference Include="..\PipelineLauncher.Abstractions\PipelineLauncher.Abstractions.csproj" />
+    <PackageReference Include="PipelineLauncher.Abstractions" Version="0.0.4" />
   </ItemGroup>
+
+  <!--<ItemGroup>
+    <ProjectReference Include="..\PipelineLauncher.Abstractions\PipelineLauncher.Abstractions.csproj" />
+  </ItemGroup>-->
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DocumentationFile></DocumentationFile>
