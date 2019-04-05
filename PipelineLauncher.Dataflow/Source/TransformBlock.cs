@@ -13,7 +13,7 @@ namespace PipelineLauncher.Dataflow
     public class TransformBlock<TIn, TOut> : ExecutionBlock<TIn>, ITarget<TIn, TOut>, IDisposable
     {
         protected Func<TIn, TOut> Method { get; set; }
-        protected ITarget<TOut> Target { get; set; }
+        protected ITargetIn<TOut> Target { get; set; }
 
 
         /// <summary>
@@ -41,12 +41,12 @@ namespace PipelineLauncher.Dataflow
         /// 
         /// </summary>
         /// <param name="target"></param>
-        public void LinkTo(ITarget<TOut> target)
+        public void LinkTo(ITargetIn<TOut> target)
         {
             Target = target;
         }
 
-        public void LinkTo(ITarget<TOut> target, Action<TOut, ITarget<TOut>> filterMethod)
+        public void LinkTo(ITargetIn<TOut> target, Action<TOut, ITargetIn<TOut>> filterMethod)
         {
             LinkTo(target);
         }

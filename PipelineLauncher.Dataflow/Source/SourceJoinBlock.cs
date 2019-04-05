@@ -12,7 +12,7 @@ namespace PipelineLauncher.Dataflow
     /// <typeparam name="TIn"></typeparam>
     public class SourceJoinBlock<TIn> : ExecutionBlock<TIn>, ITarget<TIn, TIn>, IDisposable
     {
-        protected ITarget<TIn> Target { get; set; }
+        protected ITargetIn<TIn> Target { get; set; }
         protected List<IComplete> Sources { get; set; }
 
 
@@ -38,12 +38,12 @@ namespace PipelineLauncher.Dataflow
         /// 
         /// </summary>
         /// <param name="target"></param>
-        public void LinkTo(ITarget<TIn> target)
+        public void LinkTo(ITargetIn<TIn> target)
         {
             Target = target;
         }
 
-        public void LinkTo(ITarget<TIn> target, Action<TIn, ITarget<TIn>> filterMethod)
+        public void LinkTo(ITargetIn<TIn> target, Action<TIn, ITargetIn<TIn>> filterMethod)
         {
             LinkTo(target);
         }

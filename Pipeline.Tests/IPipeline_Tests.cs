@@ -214,7 +214,8 @@ namespace PipelineLauncher.Tests
                 //    Thread.Sleep(1000);
                 //}
 
-                return item+"->4";
+                 var t = item+ "4->";
+                return t;
             }
         }
 
@@ -237,21 +238,21 @@ namespace PipelineLauncher.Tests
 
             //Configure stages
             var stageSetup = new PipelineFrom<Item>(new JobService())
-                .AsyncStage(new Stage2())
+                .Stage(new Stage1())
                 //.AsyncStage(new Stage2())
                 //.Stage<Stage3>()
                 //.Stage(new Stage4())
                 .Branch(
-                    root => root.AsyncStage<Stage3, string>((f) => false),
-                    //.Stage<Stage4string>()
+                    (root => root.AsyncStage<Stage3Analog, string>(), item => item.Value.StartsWith("Item#0")),
+                    //.AsyncStage<Stage4string>(),
                     //.Stage<Stage4string>()
                     //.Stage<Stage4string>(),
-                    root => root.AsyncStage<Stage3Analog, string>((f) => true)
-                                .AsyncStage<Stage4string>()
+                    (root => root.AsyncStage<Stage2>()
+                        .AsyncStage<Stage3, string>()
+                        .AsyncStage<Stage4string>(), item => !item.Value.StartsWith("Item#0"))
+                //.AsyncStage<Stage4string>()
                 )
-                //.AsyncStage((string e) => e+"f")
-                .AsyncStage<Stage4string>()
-                .AsyncStage<Stage4string>()
+                .AsyncStage(( e) => e + "->5")
                 .AsyncStage<Stage4string>();
 
             Stopwatch stopWatch = new Stopwatch();

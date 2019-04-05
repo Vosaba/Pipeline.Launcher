@@ -11,12 +11,17 @@ namespace PipelineLauncher.Stages
         IStage Previous { get; set; }
     }
 
-    public interface IStage<in TIn> : IStage
+    public interface IStageIn<TIn> : IStage
     {
-        ITarget<TIn> ExecutionBlock { get; }
+        ITargetIn<TIn> ExecutionBlock { get; }
     }
 
-    public interface IStage<TIn, TOut> : IStage<TIn>
+    public interface IStageOut<TOut> : IStage
+    {
+        ITargetOut<TOut> ExecutionBlock { get; }
+    }
+
+    public interface IStage<TIn, TOut> : IStageIn<TIn>, IStageOut<TOut>
     {
         new ITarget<TIn, TOut> ExecutionBlock { get; }
     }

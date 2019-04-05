@@ -36,7 +36,7 @@ namespace PipelineLauncher.Dataflow
         /// 
         /// </summary>
         /// <param name="target"></param>
-        public void LinkTo(ITarget<TIn> target)
+        public void LinkTo(ITargetIn<TIn> target)
         {
 #if DEBUG
             throw new InvalidOperationException("LinkTo(target) is not valid for FilterBlock. You need to use LinkTo(target, method).");
@@ -48,7 +48,7 @@ namespace PipelineLauncher.Dataflow
         /// </summary>
         /// <param name="target"></param>
         /// <param name="filterMethod"></param>
-        public void LinkTo(ITarget<TIn> target,  Action<TIn, ITarget<TIn>> filterMethod)
+        public void LinkTo(ITargetIn<TIn> target,  Action<TIn, ITargetIn<TIn>> filterMethod)
         {
             Filters.Add(new Filter<TIn>(target, filterMethod));
         }

@@ -4,15 +4,15 @@ namespace PipelineLauncher.Dataflow
 {
     internal class Filter<TIn> : IDisposable
     {
-        public Action<TIn, ITarget<TIn>> FilterMethod { get; private set; }
-        public ITarget<TIn> Target { get; private set; }
+        public Action<TIn, ITargetIn<TIn>> FilterMethod { get; private set; }
+        public ITargetIn<TIn> Target { get; private set; }
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="target"></param>
         /// <param name="filterMethod"></param>
-        public Filter(ITarget<TIn> target, Action<TIn, ITarget<TIn>> filterMethod)
+        public Filter(ITargetIn<TIn> target, Action<TIn, ITargetIn<TIn>> filterMethod)
         {
             Target = target;
             FilterMethod = filterMethod;

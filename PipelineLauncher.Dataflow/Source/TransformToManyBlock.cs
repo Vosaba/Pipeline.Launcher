@@ -11,15 +11,15 @@ namespace PipelineLauncher.Dataflow
     /// <typeparam name="TOut"></typeparam>
     public class TransformToManyBlock<TIn, TOut> : ExecutionBlock<TIn>, ITarget<TIn, TOut>, IDisposable
     {
-        protected Action<TIn, ITarget<TOut>> Method { get; set; }
-        protected ITarget<TOut> Target { get; set; }
+        protected Action<TIn, ITargetIn<TOut>> Method { get; set; }
+        protected ITargetIn<TOut> Target { get; set; }
 
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="method"></param>
-        public TransformToManyBlock(Action<TIn, ITarget<TOut>> method)
+        public TransformToManyBlock(Action<TIn, ITargetIn<TOut>> method)
             : this(new QueueBlock<TIn>(), method)
         {
         }
@@ -29,7 +29,7 @@ namespace PipelineLauncher.Dataflow
         /// </summary>
         /// <param name="source"></param>
         /// <param name="method"></param>
-        public TransformToManyBlock(IDataBlockCollection<TIn> source, Action<TIn, ITarget<TOut>> method)
+        public TransformToManyBlock(IDataBlockCollection<TIn> source, Action<TIn, ITargetIn<TOut>> method)
             : base(source)
         {
             Method = method;
@@ -39,12 +39,12 @@ namespace PipelineLauncher.Dataflow
         /// 
         /// </summary>
         /// <param name="target"></param>
-        public void LinkTo(ITarget<TOut> target)
+        public void LinkTo(ITargetIn<TOut> target)
         {
             Target = target;
         }
 
-        public void LinkTo(ITarget<TOut> target, Action<TOut, ITarget<TOut>> filterMethod)
+        public void LinkTo(ITargetIn<TOut> target, Action<TOut, ITargetIn<TOut>> filterMethod)
         {
             LinkTo(target);
         }

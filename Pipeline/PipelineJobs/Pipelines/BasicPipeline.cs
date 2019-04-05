@@ -12,24 +12,24 @@ using PipelineLauncher.Stages;
 
 namespace PipelineLauncher.Pipelines
 {
-    internal class BasicPipeline<TInput, TLastInput, TOutput> : IPipeline<TInput, TOutput>
+    internal class BasicPipeline<TInput, TOutput> : IPipeline<TInput, TOutput>
     {
-        private readonly ITarget<TInput> _firstBlock;
-        private readonly ITarget<TLastInput,TOutput> _lastBlock;
+        private readonly ITargetIn<TInput> _firstBlock;
+        private readonly ITargetOut<TOutput> _lastBlock;
 
         private readonly CancellationToken _cancellationToken;
 
         private readonly List<IExecutionBlock> _blocks = new List<IExecutionBlock>();
-        private ITarget<TInput> _startTask;
+        private ITargetIn<TInput> _startTask;
         public Task<TOutput> EndTask;
 
-        internal BasicPipeline(ITarget<TInput> firstBlock, ITarget<TLastInput, TOutput> lastBlock)
+        internal BasicPipeline(ITargetIn<TInput> firstBlock, ITargetOut<TOutput> lastBlock)
         {
             _firstBlock = firstBlock;
             _lastBlock = lastBlock;
         }
 
-        internal BasicPipeline(ITarget<TInput> firstBlock, ITarget<TLastInput,TOutput> lastBlock, CancellationToken cancellationToken)
+        internal BasicPipeline(ITargetIn<TInput> firstBlock, ITargetOut<TOutput> lastBlock, CancellationToken cancellationToken)
             : this(firstBlock, lastBlock)
         {
             _cancellationToken = cancellationToken;
@@ -68,7 +68,7 @@ namespace PipelineLauncher.Pipelines
             _lastBlock.LinkTo(consuming);
             await consuming.ExecutionTask;
 
-            return null;
+            return result;
             //var tasks = new HashSet<Task>();
             //KeyValuePair<IEnumerable<IQueue<object>>, IPipelineJob>[] stages = Inline(_rootStage, new[]{input.ToQueue(_cancellationToken)}).ToArray();
 

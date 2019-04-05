@@ -8,7 +8,7 @@ namespace PipelineLauncher.Dataflow
     /// Perform an action that doesn't require the data to be passed on.
     /// </summary>
     /// <typeparam name="TIn"></typeparam>
-    public class ActionBlock<TIn> : ExecutionBlock<TIn>, ITarget<TIn>
+    public class ActionBlock<TIn> : ExecutionBlock<TIn>, ITargetIn<TIn>
     {
         protected Action<TIn> Method { get; }
 

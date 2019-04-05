@@ -53,7 +53,10 @@ namespace PipelineLauncher.Stages
         /// Gets the current stage.
         /// </summary>
         public IStage<TInput, TOutput> Current => _stage;
-        IStage<TInput> IStageSetup<TInput>.Current => Current;
+
+        IStageIn<TInput> IStageSetupIn<TInput>.Current => Current;
+
+        IStageOut<TOutput> IStageSetupOut<TOutput>.Current => Current;
 
 
         internal StageSetup(IStage<TInput, TOutput> stage, IJobService jobService)
@@ -149,30 +152,52 @@ namespace PipelineLauncher.Stages
         #region Nongeneric Branch
 
         public StageSetup<TNexTOutput, TNexTOutput> Branch<TNexTOutput>(
-            params Func<StageSetup<TOutput, TOutput>, IStageSetup<TOutput>>[] branches)
+            params (Func<StageSetup<TOutput, TOutput>, IStageSetupOut<TNexTOutput>> branch, Func<TOutput, bool> condition)[] branches)
         {
             //var _stageNext = new List<IStage>();
 
+            //Func<TOutput, bool> condition = (item)=>true;
+
+
+
+
+
             var filterBlock = new FilterBlock<TOutput, TOutput>();
 
-
-            StageSetup<TOutput, TOutput> nextStageSetup = new StageSetup<TOutput, TOutput>(
-                new Stage<TOutput, TOutput>(filterBlock)
-                , _jobService); ;
+            var nextStageSetup = 
+                new StageSetup<TOutput, TOutput>(
+                        new Stage<TOutput, TOutput>(filterBlock)
+                , _jobService); 
 
             Current.ExecutionBlock.LinkTo(filterBlock);
+            Current.Next = nextStageSetup.Current;
 
-
-           // Current.Next = nextStageSetup.Current;
 
 
             var mergeBlock = new SourceJoinBlock<TNexTOutput>();
 
+
+
+
             foreach (var branch in branches)
             {
-                
+                var nextBlock = new TransformBlock<TOutput, TOutput>(e => e);
 
-                var newBranch = branch(nextStageSetup);
+                filterBlock.LinkTo(nextBlock, (output, target) =>
+                {
+                    if(branch.condition(output))
+                    {
+                        target.TryAdd(output);
+                    }
+                });
+
+                var nextStageSetup2 =
+                    new StageSetup<TOutput, TOutput>(
+                        new Stage<TOutput, TOutput>(nextBlock)
+                        , _jobService);
+
+
+                var newBranch = branch.branch(nextStageSetup2);
 
                 //filterBlock.LinkTo(newBranch.Current.ExecutionBlock, ((output, target) =>
                 //{
@@ -180,10 +205,11 @@ namespace PipelineLauncher.Stages
                 //    {
                 //        target.TryAdd(output);
                 //    }
-                //}));
+                //})); 
+
                 newBranch.Current.ExecutionBlock.LinkTo(mergeBlock);
                 mergeBlock.AddSource(newBranch.Current.ExecutionBlock);
-            }
+            } 
 
 
             return new StageSetup<TNexTOutput, TNexTOutput>(new Stage<TNexTOutput, TNexTOutput>(mergeBlock)
@@ -209,10 +235,10 @@ namespace PipelineLauncher.Stages
 
             if (firstJobType.BaseType != null && firstJobType.GenericTypeArguments[0] == typeof(TFirstInput))
             {
-                var t = (IStage<TFirstInput>)this.GetFirstStage();
+                var t = (IStageIn<TFirstInput>)this.GetFirstStage();
 
                 //Current.ExecutionBlock.LinkTo(new TransformBlock<TOutput, TOutput>());
-                return new BasicPipeline<TFirstInput, TInput, TOutput>(t.ExecutionBlock, Current.ExecutionBlock
+                return new BasicPipeline<TFirstInput, TOutput>(t.ExecutionBlock, Current.ExecutionBlock
                     , cancellationToken);
             }
 
@@ -239,7 +265,7 @@ namespace PipelineLauncher.Stages
                 {
                     while (!target.TryAdd(result))
                     {
-                        
+
                     }
                 }
 
@@ -271,7 +297,7 @@ namespace PipelineLauncher.Stages
                     {
                         while (!target.TryAdd(input))
                         {
-                            
+
                         }
 
                     }
@@ -359,6 +385,5 @@ namespace PipelineLauncher.Stages
         //}
 
         #endregion
-
     }
 }

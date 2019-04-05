@@ -12,7 +12,7 @@ namespace PipelineLauncher.Dataflow
     public class BatchInputBlock<TIn> : ExecutionBlock<TIn>, ITarget<TIn, List<TIn>>, IDisposable
     {
         private readonly int _batchSize;
-        protected ITarget<List<TIn>> Target { get; set; }
+        protected ITargetIn<List<TIn>> Target { get; set; }
 
 
         /// <summary>
@@ -39,12 +39,12 @@ namespace PipelineLauncher.Dataflow
         /// 
         /// </summary>
         /// <param name="target"></param>
-        public void LinkTo(ITarget<List<TIn>> target)
+        public void LinkTo(ITargetIn<List<TIn>> target)
         {
             Target = target;
         }
 
-        public void LinkTo(ITarget<List<TIn>> target, Action<List<TIn>, ITarget<List<TIn>>> filterMethod)
+        public void LinkTo(ITargetIn<List<TIn>> target, Action<List<TIn>, ITargetIn<List<TIn>>> filterMethod)
         {
             LinkTo(target);
         }
