@@ -65,13 +65,6 @@ namespace PipelineLauncher.Dataflow
                     var result = Source.GetConsumingEnumerable().ToArray();
 
                     Method(result, Target);
-                    //Parallel.ForEach(Source.GetConsumingEnumerable(), ParallelOptions, item =>
-                    //{
-                    //    if (item == null)
-                    //        return;
-
-
-                    //});
                 }
                 catch (OperationCanceledException)
                 {

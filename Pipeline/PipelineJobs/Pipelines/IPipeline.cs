@@ -1,10 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace PipelineLauncher.Pipelines
 {
     public interface IPipeline<in TInput, TOutput>
     {
+        List<Exception> Exceptions { get; }
+
         TOutput Run(TInput input);
         IEnumerable<TOutput> Run(IEnumerable<TInput> input);
 
@@ -18,8 +21,5 @@ namespace PipelineLauncher.Pipelines
         /// </summary>
         /// <param name="input">The param.</param>
         Task<IEnumerable<TOutput>> RunAsync(IEnumerable<TInput> input);
-
-       
-
     }
 }

@@ -6,9 +6,9 @@ namespace PipelineLauncher.Stages
 {
     public interface IStage
     {
-        IStage Next { get; set; }
+        IStage Next { get; }
 
-        IStage Previous { get; set; }
+        IStage Previous { get; }
     }
 
     public interface IStageIn<TIn> : IStage
@@ -24,5 +24,9 @@ namespace PipelineLauncher.Stages
     public interface IStage<TIn, TOut> : IStageIn<TIn>, IStageOut<TOut>
     {
         new ITarget<TIn, TOut> ExecutionBlock { get; }
+
+        new IStageIn<TOut> Next { get; set; }
+
+        new IStageOut<TIn> Previous { get; set; }
     }
 }

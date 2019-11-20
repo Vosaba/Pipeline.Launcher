@@ -79,8 +79,12 @@ namespace PipelineLauncher.Dataflow
                         if (item == null)
                             return;
 
-                        Target.TryAdd(item);
+                        while (!Target.TryAdd(item))
+                        {
+
+                        }
                     });
+
                 }
                 catch (OperationCanceledException)
                 {

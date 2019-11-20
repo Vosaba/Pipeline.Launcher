@@ -1,36 +1,14 @@
-﻿using PipelineLauncher.Attributes;
+﻿using PipelineLauncher.Abstractions.Services;
+using PipelineLauncher.Dataflow;
 using PipelineLauncher.Jobs;
-using PipelineLauncher.PipelineJobs;
 using PipelineLauncher.Pipelines;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
-using PipelineLauncher.Abstractions.Pipeline;
-using PipelineLauncher.Abstractions.Services;
-using PipelineLauncher.Dataflow;
 
 namespace PipelineLauncher.Stages
 {
-    public interface IStageSetup //: IStageSetup<int>
-    {
-        //StageSetup<TOutput, TNextOutput> AppendStage<TNextOutput>(IStage stage);
-
-        //StageSetup<TOutput, TNexTOutput> CreateNextStage<TNexTOutput>(IPipelineJob job);
-        //StageSetup<TOutput, TNexTOutput> Stage<TNexTOutput>(Func<IEnumerable<TOutput>, IEnumerable<TNexTOutput>> func);
-    }
-
-    //public class StageSetup<TOutput>: IStageSetup<TOutput>
-    //{
-    //    public StageSetup(IStage current)
-    //    {
-    //        Current = current;
-    //    }
-
-    //    public IStage Current { get; }
-    //}
-
     public class StageSetup<TInput, TOutput> : IStageSetup<TInput, TOutput>
     {
         private readonly IStage<TInput, TOutput> _stage;
@@ -152,75 +130,58 @@ namespace PipelineLauncher.Stages
         #region Nongeneric Branch
 
         public StageSetup<TNexTOutput, TNexTOutput> Branch<TNexTOutput>(
-            params (Func<StageSetup<TOutput, TOutput>, IStageSetupOut<TNexTOutput>> branch, Func<TOutput, bool> condition)[] branches)
+            params (Func<TOutput, bool> condition, Func<StageSetup<TInput, TOutput>, IStageSetupOut<TNexTOutput>> branch)[] branches)
         {
-            //var _stageNext = new List<IStage>();
-
-            //Func<TOutput, bool> condition = (item)=>true;
-
-
-
-
-
             var filterBlock = new FilterBlock<TOutput, TOutput>();
 
-            var nextStageSetup = 
-                new StageSetup<TOutput, TOutput>(
-                        new Stage<TOutput, TOutput>(filterBlock)
-                , _jobService); 
-
-            Current.ExecutionBlock.LinkTo(filterBlock);
-            Current.Next = nextStageSetup.Current;
-
+           
 
 
             var mergeBlock = new SourceJoinBlock<TNexTOutput>();
 
 
 
-
             foreach (var branch in branches)
             {
-                var nextBlock = new TransformBlock<TOutput, TOutput>(e => e);
+                //var nextBlock = new TransformBlock<TOutput, TOutput>(e => e);
 
-                filterBlock.LinkTo(nextBlock, (output, target) =>
+                //var nextStageSetup2 =
+                //    new StageSetup<TOutput, TOutput>(
+                //        new Stage<TOutput, TOutput>(null)
+                //        , _jobService);
+
+                var newBranch = branch.branch(this);
+
+                filterBlock.LinkTo(Current.Next.ExecutionBlock, (output, target) =>
                 {
-                    if(branch.condition(output))
+                    if (branch.condition(output))
                     {
-                        target.TryAdd(output);
+                        while (!target.TryAdd(output))
+                        {
+
+                        }
                     }
                 });
 
-                var nextStageSetup2 =
-                    new StageSetup<TOutput, TOutput>(
-                        new Stage<TOutput, TOutput>(nextBlock)
-                        , _jobService);
-
-
-                var newBranch = branch.branch(nextStageSetup2);
-
-                //filterBlock.LinkTo(newBranch.Current.ExecutionBlock, ((output, target) =>
-                //{
-                //    if (branch.condition(output))
-                //    {
-                //        target.TryAdd(output);
-                //    }
-                //})); 
 
                 newBranch.Current.ExecutionBlock.LinkTo(mergeBlock);
                 mergeBlock.AddSource(newBranch.Current.ExecutionBlock);
-            } 
+            }
+
+            var nextStageSetup =
+                new StageSetup<TOutput, TOutput>(
+                    new Stage<TOutput, TOutput>(filterBlock)
+                    , _jobService);
+
+            Current.ExecutionBlock.LinkTo(filterBlock);
+            Current.Next = nextStageSetup.Current;
 
 
             return new StageSetup<TNexTOutput, TNexTOutput>(new Stage<TNexTOutput, TNexTOutput>(mergeBlock)
             {
-                Previous = Current
+                Previous = (IStageOut<TNexTOutput>) Current //HACK
             },
                 _jobService);
-
-            //return CreateNextBlock(mergeBlock);
-
-            // return new StageSetup<TOutput, TNexTOutput>(mergeStage, _jobService);
         }
 
         #endregion
@@ -235,11 +196,9 @@ namespace PipelineLauncher.Stages
 
             if (firstJobType.BaseType != null && firstJobType.GenericTypeArguments[0] == typeof(TFirstInput))
             {
-                var t = (IStageIn<TFirstInput>)this.GetFirstStage();
+                var firstStage = (IStageIn<TFirstInput>)this.GetFirstStage();
 
-                //Current.ExecutionBlock.LinkTo(new TransformBlock<TOutput, TOutput>());
-                return new BasicPipeline<TFirstInput, TOutput>(t.ExecutionBlock, Current.ExecutionBlock
-                    , cancellationToken);
+                return new BasicPipeline<TFirstInput, TOutput>(firstStage.ExecutionBlock, Current.ExecutionBlock, cancellationToken);
             }
 
             if (firstJobType != null)
@@ -314,17 +273,7 @@ namespace PipelineLauncher.Stages
             return new StageSetup<TOutput, TNexTOutput>(nextStage, _jobService);
         }
 
-        private StageSetup<TOut, TNextOut> CreateNextSpecificBlock<TIn, TOut, TNextOut>(IStage<TIn, TOut> curreBlock, ITarget<TOut, TNextOut> nextBlock)
-        {
-            var nextStage = new Stage<TOut, TNextOut>(nextBlock)
-            {
-                Previous = curreBlock
-            };
-
-            curreBlock.Next = nextStage;
-
-            return new StageSetup<TOut, TNextOut>(nextStage, _jobService);
-        }
+        
 
 
         //private StageSetup<TOutput, TNexTOutput> CreateNextBlock<TNexTOutput>(ITarget<List<TOutput>> executionBlock)

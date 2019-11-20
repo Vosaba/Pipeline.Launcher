@@ -12,10 +12,15 @@ namespace PipelineLauncher.Stages
         }
 
         public ITarget<TIn, TOut> ExecutionBlock { get; }
-        public IStage Next { get; set; }
-        public IStage Previous { get; set; }
-        ITargetIn<TIn> IStageIn<TIn>.ExecutionBlock => ExecutionBlock;
+        public IStageIn<TOut> Next { get; set; }
+        public IStageOut<TIn> Previous { get; set; }
 
+        ITargetIn<TIn> IStageIn<TIn>.ExecutionBlock => ExecutionBlock;
         ITargetOut<TOut> IStageOut<TOut>.ExecutionBlock => ExecutionBlock;
+
+        IStage IStage.Previous => Previous;
+        IStage IStage.Next => Next;
+
+
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DataflowLite
@@ -12,7 +13,7 @@ namespace DataflowLite
         /// </summary>
         public BlockParallelOption()
         {
-            MaxDegreeOfParallelism = 1;
+            MaxDegreeOfParallelism = Environment.ProcessorCount;
         }
 
         /// <summary>
@@ -54,7 +55,7 @@ namespace DataflowLite
         /// </summary>
         public void Cancel()
         {
-            CancellationSource.Cancel();
+            CancellationSource?.Cancel();
         }
     }
 }
