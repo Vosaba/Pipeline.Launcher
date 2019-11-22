@@ -1,9 +1,11 @@
 ﻿using PipelineLauncher.Abstractions.Services;
-using PipelineLauncher.Dataflow;
+//using PipelineLauncher.Dataflow;
 using PipelineLauncher.Jobs;
 using PipelineLauncher.Stages;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks.Dataflow;
 
 namespace PipelineLauncher.Pipelines
 {
@@ -34,26 +36,26 @@ namespace PipelineLauncher.Pipelines
 
         #region Generic Stages
 
-        public StageSetup<TInput, TOutput> Stage<TJob, TOutput>()
+        public StageSetup<TInput[], TOutput> Stage<TJob, TOutput>()
             where TJob : Job<TInput, TOutput>
             => CreateNextStage<TOutput>(GetJobService.GetJobInstance<TJob>());
 
-        public StageSetup<TInput, TInput> Stage<TJob>()
+        public StageSetup<TInput[], TInput> Stage<TJob>()
             where TJob : Job<TInput, TInput>
             => CreateNextStage<TInput>(GetJobService.GetJobInstance<TJob>());
 
-        public StageSetup<TInput, TOutput> Stage<TJob, TJob2, TOutput>()
+        public StageSetup<TInput[], TOutput> Stage<TJob, TJob2, TOutput>()
             where TJob : Job<TInput, TOutput>
             where TJob2 : Job<TInput, TOutput>
             => Stage(GetJobService.GetJobInstance<TJob>(), GetJobService.GetJobInstance<TJob2>());
 
-        public StageSetup<TInput, TOutput> Stage<TJob, TJob2, TJob3, TOutput>()
+        public StageSetup<TInput[], TOutput> Stage<TJob, TJob2, TJob3, TOutput>()
             where TJob : Job<TInput, TOutput>
             where TJob2 : Job<TInput, TOutput>
             where TJob3 : Job<TInput, TOutput>
             => Stage(GetJobService.GetJobInstance<TJob>(), GetJobService.GetJobInstance<TJob2>(), GetJobService.GetJobInstance<TJob3>());
 
-        public StageSetup<TInput, TOutput> Stage<TJob, TJob2, TJob3, TJob4, TOutput>()
+        public StageSetup<TInput[], TOutput> Stage<TJob, TJob2, TJob3, TJob4, TOutput>()
             where TJob : Job<TInput, TOutput>
             where TJob2 : Job<TInput, TOutput>
             where TJob3 : Job<TInput, TOutput>
@@ -90,13 +92,13 @@ namespace PipelineLauncher.Pipelines
 
         #region Nongeneric Stages
 
-        public StageSetup<TInput, TOutput> Stage<TOutput>(Job<TInput, TOutput> job)
+        public StageSetup<TInput[], TOutput> Stage<TOutput>(Job<TInput, TOutput> job)
             => CreateNextStage<TOutput>(job);
 
-        public StageSetup<TInput, TOutput> Stage<TOutput>(Func<IEnumerable<TInput>, IEnumerable<TOutput>> func)
+        public StageSetup<TInput[], TOutput> Stage<TOutput>(Func<IEnumerable<TInput>, IEnumerable<TOutput>> func)
             => Stage(new LambdaJob<TInput, TOutput>(func));
 
-        public StageSetup<TInput, TOutput> Stage<TOutput>(params Job<TInput, TOutput>[] jobs)
+        public StageSetup<TInput[], TOutput> Stage<TOutput>(params Job<TInput, TOutput>[] jobs)
             => Stage(new ConditionJob<TInput, TOutput>(jobs));
 
         public StageSetup<TInput, TOutput> AsyncStage<TOutput>(AsyncJob<TInput, TOutput> asyncJob)
@@ -110,20 +112,30 @@ namespace PipelineLauncher.Pipelines
 
         #endregion
 
-        private StageSetup<TInput, TOutput> CreateNextStage<TOutput>(Job<TInput, TOutput> job)
+        private StageSetup<TInput[], TOutput> CreateNextStage<TOutput>(Job<TInput, TOutput> job)
         {
-            var nextBlock = new TransformManyToManyBlock<TInput, TOutput>((e, target) =>
+            var nextBuffer = new BatchBlock<TInput>(int.MaxValue);
+            var newcurrent = CreateNextBlock(nextBuffer);
+
+            var g = new TransformManyBlock<IEnumerable<TInput>, TOutput>(e => job.Execute(e.ToArray()), new ExecutionDataflowBlockOptions(){MaxDegreeOfParallelism =5});
+
+            nextBuffer.Completion.ContinueWith(t =>
             {
-                foreach (var result in job.Execute(e))
+                if (t.IsFaulted)
                 {
-                    target.TryAdd(result);
+                    //((IDataflowBlock)_step2A).Fault(t.Exception);
+                    //((IDataflowBlock)_step2B).Fault(t.Exception);
                 }
-
-                target.CompleteAdding();
+                else
+                {
+                    g.Complete();
+                }
             });
+            //ar nextBlock = new TransformBlock<TOutput[], IEnumerable<TNexTOutput>>(e => job.Execute(e));
 
+            return newcurrent.CreateNextBlock(g, null);
 
-            return CreateNextBlock<TOutput>(nextBlock);
+            //return CreateNextBlock<TOutput>(t);
         }
 
         private StageSetup<TInput, TOutput> CreateNextStageAsync<TOutput>(AsyncJob<TInput, TOutput> asyncJob)
@@ -133,7 +145,7 @@ namespace PipelineLauncher.Pipelines
             return CreateNextBlock<TOutput>(nextBlock);
         }
 
-        private StageSetup<TInput, TOutput> CreateNextBlock<TOutput>(ITarget<TInput, TOutput> executionBlock)
+        private StageSetup<TInput, TOutput> CreateNextBlock<TOutput>(IPropagatorBlock<TInput, TOutput> executionBlock)
         {
 
             return AppendStage(

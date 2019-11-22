@@ -22,9 +22,36 @@ namespace PipelineLauncher.Demo.Tests.Modules
             //Configure stages
             var stageSetup = new PipelineFrom<Item>()
                 .Stage(new Stage1())
-                .AsyncStage(new AsyncStage2(), new AsyncStage2Alternative())
+                .AsyncStage(new AsyncStage2())//, new AsyncStage2Alternative())
                 .AsyncStage(new AsyncStage3())
                 //.AsyncStage((item) => item.Value)
+                .Stage(new Stage4())
+                .Stage(new Stage4());
+
+            Stopwatch stopWatch = new Stopwatch();
+
+            //Make pipeline from stageSetup
+            var pipeline = stageSetup.From<Item>();
+
+            //run
+            stopWatch.Start();
+            var result = pipeline.Run(input);
+            stopWatch.Stop();
+
+            //Total time 24032
+            PrintOutputAndTime(stopWatch.ElapsedMilliseconds, input);
+        }
+
+        [Fact]
+        public void Pipeline_Creation_Multiple_SyncJobs()
+        {
+            //Test input 6 items
+            List<Item> input = MakeInput(6);
+
+            //Configure stages
+            var stageSetup = new PipelineFrom<Item>()
+                .Stage(new Stage1())
+                .Stage(new Stage2())//, new Stage2Alternative())
                 .Stage(new Stage4())
                 .Stage(new Stage4());
 
@@ -42,58 +69,31 @@ namespace PipelineLauncher.Demo.Tests.Modules
             PrintOutputAndTime(stopWatch.ElapsedMilliseconds, input);
         }
 
-        [Fact]
-        public void Pipeline_Creation_Multiple_SyncJobs()
-        {
-            //Test input 6 items
-            List<Item> input = MakeInput(6);
+        //[Fact]
+        //public void Pipeline_Creation_Multiple_Async_and_SyncJobs_generic()
+        //{
+        //    //Test input 6 items
+        //    List<Item> input = MakeInput(6);
 
-            //Configure stages
-            var stageSetup = new PipelineFrom<Item>()
-                .Stage(new Stage1())
-                .Stage(new Stage2(), new Stage2Alternative())
-                .Stage(new Stage3())
-                .Stage(new Stage4());
+        //    //Configure stages
+        //    var stageSetup = new PipelineFrom<Item>(new FakeServicesRegistry.JobService())
+        //        .Stage<Stage1>()
+        //        .Stage<Stage2>() //, Stage2Alternative, Item>()
+        //        .AsyncStage(item => item)
+        //        .AsyncStage<AsyncStage2, AsyncStage2Alternative, Item>();
 
-            Stopwatch stopWatch = new Stopwatch();
+        //    Stopwatch stopWatch = new Stopwatch();
 
-            //Make pipeline from stageSetup
-            var pipeline = stageSetup.From<Item>();
+        //    //Make pipeline from stageSetup
+        //    var pipeline = stageSetup.From<Item>();
 
-            //run
-            stopWatch.Start();
-            IEnumerable<Item> result = pipeline.Run(input);
-            stopWatch.Stop();
+        //    //run
+        //    stopWatch.Start();
+        //    IEnumerable<Item> result = pipeline.Run(input);
+        //    stopWatch.Stop();
 
-            //Total time 24032
-            PrintOutputAndTime(stopWatch.ElapsedMilliseconds, input);
-        }
-
-        [Fact]
-        public void Pipeline_Creation_Multiple_Async_and_SyncJobs_generic()
-        {
-            //Test input 6 items
-            List<Item> input = MakeInput(6);
-
-            //Configure stages
-            var stageSetup = new PipelineFrom<Item>(new FakeServicesRegistry.JobService())
-                .Stage<Stage1>()
-                .Stage<Stage2, Stage2Alternative, Item>()
-                .AsyncStage(item => item)
-                .AsyncStage<AsyncStage2, AsyncStage2Alternative, Item>();
-
-            Stopwatch stopWatch = new Stopwatch();
-
-            //Make pipeline from stageSetup
-            var pipeline = stageSetup.From<Item>();
-
-            //run
-            stopWatch.Start();
-            IEnumerable<Item> result = pipeline.Run(input);
-            stopWatch.Stop();
-
-            //Total time 24032
-            PrintOutputAndTime(stopWatch.ElapsedMilliseconds, input);
-        }
+        //    //Total time 24032
+        //    PrintOutputAndTime(stopWatch.ElapsedMilliseconds, input);
+        //}
     }
 }

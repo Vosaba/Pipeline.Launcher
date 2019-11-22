@@ -121,6 +121,8 @@ namespace PipelineLauncher.Demo.Tests.Stages
         }
     }
 
+    
+
     public class IntStage : Job<int>
     {
         public override IEnumerable<int> Execute(int[] items)

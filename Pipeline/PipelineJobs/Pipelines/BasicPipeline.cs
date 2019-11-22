@@ -4,9 +4,10 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
 using PipelineLauncher.Abstractions.Collections;
 using PipelineLauncher.Abstractions.Pipeline;
-using PipelineLauncher.Dataflow;
+//using PipelineLauncher.Dataflow;
 using PipelineLauncher.Dto;
 using PipelineLauncher.Stages;
 
@@ -14,18 +15,18 @@ namespace PipelineLauncher.Pipelines
 {
     internal class BasicPipeline<TInput, TOutput> : IPipeline<TInput, TOutput>
     {
-        private readonly ITargetIn<TInput> _firstBlock;
-        private readonly ITargetOut<TOutput> _lastBlock;
+        private readonly ITargetBlock<TInput> _firstBlock;
+        private readonly ISourceBlock<TOutput> _lastBlock;
         private readonly CancellationToken _cancellationToken;
 
 
-        internal BasicPipeline(ITargetIn<TInput> firstBlock, ITargetOut<TOutput> lastBlock)
+        internal BasicPipeline(ITargetBlock<TInput> firstBlock, ISourceBlock<TOutput> lastBlock)
         {
             _firstBlock = firstBlock;
             _lastBlock = lastBlock;
         }
 
-        internal BasicPipeline(ITargetIn<TInput> firstBlock, ITargetOut<TOutput> lastBlock, CancellationToken cancellationToken)
+        internal BasicPipeline(ITargetBlock<TInput> firstBlock, ISourceBlock<TOutput> lastBlock, CancellationToken cancellationToken)
             : this(firstBlock, lastBlock)
         {
             _cancellationToken = cancellationToken;
@@ -53,10 +54,10 @@ namespace PipelineLauncher.Pipelines
         {
             foreach (var i in input)
             {
-                _firstBlock.TryAdd(i);
+                _firstBlock.Post(i);
             }
 
-            _firstBlock.CompleteAdding();
+            _firstBlock.Complete();
 
             var result = new List<TOutput>();
             var consuming = new ActionBlock<TOutput>(e =>
@@ -66,9 +67,25 @@ namespace PipelineLauncher.Pipelines
 
             _lastBlock.LinkTo(consuming);
 
-            await consuming.ExecutionTask;
+            _lastBlock.Completion.ContinueWith(t =>
+            {
+                if (t.IsFaulted)
+                {
+                    //((IDataflowBlock)_step2A).Fault(t.Exception);
+                    //((IDataflowBlock)_step2B).Fault(t.Exception);
+                }
+                else
+                {
+                   consuming.Complete();
+                }
+            });
 
-            return result;
+            //_lastBlock.Completion.Wait();
+           
+            //await consuming.ExecutionTask;
+            consuming.Completion.Wait();
+
+           return result;
         }
     }
 }

@@ -19,7 +19,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PipelineLauncher.Abstractions\PipelineLauncher.Abstractions.csproj" />
-    <ProjectReference Include="..\PipelineLauncher.Dataflow\PipelineLauncher.Dataflow.csproj" />
   </ItemGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
