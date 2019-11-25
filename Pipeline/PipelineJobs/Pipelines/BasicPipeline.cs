@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using PipelineLauncher.Abstractions.Collections;
+using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.Pipeline;
 //using PipelineLauncher.Dataflow;
 using PipelineLauncher.Dto;
@@ -15,18 +16,18 @@ namespace PipelineLauncher.Pipelines
 {
     internal class BasicPipeline<TInput, TOutput> : IPipeline<TInput, TOutput>
     {
-        private readonly ITargetBlock<TInput> _firstBlock;
-        private readonly ISourceBlock<TOutput> _lastBlock;
+        private readonly ITargetBlock<PipelineItem<TInput>> _firstBlock;
+        private readonly ISourceBlock<PipelineItem<TOutput>> _lastBlock;
         private readonly CancellationToken _cancellationToken;
 
 
-        internal BasicPipeline(ITargetBlock<TInput> firstBlock, ISourceBlock<TOutput> lastBlock)
+        internal BasicPipeline(ITargetBlock<PipelineItem<TInput>> firstBlock, ISourceBlock<PipelineItem<TOutput>> lastBlock)
         {
             _firstBlock = firstBlock;
             _lastBlock = lastBlock;
         }
 
-        internal BasicPipeline(ITargetBlock<TInput> firstBlock, ISourceBlock<TOutput> lastBlock, CancellationToken cancellationToken)
+        internal BasicPipeline(ITargetBlock<PipelineItem<TInput>> firstBlock, ISourceBlock<PipelineItem<TOutput>> lastBlock, CancellationToken cancellationToken)
             : this(firstBlock, lastBlock)
         {
             _cancellationToken = cancellationToken;
@@ -53,9 +54,9 @@ namespace PipelineLauncher.Pipelines
         private bool isLinked = false;
         private static List<TOutput> result = new List<TOutput>();
 
-        private ActionBlock<TOutput> consuming = new ActionBlock<TOutput>(e =>
+        private ActionBlock<PipelineItem<TOutput>> consuming = new ActionBlock<PipelineItem<TOutput>>(e =>
         {
-            result.Add(e);
+            result.Add(e.Item);
         });
 
 
@@ -66,7 +67,7 @@ namespace PipelineLauncher.Pipelines
 
             foreach (var i in input)
             {
-                _firstBlock.Post(i);
+                _firstBlock.Post(new PipelineItem<TInput>(i));
             }
 
             //_firstBlock.Complete();

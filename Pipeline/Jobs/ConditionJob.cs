@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using PipelineLauncher.Exceptions;
 
 namespace PipelineLauncher.Jobs
@@ -14,27 +15,22 @@ namespace PipelineLauncher.Jobs
             _jobs = jobs;
         }
 
-        public override IEnumerable<object> InternalExecute(IEnumerable<object> input, CancellationToken cancellationToken)
+        public override async Task<IEnumerable<TOutput>> ExecuteAsync(IEnumerable<TInput> input, CancellationToken cancellationToken)
         {
-            var workParams = input.Cast<TInput>().ToArray();
+            List<TOutput> result = new List<TOutput>();
+            var enumerable = input as TInput[] ?? input.ToArray();
 
             foreach (var job in _jobs)
             {
-                var acceptableParam = workParams.Where(e => job.Condition(e)).ToArray();
+                var acceptableParam = enumerable.Where(e => job.Condition(e)).ToArray();
 
                 if (acceptableParam.Any())
                 {
-                    var result = job.ExecuteAsync(acceptableParam, cancellationToken).Result;
-
-                    var internalResult = result as TOutput[] ?? result.ToArray();
-                    foreach (var res in internalResult)
-                    {
-                        Output.Add(res, cancellationToken);
-                    }
-
-                    yield return internalResult.Cast<object>();
+                    result.AddRange(await job.ExecuteAsync(acceptableParam, cancellationToken));
                 }
             }
+
+            return result;
         }
     }
 

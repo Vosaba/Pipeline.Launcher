@@ -1,6 +1,6 @@
 ﻿namespace PipelineLauncher.Abstractions.Pipeline
 {
-    public interface IPipelineFilterAsync : IPipelineJobAsync
+    public interface IPipelineFilterAsync<TInput, TOutput> : IPipelineJobAsync<TInput, TOutput>
     {
     }
 }

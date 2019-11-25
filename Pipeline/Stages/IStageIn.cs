@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks.Dataflow;
 using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.Pipeline;
@@ -10,6 +11,8 @@ namespace PipelineLauncher.Stages
     {
         IDataflowBlock ExecutionBlock { get; }
 
+        CancellationToken CancellationToken { get; }
+
         IStage Next { get; set; }
 
         IStage Previous { get; set; }
@@ -17,16 +20,16 @@ namespace PipelineLauncher.Stages
 
     public interface IStageIn<TIn> : IStage
     {
-        new ITargetBlock<TIn> ExecutionBlock { get; }
+        new ITargetBlock<PipelineItem<TIn>> ExecutionBlock { get; }
     }
 
     public interface IStageOut<TOut> : IStage
     {
-        new ISourceBlock<TOut> ExecutionBlock { get; }
+        new ISourceBlock<PipelineItem<TOut>> ExecutionBlock { get; }
     }
 
     public interface IStage<TIn, TOut> : IStageIn<TIn>, IStageOut<TOut>
     {
-        new IPropagatorBlock<TIn, TOut> ExecutionBlock { get; }
+        new IPropagatorBlock<PipelineItem<TIn>, PipelineItem<TOut>> ExecutionBlock { get; }
     }
 }

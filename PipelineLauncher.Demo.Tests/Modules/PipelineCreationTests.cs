@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 using PipelineLauncher.Demo.Tests.Fakes;
 using PipelineLauncher.Demo.Tests.Stages;
 using PipelineLauncher.Pipelines;
@@ -20,7 +21,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
             List<Item> input = MakeInput(6);
 
             //Configure stages
-            var stageSetup = new PipelineFrom<Item>()
+            var stageSetup = new PipelineFrom(CancellationToken.None)
                 .Stage(new Stage1())
                 .Stage(new Stage2())
                 .Stage(new Stage3())
@@ -48,7 +49,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
             List<Item> input = MakeInput(6);
 
             //Configure stages
-            var stageSetup = new PipelineFrom<Item>()
+            var stageSetup = new PipelineFrom(CancellationToken.None)
                 .Stage(new Stage1())
                 .Stage(new Stage2())
                 .Stage(new Stage3())
@@ -76,8 +77,8 @@ namespace PipelineLauncher.Demo.Tests.Modules
             List<Item> input = MakeInput(6);
 
             //Configure stages
-            var stageSetup = new PipelineFrom<Item>(new FakeServicesRegistry.JobService())
-                .Stage<Stage1>()
+            var stageSetup = new PipelineFrom(new FakeServicesRegistry.JobService(), CancellationToken.None)
+                .Stage<Stage1, Item>()
                 .Stage<Stage2>()
                 .Stage<Stage3>()
                 .Stage<Stage_Item_To_String, string>()

@@ -1,5 +1,8 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
+using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Exceptions;
 using PipelineLauncher.PipelineJobs;
 
@@ -15,27 +18,29 @@ namespace PipelineLauncher.Jobs
         }
 
 
-        public override object InternalExecute(object input, CancellationToken cancellationToken)
+        public override async Task<PipelineItem<TOutput>> InternalExecute(PipelineItem<TInput> input, CancellationToken cancellationToken)
         {
             try
             {
-                var param = (TInput) input;
+                var param =  input;
 
-                var firstAcceptableJob = _pipelineJobs.FirstOrDefault(e => e.Condition(param));
+                var firstAcceptableJob = _pipelineJobs.FirstOrDefault(e => e.Condition(param.Item));
                 if(firstAcceptableJob != null)
                 {
-                    var result = firstAcceptableJob.ExecuteAsync(param, cancellationToken).Result;
-                    Output.Add(result, cancellationToken);
-                    return result;
+                    var result = await firstAcceptableJob.ExecuteAsync(param.Item, cancellationToken);
+                    //Output.Add(result, cancellationToken);
+                    return new PipelineItem<TOutput>(result);
                 }
 
-                return null;
+                //return null;
             }
-            catch (NonParamException e)
+            catch (NonParamException<TOutput> e)
             {
-                NonOutputResult(e.Result, input, cancellationToken);
-                return null;
+                //NonOutputResult(e.Item, input, cancellationToken);
+                //return null;
             }
+
+            throw new Exception();
         }
     }
 

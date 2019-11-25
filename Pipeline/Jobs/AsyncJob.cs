@@ -38,19 +38,19 @@ namespace PipelineLauncher.Jobs
             throw new NotImplementedException($"Neither of {nameof(Execute)} methods, are not implemented");
         }
 
-        public TOutput Remove()
+        public TOutput Remove(TInput input)
         {
-            throw new NonParamException(new RemoveResult());
+            throw new NonParamException<TOutput>(new RemoveItem<TOutput>(input));
         }
 
-        public TOutput Skip()
+        public TOutput Skip(TInput input)
         {
-            throw new NonParamException(new SkipResult());
+            throw new NonParamException<TOutput>(new SkipItem<TOutput>(input));
         }
 
-        public TOutput SkipTo<TSkipToJob>() where TSkipToJob : PipelineJob<TOutput>
+        public TOutput SkipTo<TSkipToJob>(TInput input) where TSkipToJob : IPipelineJobIn<TInput>
         {
-            throw new NonParamException(new SkipToResult(typeof(TSkipToJob)));
+            throw new NonParamException<TOutput>(new SkipItemTill<TOutput>(typeof(TSkipToJob), input));
         }
     }
 

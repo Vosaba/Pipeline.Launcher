@@ -5,7 +5,7 @@ namespace PipelineLauncher.Stages
 
     public interface IStageSetup
     {
-        StageType Type { get; }
+        //StageType Type { get; }
 
         IStage Current { get; }
     }

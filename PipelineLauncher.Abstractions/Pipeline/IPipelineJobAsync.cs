@@ -1,9 +1,11 @@
 ﻿using System.Threading;
+using System.Threading.Tasks;
+using PipelineLauncher.Abstractions.Dto;
 
 namespace PipelineLauncher.Abstractions.Pipeline
 {
-    public interface IPipelineJobAsync : IPipelineJob
+    public interface IPipelineJobAsync<TInput, TOutput> : IPipelineJob<TInput, TOutput>
     {
-        object InternalExecute(object input, CancellationToken cancellationToken);
+        Task<PipelineItem<TOutput>> InternalExecute(PipelineItem<TInput> input, CancellationToken cancellationToken);
     }
 }

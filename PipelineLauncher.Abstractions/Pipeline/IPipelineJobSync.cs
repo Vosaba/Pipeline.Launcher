@@ -1,10 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
+using PipelineLauncher.Abstractions.Dto;
 
 namespace PipelineLauncher.Abstractions.Pipeline
 {
-    public interface IPipelineJobSync : IPipelineJob
+    public interface IPipelineJobSync<TInput, TOutput> : IPipelineJob<TInput, TOutput>
     {
-        IEnumerable<object> InternalExecute(IEnumerable<object> input, CancellationToken cancellationToken);
+        Task<IEnumerable<PipelineItem<TOutput>>> InternalExecute(IEnumerable<PipelineItem<TInput>> input, CancellationToken cancellationToken);
     }
 }

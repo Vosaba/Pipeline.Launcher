@@ -3,13 +3,23 @@ using PipelineLauncher.Abstractions.Collections;
 
 namespace PipelineLauncher.Abstractions.Pipeline
 {
+    public interface IPipelineJobIn<TInput>
+    {
+    }
+
+    public interface IPipelineJobOut<TOutput>
+    {
+
+    }
+
     public interface IPipelineJob
     {
-        IQueue<object> Output { get; }
-
         Type AcceptedType { get; }
+    }
 
-        void InitOutput();
+    public interface IPipelineJob<TInput, TOutput>: IPipelineJob, IPipelineJobIn<TInput>, IPipelineJobOut<TOutput>
+    {
+        //Type AcceptedType { get; }
 
         int MaxDegreeOfParallelism { get; }
     }

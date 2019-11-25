@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Blocks;
+using PipelineLauncher.PipelineJobs;
 
 namespace PipelineLauncher.Stages
 {
@@ -17,7 +18,8 @@ namespace PipelineLauncher.Stages
     public abstract class StageSetup<TFirstInput> : IStageSetup
     {
         public IStage Current { get; }
-        public StageType Type { get; }
+        //public StageType Type { get; }
+
 
         protected readonly IJobService _jobService;
 
@@ -184,18 +186,16 @@ namespace PipelineLauncher.Stages
 
         #region Nongeneric Branch
 
-        public StageSetupOut<TFirstInput, TNexTOutput> Branch<TNexTOutput>(
-            params (Func<TOutput, bool> condition,
+        public StageSetupOut<TFirstInput, TNexTOutput> Branch<TNexTOutput>(params (Predicate<TOutput> predicate,
                 Func<StageSetupOut<TFirstInput, TOutput>, StageSetupOut<TFirstInput, TNexTOutput>> branch)[] branches)
         {
-            var mergeBlock = new BatchBlockEx<TNexTOutput>(branches.Length, 100);
+            var mergeBlock = new BatchBlockEx<PipelineItem<TNexTOutput>>(branches.Length, 100);
 
             foreach (var branch in branches)
             {
-                var filterBlock = new TransformBlock<TOutput, TOutput>(e => e);
+                var filterBlock = new TransformBlock<PipelineItem<TOutput>, PipelineItem<TOutput>>(e => e);
 
-
-                var nextStage = new StageOut<TOutput>(filterBlock)
+                var nextStage = new StageOut<TOutput>(filterBlock, Current.CancellationToken)
                 {
                     Previous = Current
                 };
@@ -213,10 +213,9 @@ namespace PipelineLauncher.Stages
 
                 var newBranch = branch.branch(nextBlock);
 
-                Current.ExecutionBlock.LinkTo(filterBlock, output => branch.condition(output));
+                Current.ExecutionBlock.LinkTo(filterBlock, e=>branch.predicate(e.Item));//TODO AAAAA ctach
 
-                
-                    newBranch.Current.ExecutionBlock.LinkTo(mergeBlock); //TODO AAAAA
+                newBranch.Current.ExecutionBlock.LinkTo(mergeBlock); 
             }
 
             //var nextStageSetup =
@@ -227,11 +226,11 @@ namespace PipelineLauncher.Stages
             //Current.ExecutionBlock.LinkTo(filterBlock);
             //Current.Next = nextStageSetup.Current;    
 
-            var filterBlock2 = new TransformManyBlock<IEnumerable<TNexTOutput>, TNexTOutput>(e=>e);
+            var filterBlock2 = new TransformManyBlock<IEnumerable<PipelineItem<TNexTOutput>>, PipelineItem<TNexTOutput>>(e=>e);
 
         mergeBlock.LinkTo(filterBlock2);
 
-            return new StageSetupOut<TFirstInput, TNexTOutput>(new StageOut<TNexTOutput>(filterBlock2)
+            return new StageSetupOut<TFirstInput, TNexTOutput>(new StageOut<TNexTOutput>(filterBlock2, Current.CancellationToken)
             {
                 Previous = Current //HACK
             },
@@ -242,9 +241,9 @@ namespace PipelineLauncher.Stages
 
         #endregion
 
-        private StageSetupOut<TFirstInput, TNexTOutput> CreateNextStageAsync<TNexTOutput>(AsyncJob<TOutput, TNexTOutput> asyncJob)
+        private StageSetupOut<TFirstInput, TNexTOutput> CreateNextStageAsync<TNexTOutput>(PipelineJobAsync<TOutput, TNexTOutput> asyncJob)
         {
-            var nextBlock = new TransformBlock<TOutput, TNexTOutput>(async e => await asyncJob.ExecuteAsync(e) , new ExecutionDataflowBlockOptions() { MaxDegreeOfParallelism = asyncJob.MaxDegreeOfParallelism });
+            var nextBlock = new TransformBlock<PipelineItem<TOutput>, PipelineItem<TNexTOutput>>(async e => await asyncJob.InternalExecute(e, Current.CancellationToken) , new ExecutionDataflowBlockOptions() { MaxDegreeOfParallelism = asyncJob.MaxDegreeOfParallelism });
 
             return CreateNextBlock(nextBlock);
         }
@@ -263,14 +262,14 @@ namespace PipelineLauncher.Stages
         //    return 
 
         //}
-        private StageSetupOut<TFirstInput, TNexTOutput> CreateNextStage<TNexTOutput>(Job<TOutput, TNexTOutput> job)
+        private StageSetupOut<TFirstInput, TNexTOutput> CreateNextStage<TNexTOutput>(PipelineJobSync<TOutput, TNexTOutput> job)
         {
             //if(Current.Previous.Type == StageType.ManyToOne)
 
-            var nextBuffer = new BatchBlockEx<TOutput>(7, 5000);
+            var nextBuffer = new BatchBlockEx<PipelineItem<TOutput>>(7, 5000);
             //var newcurrent = CreateNextBlock(nextBuffer);
-            var g = new TransformManyBlock<IEnumerable<TOutput>, TNexTOutput>(async e =>
-                await job.ExecuteAsync(e), new ExecutionDataflowBlockOptions() { MaxDegreeOfParallelism = job.MaxDegreeOfParallelism });
+            var g = new TransformManyBlock<IEnumerable<PipelineItem<TOutput>>, PipelineItem<TNexTOutput>>(async e =>
+                await job.InternalExecute(e, Current.CancellationToken), new ExecutionDataflowBlockOptions() { MaxDegreeOfParallelism = job.MaxDegreeOfParallelism });
 
             nextBuffer.LinkTo(g, new DataflowLinkOptions() { PropagateCompletion = true });
 
@@ -327,7 +326,7 @@ namespace PipelineLauncher.Stages
 
         }
 
-        internal StageSetupOut<TFirstInput, TNexTOutput> CreateNextBlock<TNexTOutput>(IPropagatorBlock<TOutput, TNexTOutput> nextBlock)
+        internal StageSetupOut<TFirstInput, TNexTOutput> CreateNextBlock<TNexTOutput>(IPropagatorBlock<PipelineItem<TOutput>, PipelineItem<TNexTOutput>> nextBlock)
         {
             Current.ExecutionBlock.LinkTo(nextBlock, new DataflowLinkOptions() { PropagateCompletion = true });
 
@@ -366,7 +365,7 @@ namespace PipelineLauncher.Stages
                 }
             });
 
-            var nextStage = new StageOut<TNexTOutput>(nextBlock)
+            var nextStage = new StageOut<TNexTOutput>(nextBlock, Current.CancellationToken)
             {
                 Previous = Current
             };

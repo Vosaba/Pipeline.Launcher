@@ -1,4 +1,5 @@
 ﻿using System;
+using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.Pipeline;
 using PipelineLauncher.PipelineJobs;
 
@@ -6,36 +7,37 @@ namespace PipelineLauncher.Attributes
 {
     public abstract class FilterService
     {
-        internal abstract PipelineFilterResult Filter(object param);
+        internal abstract PipelineItem<T> Filter<T>(object param);
     }
 
     public abstract class FilterService<TInput> : FilterService
     {
-        public abstract PipelineFilterResult Filter(TInput param);
+        public abstract PipelineItem<TInput> Filter(TInput param);
 
-        internal override PipelineFilterResult Filter(object param)
+        internal override PipelineItem<TInputf> Filter<TInputf>(object param)
         {
-            return Filter((TInput) param);
+           // return Filter((TInput) param);
+           throw new Exception();
         }
 
-        public PipelineFilterResult Keep()
+        //public PipelineItem<TInput> Keep(TInput item)
+        //{
+        //    return new KeepItem<TInput>(item);
+        //}
+
+        //public PipelineItem<TInput> Remove(TInput item)
+        //{
+        //    return new RemoveItem<TInput>(item);
+        //}
+
+        public PipelineItem<TInput> Skip(TInput item)
         {
-            return new KeepResult();
+            return new SkipItem<TInput>(item);
         }
 
-        public PipelineFilterResult Remove()
+        public PipelineItem<TInput> SkipTo<TSkipToJob>(TInput item) where TSkipToJob : IPipelineJobIn<TInput>
         {
-            return new RemoveResult();
-        }
-
-        public PipelineFilterResult Skip()
-        {
-            return new SkipResult();
-        }
-
-        public PipelineFilterResult SkipTo<TSkipToJob>() where TSkipToJob : PipelineJob<TInput>
-        {
-            return new SkipToResult(typeof(TSkipToJob));
+            return new SkipItemTill<TInput>(typeof(TSkipToJob), item);
         }
     }
 
@@ -53,9 +55,9 @@ namespace PipelineLauncher.Attributes
             _filter = (FilterService)Activator.CreateInstance(filter);
         }
 
-        public PipelineFilterResult Execute(object param)
-        {
-            return _filter.Filter(param);
-        }
+        //public PipelineItem<> Execute(object param)
+        //{
+        //    return _filter.Filter(param);
+        //}
     }
 }

@@ -1,40 +1,55 @@
 ﻿using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks.Dataflow;
+using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.Pipeline;
 //using PipelineLauncher.Dataflow;
 
 namespace PipelineLauncher.Stages
 {
-    internal class Stage <TIn, TOut>: StageOut<TOut>, IStage<TIn, TOut>
+    internal class Stage: IStage
     {
-        public new IPropagatorBlock<TIn, TOut> ExecutionBlock { get; }
+        public IDataflowBlock ExecutionBlock { get; set; }
 
-        public Stage(IPropagatorBlock<TIn, TOut> executionBlock) : base(executionBlock)
+        public CancellationToken CancellationToken { get; set; }
+
+        public IStage Next { get; set; }
+        
+        public IStage Previous { get; set; }
+
+        public Stage(IDataflowBlock executionBlock, CancellationToken cancellationToken)
         {
+            CancellationToken = cancellationToken;
             ExecutionBlock = executionBlock;
         }
+    }
 
-        ITargetBlock<TIn> IStageIn<TIn>.ExecutionBlock => ExecutionBlock;
+    internal class Stage <TIn, TOut>: StageOut<TOut>, IStage<TIn, TOut>
+    {
+        //public new IPropagatorBlock<TIn, TOut> ExecutionBlock { get; }
 
-        IPropagatorBlock<TIn, TOut> IStage<TIn, TOut>.ExecutionBlock => ExecutionBlock;
+        public Stage(IPropagatorBlock<PipelineItem<TIn>, PipelineItem<TOut>> executionBlock, CancellationToken cancellationToken) : base(executionBlock, cancellationToken)
+        {
+            //ExecutionBlock = executionBlock;
+        }
+
+        ITargetBlock<PipelineItem<TIn>> IStageIn<TIn>.ExecutionBlock => (ITargetBlock< PipelineItem<TIn>>) ExecutionBlock;
+
+        IPropagatorBlock<PipelineItem<TIn>, PipelineItem<TOut>> IStage<TIn, TOut>.ExecutionBlock => (IPropagatorBlock< PipelineItem<TIn>, PipelineItem<TOut>>) ExecutionBlock;
     }
 
 
-    internal class StageIn<TIn> : IStageIn<TIn>
+    internal class StageIn<TIn> : Stage, IStageIn<TIn>
     {
-        public StageIn(ITargetBlock<TIn> executionBlock)
+        public StageIn(ITargetBlock<PipelineItem<TIn>> executionBlock, CancellationToken cancellationToken): base(executionBlock, cancellationToken)
         {
-            ExecutionBlock = executionBlock;
+            //ExecutionBlock = executionBlock;
         }
 
-        public ITargetBlock<TIn> ExecutionBlock { get; }
-
-        public IStage Previous { get; set; }
-
-        public IStage Next { get; set; }
+        //public ITargetBlock<TIn> ExecutionBlock { get; }
 
         IDataflowBlock IStage.ExecutionBlock => ExecutionBlock;
-        ITargetBlock<TIn> IStageIn<TIn>.ExecutionBlock => ExecutionBlock;
+        ITargetBlock<PipelineItem<TIn>> IStageIn<TIn>.ExecutionBlock => (ITargetBlock< PipelineItem<TIn>>) ExecutionBlock;
 
         //IStage IStage.Previous
         //{
@@ -44,18 +59,16 @@ namespace PipelineLauncher.Stages
 
     }
 
-    internal class StageOut<TOut> : IStageOut<TOut>
+    internal class StageOut<TOut> : Stage, IStageOut<TOut>
     {
-        public StageOut(ISourceBlock<TOut> executionBlock)
+        public StageOut(ISourceBlock<PipelineItem<TOut>> executionBlock, CancellationToken cancellationToken) : base(executionBlock, cancellationToken)
         {
-            ExecutionBlock = executionBlock;
+           // ExecutionBlock = executionBlock;
         }
 
-        public ISourceBlock<TOut> ExecutionBlock { get; }
-        public IStage Next { get; set; }
-        public IStage Previous { get; set; }
+        //public ISourceBlock<TOut> ExecutionBlock { get; }
 
         IDataflowBlock IStage.ExecutionBlock => ExecutionBlock;
-        ISourceBlock<TOut> IStageOut<TOut>.ExecutionBlock => ExecutionBlock;
+        ISourceBlock<PipelineItem<TOut>> IStageOut<TOut>.ExecutionBlock => (ISourceBlock< PipelineItem<TOut>>) ExecutionBlock;
     }
 }

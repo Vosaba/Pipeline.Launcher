@@ -34,12 +34,16 @@ namespace PipelineLauncher.Demo.Tests.Stages
     {
         public override Item Execute(Item item)
         {
+            return Remove(item);
+
             item.Value = item.Value + "AsyncStage2->";
             Thread.Sleep(1000);
 
             item.ProcessedBy.Add(Thread.CurrentThread.ManagedThreadId);
 
-            return item;
+            //return Remove(item);
+
+            //return "";
         }
 
         public override int MaxDegreeOfParallelism => 2;

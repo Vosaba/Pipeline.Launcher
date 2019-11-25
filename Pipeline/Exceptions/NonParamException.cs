@@ -1,16 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Attributes;
 
 namespace PipelineLauncher.Exceptions
 {
-    internal class NonParamException : Exception
+    internal class NonParamException<TItem> : Exception
     {
-        public PipelineFilterResult Result { get; }
-        public NonParamException(PipelineFilterResult result)
+        public PipelineItem<TItem> Item { get; }
+        public NonParamException(PipelineItem<TItem> item)
         {
-            Result = result;
+            Item = item;
         }
     }
 }

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using PipelineLauncher.Demo.Tests.Fakes;
 using PipelineLauncher.Demo.Tests.Stages;
 using PipelineLauncher.Pipelines;
@@ -12,7 +13,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
     public class PipelineCreationMultipleTests : PipelineTestsBase
     {
         public PipelineCreationMultipleTests(ITestOutputHelper output)
-            : base(output){}
+            : base(output) { }
 
         [Fact]
         public void Pipeline_Creation_Multiple_AsyncJobs()
@@ -21,15 +22,22 @@ namespace PipelineLauncher.Demo.Tests.Modules
             List<Item> input = MakeInput(3);
 
             //Configure stages
-            var stageSetup = new PipelineFrom<Item>()
+            var stageSetup = new PipelineFrom(CancellationToken.None)
                 .AsyncStage(new AsyncStage1())
-                .Branch((item => item.Value == "Item#1->AsyncStage1->", d => d.AsyncStage(new AsyncStage2()).Stage(new Stage2())),
-                   (item => true, d => d.AsyncStage(new AsyncStage2Alternative())))
+                .Branch(
+                    (item => item.Value == "Item#1->AsyncStage1->", 
+                        branch => branch.AsyncStage(new AsyncStage2())
+                                        //.AsyncStage(e => e.Value)
+                                        
+                                        .AsyncStage(new AsyncStage1())
+                                        .AsyncStage(new AsyncStage2Alternative())),
+                    (item => true, 
+                        branch => branch.AsyncStage(new AsyncStage2Alternative())))
                 //.Stage(new Stage2())
                 .AsyncStage(new AsyncStage3())
                 //.AsyncStage((item) => item.Value)
-                .AsyncStage(new AsyncStage4());
-            // .Stage(new Stage4());
+                .AsyncStage(new AsyncStage4())
+                .Stage(new Stage4());
 
             Stopwatch stopWatch = new Stopwatch();
 
@@ -45,7 +53,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
             }
             stopWatch.Stop();
 
-           
+
 
             //Total time 24032
             PrintOutputAndTime(stopWatch.ElapsedMilliseconds, input);
@@ -77,7 +85,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
             List<Item> input = MakeInput(6);
 
             //Configure stages
-            var stageSetup = new PipelineFrom<Item>()
+            var stageSetup = new PipelineFrom(CancellationToken.None)
                 .Stage(new Stage1())
                 .Stage(new Stage2())//, new Stage2Alternative())
                 .Stage(new Stage4())
