@@ -5,6 +5,6 @@ namespace PipelineLauncher.Abstractions.Pipeline
 {
     public interface IPipelineJobSync : IPipelineJob
     {
-        IEnumerable<object> InternalExecute(object[] input, CancellationToken cancellationToken);
+        IEnumerable<object> InternalExecute(IEnumerable<object> input, CancellationToken cancellationToken);
     }
 }

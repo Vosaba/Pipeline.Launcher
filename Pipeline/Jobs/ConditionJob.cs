@@ -14,7 +14,7 @@ namespace PipelineLauncher.Jobs
             _jobs = jobs;
         }
 
-        public override IEnumerable<object> InternalExecute(object[] input, CancellationToken cancellationToken)
+        public override IEnumerable<object> InternalExecute(IEnumerable<object> input, CancellationToken cancellationToken)
         {
             var workParams = input.Cast<TInput>().ToArray();
 

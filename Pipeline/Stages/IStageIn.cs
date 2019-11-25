@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks.Dataflow;
+using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.Pipeline;
 //using PipelineLauncher.Dataflow;
 
@@ -7,27 +8,25 @@ namespace PipelineLauncher.Stages
 {
     public interface IStage
     {
-        IStage Next { get; }
+        IDataflowBlock ExecutionBlock { get; }
 
-        IStage Previous { get; }
+        IStage Next { get; set; }
+
+        IStage Previous { get; set; }
     }
 
     public interface IStageIn<TIn> : IStage
     {
-        ITargetBlock<TIn> ExecutionBlock { get; }
+        new ITargetBlock<TIn> ExecutionBlock { get; }
     }
 
     public interface IStageOut<TOut> : IStage
     {
-        ISourceBlock<TOut> ExecutionBlock { get; }
+        new ISourceBlock<TOut> ExecutionBlock { get; }
     }
 
     public interface IStage<TIn, TOut> : IStageIn<TIn>, IStageOut<TOut>
     {
         new IPropagatorBlock<TIn, TOut> ExecutionBlock { get; }
-
-        new IStageIn<TOut> Next { get; set; }
-
-        new IStageOut<TIn> Previous { get; set; }
     }
 }

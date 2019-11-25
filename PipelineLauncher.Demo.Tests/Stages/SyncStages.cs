@@ -9,7 +9,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
 {
     public class Stage1 : Job<Item>
     {
-        public override IEnumerable<Item> Execute(Item[] items)
+        public override IEnumerable<Item> Execute(IEnumerable<Item> items)
         {
             foreach (var item in items)
             {
@@ -30,7 +30,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
 
     public class Stage2 : Job<Item>
     {
-        public override IEnumerable<Item> Execute(Item[] items)
+        public override IEnumerable<Item> Execute(IEnumerable<Item> items)
         {
             foreach (var item in items)
             {
@@ -56,7 +56,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
 
     public class Stage2Alternative : Job<Item>
     {
-        public override IEnumerable<Item> Execute(Item[] items)
+        public override IEnumerable<Item> Execute(IEnumerable<Item> items)
         {
             foreach (var item in items)
             {
@@ -82,7 +82,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
 
     public class Stage3 : Job<Item>
     {
-        public override IEnumerable<Item> Execute(Item[] items)
+        public override IEnumerable<Item> Execute(IEnumerable<Item> items)
         {
             foreach (var item in items)
             {
@@ -102,7 +102,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
 
     public class Stage4 : Job<Item>
     {
-        public override IEnumerable<Item> Execute(Item[] items)
+        public override IEnumerable<Item> Execute(IEnumerable<Item> items)
         {
             foreach (var item in items)
             {
@@ -125,9 +125,8 @@ namespace PipelineLauncher.Demo.Tests.Stages
 
     public class IntStage : Job<int>
     {
-        public override IEnumerable<int> Execute(int[] items)
+        public override IEnumerable<int> Execute(IEnumerable<int> items)
         {
-
             return items;
         }
 
@@ -139,7 +138,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
 
     public class Stage_Item_To_String : Job<Item, string>
     {
-        public override IEnumerable<string> Execute(Item[] items)
+        public override IEnumerable<string> Execute(IEnumerable<Item> items)
         {
             foreach (var item in items)
             {
@@ -160,7 +159,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
 
     public class Stage_String_To_Object : Job<string, object>
     {
-        public override IEnumerable<object> Execute(string[] items)
+        public override IEnumerable<object> Execute(IEnumerable<string> items)
         {
             return items.Select(e => new object());
         }

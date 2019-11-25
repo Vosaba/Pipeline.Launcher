@@ -11,5 +11,6 @@ namespace PipelineLauncher.Abstractions.Pipeline
 
         void InitOutput();
 
+        int MaxDegreeOfParallelism { get; }
     }
 }

@@ -10,14 +10,18 @@ namespace PipelineLauncher.Demo.Tests.Stages
 {
     public class AsyncStage1 : AsyncJob<Item>
     {
-        public override Task<Item> ExecuteAsync(Item item)
+        public override Item Execute(Item item)
         {
+            if (item.Value == "Item#1->ed")
+            {
+                throw new Exception("fdfdf");
+            }
             item.Value = item.Value + "AsyncStage1->";
             Thread.Sleep(1000);
 
             item.ProcessedBy.Add(Thread.CurrentThread.ManagedThreadId);
 
-            return Task.FromResult(item);
+            return (item);
         }
 
         public override String ToString()
@@ -114,7 +118,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
 
     public class AsyncStage_Item_To_String : Job<Item, string>
     {
-        public override IEnumerable<string> Execute(Item[] items)
+        public override IEnumerable<string> Execute(IEnumerable<Item> items)
         {
             foreach (var item in items)
             {
@@ -135,7 +139,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
 
     public class AsyncStage_String_To_Object : Job<string, object>
     {
-        public override IEnumerable<object> Execute(string[] items)
+        public override IEnumerable<object> Execute(IEnumerable<string> items)
         {
             return items.Select(e => new object());
         }

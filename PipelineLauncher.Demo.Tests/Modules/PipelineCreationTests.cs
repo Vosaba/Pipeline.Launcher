@@ -25,11 +25,12 @@ namespace PipelineLauncher.Demo.Tests.Modules
                 .Stage(new Stage2())
                 .Stage(new Stage3())
                 .Stage(new Stage4());
+                
 
             Stopwatch stopWatch = new Stopwatch();
 
             //Make pipeline from stageSetup
-            var pipeline = stageSetup.From<Item>();
+            var pipeline = stageSetup.From();
 
             //run
             stopWatch.Start();
@@ -56,7 +57,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
             Stopwatch stopWatch = new Stopwatch();
 
             //Make pipeline from stageSetup
-            var pipeline = stageSetup.From<Item>();
+            var pipeline = stageSetup.From();
 
             //run
             stopWatch.Start();
@@ -85,7 +86,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
             Stopwatch stopWatch = new Stopwatch();
 
             //Make pipeline from stageSetup
-            var pipeline = stageSetup.From<Item>();
+            var pipeline = stageSetup.From();
 
             //run
             stopWatch.Start();

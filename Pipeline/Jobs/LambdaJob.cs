@@ -12,7 +12,7 @@ namespace PipelineLauncher.Jobs
             _func = func;
         }
 
-        public override IEnumerable<TOutput> Execute(TInput[] param)
+        public override IEnumerable<TOutput> Execute(IEnumerable<TInput> param)
         {
             return _func(param);
         }

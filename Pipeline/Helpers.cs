@@ -10,7 +10,7 @@ namespace PipelineLauncher
 {
     internal static class Helpers
     {
-        public static IStage GetFirstStage<TInput, TOutput>(this IStageSetup<TInput, TOutput> stageSetup)
+        public static IStage GetFirstStage(this IStageSetup stageSetup)
         {
             IStage stage = stageSetup.Current;
 

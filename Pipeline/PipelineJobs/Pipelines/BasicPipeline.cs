@@ -50,40 +50,52 @@ namespace PipelineLauncher.Pipelines
             return (await RunAsync(new[] { input })).FirstOrDefault();
         }
 
+        private bool isLinked = false;
+        private static List<TOutput> result = new List<TOutput>();
+
+        private ActionBlock<TOutput> consuming = new ActionBlock<TOutput>(e =>
+        {
+            result.Add(e);
+        });
+
+
         public async Task<IEnumerable<TOutput>> RunAsync(IEnumerable<TInput> input)
         {
+            //if(_firstBlock.Completion.IsCompleted)
+            //    _firstBlock.Completion.Start();
+
             foreach (var i in input)
             {
                 _firstBlock.Post(i);
             }
 
-            _firstBlock.Complete();
+            //_firstBlock.Complete();
 
-            var result = new List<TOutput>();
-            var consuming = new ActionBlock<TOutput>(e =>
+            if (!isLinked)
             {
-                result.Add(e);
-            });
+                _lastBlock.LinkTo(consuming, new DataflowLinkOptions() { PropagateCompletion = false });
 
-            _lastBlock.LinkTo(consuming);
+                _lastBlock.Completion.ContinueWith(t =>
+                {
+                    if (t.IsFaulted)
+                    {
+                        //((IDataflowBlock)_step2A).Fault(t.Exception);
+                        //((IDataflowBlock)_step2B).Fault(t.Exception);
+                    }
+                    else
+                    {
+                        //consuming.Complete();
+                    }
+                });
 
-            _lastBlock.Completion.ContinueWith(t =>
-            {
-                if (t.IsFaulted)
-                {
-                    //((IDataflowBlock)_step2A).Fault(t.Exception);
-                    //((IDataflowBlock)_step2B).Fault(t.Exception);
-                }
-                else
-                {
-                   consuming.Complete();
-                }
-            });
+                isLinked = true;
+            }
+
+
 
             //_lastBlock.Completion.Wait();
-           
             //await consuming.ExecutionTask;
-            consuming.Completion.Wait();
+            //consuming.Completion.Wait();
 
            return result;
         }

@@ -24,7 +24,5 @@ namespace PipelineLauncher.PipelineJobs
                 return null;
             }
         }
-
-        public virtual int MaxDegreeOfParallelism => Environment.ProcessorCount;
     }
 }
