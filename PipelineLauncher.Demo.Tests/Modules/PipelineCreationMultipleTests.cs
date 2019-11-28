@@ -23,7 +23,8 @@ namespace PipelineLauncher.Demo.Tests.Modules
             List<Item> input = MakeInput(3);
 
             //Configure stages
-            StageSetupOut<Item, Item> stageSetup = new Pipeline(new FakeServicesRegistry.JobService(), CancellationToken.None)
+            StageSetupOut<Item, Item> stageSetup = new Pipeline(new FakeServicesRegistry.JobService())
+                .WithCancellationToken(CancellationToken.None)
                 .AsyncStage<AsyncStage1, Item, Item>()
                 .Branch(
                     (item => item.Value == "Item#1->AsyncStage1->",
@@ -70,6 +71,19 @@ namespace PipelineLauncher.Demo.Tests.Modules
             //Total time 24032
             PrintOutputAndTime(stopWatch.ElapsedMilliseconds, result);
 
+
+            stopWatch.Start();
+            result = pipeline.RunSync(input);
+            //while (result.Count() < 3)
+            //{
+
+            //}
+            stopWatch.Stop();
+
+
+
+            //Total time 24032
+            PrintOutputAndTime(stopWatch.ElapsedMilliseconds, result);
             //PrintOutputAndTime(stopWatch.ElapsedMilliseconds, result);
 
 
@@ -97,7 +111,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
             List<Item> input = MakeInput(6);
 
             //Configure stages
-            var stageSetup = new Pipeline(CancellationToken.None)
+            var stageSetup = new Pipeline(new FakeServicesRegistry.JobService())
                 .Stage(new Stage1())
                 .Stage(new Stage2())//, new Stage2Alternative())
                 .Stage(new Stage4())

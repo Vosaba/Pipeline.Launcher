@@ -1,23 +1,21 @@
-﻿using PipelineLauncher.Abstractions.Services;
-//using PipelineLauncher.Dataflow;
+﻿using PipelineLauncher.Abstractions.Dto;
+using PipelineLauncher.Abstractions.Pipeline;
+using PipelineLauncher.Abstractions.Services;
+using PipelineLauncher.Blocks;
 using PipelineLauncher.Jobs;
+using PipelineLauncher.PipelineJobs;
 using PipelineLauncher.Stages;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks.Dataflow;
-using PipelineLauncher.Abstractions.Dto;
-using PipelineLauncher.Abstractions.Pipeline;
-using PipelineLauncher.Blocks;
-using PipelineLauncher.PipelineJobs;
 
 namespace PipelineLauncher.Pipelines
 {
     public class Pipeline
     {
         private readonly IJobService _jobService;
-        private readonly CancellationToken _cancellationToken; 
+        private CancellationToken _cancellationToken = default;
 
         private IJobService GetJobService
         {
@@ -32,14 +30,14 @@ namespace PipelineLauncher.Pipelines
             }
         }
 
-        public Pipeline(CancellationToken cancellationToken)
-        {
-            _cancellationToken = cancellationToken;
+        public Pipeline(IJobService jobService) { 
+            _jobService = jobService;
         }
 
-        public Pipeline(IJobService jobService, CancellationToken cancellationToken): this(cancellationToken)
+        public Pipeline WithCancellationToken(CancellationToken cancellationToken)
         {
-            _jobService = jobService;
+            _cancellationToken = cancellationToken;
+            return this;
         }
 
         #region Generic Stages
@@ -123,7 +121,7 @@ namespace PipelineLauncher.Pipelines
         private StageSetupOut<TInput, TOutput> CreateNextStage<TInput, TOutput>(IPipelineJobSync<TInput, TOutput> job)
         {
             var buffer = new BatchBlockEx<PipelineItem<TInput>>(int.MaxValue, 200); //TODO
-           
+
             TransformManyBlock<IEnumerable<PipelineItem<TInput>>, PipelineItem<TOutput>> rePostBlock = null;
             void RePostMessages(IEnumerable<PipelineItem<TInput>> messages)
             {
@@ -131,7 +129,7 @@ namespace PipelineLauncher.Pipelines
             }
 
             var nextBlock = new TransformManyBlock<IEnumerable<PipelineItem<TInput>>, PipelineItem<TOutput>>(
-                async e =>  await job.InternalExecute(e, () => RePostMessages(e), _cancellationToken), 
+                async e => await job.InternalExecute(e, () => RePostMessages(e), _cancellationToken),
                 new ExecutionDataflowBlockOptions
                 {
                     MaxDegreeOfParallelism = job.MaxDegreeOfParallelism
@@ -168,7 +166,7 @@ namespace PipelineLauncher.Pipelines
             return CreateNextBlock(nextBlock);
         }
 
-        private StageSetupOut<TInput, TOutput> CreateNextBlock<TInput, TOutput>(IPropagatorBlock<PipelineItem<TInput>, PipelineItem<TOutput>> executionBlock)
+        private StageSetupOut<TInput, TOutput> CreateNextBlock<TInput, TOutput>(Func<IPropagatorBlock<PipelineItem<TInput>, PipelineItem<TOutput>>> executionBlock)
         {
             return AppendStage(
                 new Stage<TInput, TOutput>(executionBlock, _cancellationToken)
@@ -177,7 +175,7 @@ namespace PipelineLauncher.Pipelines
                 });
         }
 
-        public StageSetupOut<TInput, TOutput> AppendStage<TInput, TOutput>(IStage<TInput, TOutput> stage)
+        private StageSetupOut<TInput, TOutput> AppendStage<TInput, TOutput>(IStage<TInput, TOutput> stage)
         {
             return new StageSetup<TInput, TInput, TOutput>(stage, _jobService);
         }

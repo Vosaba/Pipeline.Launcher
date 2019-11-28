@@ -1,4 +1,5 @@
-﻿using PipelineLauncher.Abstractions.Dto;
+﻿using System;
+using PipelineLauncher.Abstractions.Dto;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks.Dataflow;
@@ -7,6 +8,10 @@ namespace PipelineLauncher.Stages
 {
     public interface IStage
     {
+        Action TerraForm { get; }
+
+        bool IsTerraFormed { get; set; }
+
         IDataflowBlock ExecutionBlock { get; }
 
         CancellationToken CancellationToken { get; }

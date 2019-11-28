@@ -66,7 +66,7 @@ namespace PipelineLauncher.Pipelines
 
     internal class AwaitablePipeline<TInput, TOutput> : BasicPipeline<TInput, TOutput>,  IAwaitablePipeline<TInput, TOutput>
     {
-        private readonly BlockingCollection<TOutput> _processedItems = new BlockingCollection<TOutput>();
+        private readonly ConcurrentBag<TOutput> _processedItems = new ConcurrentBag<TOutput>();
 
         internal AwaitablePipeline(
             ITargetBlock<PipelineItem<TInput>> firstBlock,
@@ -84,7 +84,7 @@ namespace PipelineLauncher.Pipelines
 
             _sortingBlock.Completion.ContinueWith(x =>
             {
-                _processedItems.CompleteAdding();
+                //_processedItems.CompleteAdding();
             });
         }
 
@@ -106,11 +106,13 @@ namespace PipelineLauncher.Pipelines
         public IEnumerable<TOutput> RunSync(IEnumerable<TInput> input)
         {
             base.Post(input);
+            _processedItems.Clear();
+
             _firstBlock.Complete();
             _lastBlock.Completion.Wait();
             //_processedItems.CompleteAdding();
 
-            return _processedItems.GetConsumingEnumerable(_cancellationToken);
+            return _processedItems;
         }
     }
 }

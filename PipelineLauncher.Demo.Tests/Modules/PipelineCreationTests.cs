@@ -21,7 +21,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
             List<Item> input = MakeInput(6);
 
             //Configure stages
-            var stageSetup = new Pipeline(CancellationToken.None)
+            var stageSetup = new Pipeline(new FakeServicesRegistry.JobService())
                 .Stage(new Stage1())
                 .Stage(new Stage2())
                 .Stage(new Stage3())
@@ -49,7 +49,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
             List<Item> input = MakeInput(6);
 
             //Configure stages
-            var stageSetup = new Pipeline(CancellationToken.None)
+            var stageSetup = new Pipeline(new FakeServicesRegistry.JobService())
                 .Stage(new Stage1())
                 .Stage(new Stage2())
                 .Stage(new Stage3())
@@ -77,7 +77,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
             List<Item> input = MakeInput(6);
 
             //Configure stages
-            var stageSetup = new Pipeline(new FakeServicesRegistry.JobService(), CancellationToken.None)
+            var stageSetup = new Pipeline(new FakeServicesRegistry.JobService())
                 .Stage<Stage1, Item>()
                 .Stage<Stage2>()
                 .Stage<Stage3>()
