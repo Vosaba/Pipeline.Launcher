@@ -18,7 +18,7 @@ namespace PipelineLauncher.Jobs
         }
 
 
-        public override async Task<PipelineItem<TOutput>> InternalExecute(PipelineItem<TInput> input, CancellationToken cancellationToken)
+        public override async Task<PipelineItem<TOutput>> InternalExecute(PipelineItem<TInput> input, Action reExecute, CancellationToken cancellationToken)
         {
             try
             {

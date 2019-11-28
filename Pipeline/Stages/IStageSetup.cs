@@ -3,19 +3,17 @@
 namespace PipelineLauncher.Stages
 {
 
-    public interface IStageSetup
+    internal interface IStageSetup
     {
-        //StageType Type { get; }
-
         IStage Current { get; }
     }
 
-    public interface IStageSetupIn<TInput> : IStageSetup
+    internal interface IStageSetupIn<TInput> : IStageSetup
     {
         new IStageIn<TInput> Current { get; }
     }
 
-    public interface IStageSetupOut<TOutput> : IStageSetup
+    internal interface IStageSetupOut<TOutput> : IStageSetup
     {
         new IStageOut<TOutput> Current { get; }
     }

@@ -17,7 +17,7 @@ namespace PipelineLauncher.PipelineJobs
             _pipelineFilter = pipelineFilter;
         }
 
-        public async Task<PipelineItem<TInput>> InternalExecute(PipelineItem<TInput> input, CancellationToken cancellationToken)
+        public async Task<PipelineItem<TInput>> InternalExecute(PipelineItem<TInput> input, Action reExecute, CancellationToken cancellationToken)
         {
             //var result = _pipelineFilter.Execute(input);
 

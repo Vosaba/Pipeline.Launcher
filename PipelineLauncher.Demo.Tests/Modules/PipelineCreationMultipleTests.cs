@@ -5,6 +5,7 @@ using System.Threading;
 using PipelineLauncher.Demo.Tests.Fakes;
 using PipelineLauncher.Demo.Tests.Stages;
 using PipelineLauncher.Pipelines;
+using PipelineLauncher.Stages;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -22,17 +23,28 @@ namespace PipelineLauncher.Demo.Tests.Modules
             List<Item> input = MakeInput(3);
 
             //Configure stages
-            var stageSetup = new PipelineFrom(CancellationToken.None)
-                .AsyncStage(new AsyncStage1())
+            StageSetupOut<Item, Item> stageSetup = new Pipeline(new FakeServicesRegistry.JobService(), CancellationToken.None)
+                .AsyncStage<AsyncStage1, Item, Item>()
                 .Branch(
-                    (item => item.Value == "Item#1->AsyncStage1->", 
-                        branch => branch.AsyncStage(new AsyncStage2())
+                    (item => item.Value == "Item#1->AsyncStage1->",
+                        branch => branch.AsyncStage<AsyncStage2>()
                                         //.AsyncStage(e => e.Value)
-                                        
-                                        .AsyncStage(new AsyncStage1())
-                                        .AsyncStage(new AsyncStage2Alternative())),
-                    (item => true, 
-                        branch => branch.AsyncStage(new AsyncStage2Alternative())))
+
+                                        //.AsyncStage(new AsyncStage1())
+                                        .Stage(x =>
+                                        {
+                                            var y = x.ToList();
+
+                                            y.Add(new Item("Item#NEW->"));
+                                             return y;
+                                        })),
+                    (item => true,
+                        branch => branch.AsyncStage(new AsyncStage2Alternative())
+                                        .AsyncStage(x =>
+                                        {
+                                            Thread.Sleep(5000);
+                                            return x;
+                                        })))
                 //.Stage(new Stage2())
                 .AsyncStage(new AsyncStage3())
                 //.AsyncStage((item) => item.Value)
@@ -46,19 +58,19 @@ namespace PipelineLauncher.Demo.Tests.Modules
 
             //run
             stopWatch.Start();
-            var result = pipeline.Run(input);
-            while (result.Count() < 3)
-            {
+            var result = pipeline.RunSync(input);
+            //while (result.Count() < 3)
+            //{
 
-            }
+            //}
             stopWatch.Stop();
 
 
 
             //Total time 24032
-            PrintOutputAndTime(stopWatch.ElapsedMilliseconds, input);
-
             PrintOutputAndTime(stopWatch.ElapsedMilliseconds, result);
+
+            //PrintOutputAndTime(stopWatch.ElapsedMilliseconds, result);
 
 
             //stopWatch.Reset();
@@ -85,7 +97,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
             List<Item> input = MakeInput(6);
 
             //Configure stages
-            var stageSetup = new PipelineFrom(CancellationToken.None)
+            var stageSetup = new Pipeline(CancellationToken.None)
                 .Stage(new Stage1())
                 .Stage(new Stage2())//, new Stage2Alternative())
                 .Stage(new Stage4())
@@ -98,7 +110,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
 
             //run
             stopWatch.Start();
-            IEnumerable<Item> result = pipeline.Run(input);
+            var result = pipeline.Post(input);
             stopWatch.Stop();
 
             //Total time 24032

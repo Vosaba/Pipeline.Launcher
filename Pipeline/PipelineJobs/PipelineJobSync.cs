@@ -1,12 +1,11 @@
-﻿using System;
+﻿using PipelineLauncher.Abstractions.Dto;
+using PipelineLauncher.Abstractions.Pipeline;
+using PipelineLauncher.Attributes;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using PipelineLauncher.Abstractions.Dto;
-using PipelineLauncher.Abstractions.Pipeline;
-using PipelineLauncher.Attributes;
-using PipelineLauncher.Exceptions;
 
 namespace PipelineLauncher.PipelineJobs
 {
@@ -14,32 +13,55 @@ namespace PipelineLauncher.PipelineJobs
     {
         public abstract Task<IEnumerable<TOutput>> ExecuteAsync(IEnumerable<TInput> input, CancellationToken cancellationToken);
 
-        public virtual async Task<IEnumerable<PipelineItem<TOutput>>> InternalExecute(IEnumerable<PipelineItem<TInput>> input, CancellationToken cancellationToken)
+        public virtual async Task<IEnumerable<PipelineItem<TOutput>>> InternalExecute(IEnumerable<PipelineItem<TInput>> input, Action reExecute, CancellationToken cancellationToken)
         {
-            var result = new List<PipelineItem<TOutput>>();
             var inputArray = input.ToArray();
+            var result = new List<PipelineItem<TOutput>>();
 
             try
             {
-                var removeAndExceptionItems = inputArray.Where(e =>
+                var removeAndExceptionItems = inputArray.Where(x =>
                 {
-                    var type = e.GetType();
+                    var type = x.GetType();
                     return type == typeof(RemoveItem<TInput>) || type == typeof(ExceptionItem<TInput>);
-                }).Cast<NonResultItem<TInput>>().Select(e => e.Return<TOutput>());
+                }).Cast<NonResultItem<TInput>>().Select(x => x.Return<TOutput>());
+
                 result.AddRange(removeAndExceptionItems);
 
-                //var exceptionItems = inputArray.Where(e => e.GetType() == typeof(ExceptionItem<TInput>)).Cast<ExceptionItem<TInput>>().Select(e => e.Return<TOutput>());
-                //result.AddRange(exceptionItems);
+                var skipItems = inputArray.Where(x =>
+                {
+                    var type = x.GetType();
+                    return type == typeof(SkipItem<TInput>);
+                }).Cast<SkipItem<TInput>>().ToArray();
 
-                var output = await ExecuteAsync(inputArray.Where(e => e.GetType() == typeof(PipelineItem<TInput>)).Select(e => e.Item), cancellationToken);
-                result.AddRange(output.Select(e => new PipelineItem<TOutput>(e)));
+                var executedSkipItems = skipItems.Any() ? await ExecuteAsync(skipItems
+                    .Where(x => typeof(TInput) == x.OriginalItem.GetType()).Select(x => x.Item), cancellationToken) : Array.Empty<TOutput>();
 
+                result.AddRange(executedSkipItems.Select(x => new PipelineItem<TOutput>(x)));
+
+                result.AddRange(skipItems.Where(x => typeof(TInput) != x.OriginalItem.GetType()).Select(x => x.Return<TOutput>()));
+
+                var skipTillItems = inputArray.Where(x =>
+                {
+                    var type = x.GetType();
+                    return type == typeof(SkipItemTill<TInput>);
+                }).Cast<SkipItemTill<TInput>>().ToArray();
+
+                var executedSkipTillItems = skipTillItems.Any() ? await ExecuteAsync(skipTillItems
+                    .Where(x => GetType() == x.SkipTillType).Select(x => x.Item), cancellationToken) : Array.Empty<TOutput>();
+
+                result.AddRange(executedSkipTillItems.Select(x => new PipelineItem<TOutput>(x)));
+
+                result.AddRange(skipTillItems.Where(x => GetType() != x.SkipTillType).Select(x => x.Return<TOutput>()));
+
+                var executedItems = await ExecuteAsync(inputArray.Where(x => x.GetType() == typeof(PipelineItem<TInput>)).Select(x => x.Item), cancellationToken);
+                result.AddRange(executedItems.Select(x => new PipelineItem<TOutput>(x)));
 
                 return result;
             }
             catch (Exception ex)
             {
-                return new[] { new ExceptionItem<TOutput>(ex, inputArray.Select(e => e.Item)) };
+                return new[] { new ExceptionItem<TOutput>(ex, reExecute, GetType(), inputArray.Select(e => e.Item)) };
             }
         }
     }

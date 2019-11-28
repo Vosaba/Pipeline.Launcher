@@ -21,7 +21,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
             List<Item> input = MakeInput(6);
 
             //Configure stages
-            var stageSetup = new PipelineFrom(CancellationToken.None)
+            var stageSetup = new Pipeline(CancellationToken.None)
                 .Stage(new Stage1())
                 .Stage(new Stage2())
                 .Stage(new Stage3())
@@ -35,7 +35,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
 
             //run
             stopWatch.Start();
-            IEnumerable<Item> result = pipeline.Run(input);
+            var result = pipeline.Post(input);
             stopWatch.Stop();
 
             //Total time 24032
@@ -49,7 +49,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
             List<Item> input = MakeInput(6);
 
             //Configure stages
-            var stageSetup = new PipelineFrom(CancellationToken.None)
+            var stageSetup = new Pipeline(CancellationToken.None)
                 .Stage(new Stage1())
                 .Stage(new Stage2())
                 .Stage(new Stage3())
@@ -62,7 +62,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
 
             //run
             stopWatch.Start();
-            IEnumerable<string> result = pipeline.Run(input);
+            var result = pipeline.Post(input);
             stopWatch.Stop();
 
             //Total time 24032
@@ -77,7 +77,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
             List<Item> input = MakeInput(6);
 
             //Configure stages
-            var stageSetup = new PipelineFrom(new FakeServicesRegistry.JobService(), CancellationToken.None)
+            var stageSetup = new Pipeline(new FakeServicesRegistry.JobService(), CancellationToken.None)
                 .Stage<Stage1, Item>()
                 .Stage<Stage2>()
                 .Stage<Stage3>()
@@ -91,7 +91,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
 
             //run
             stopWatch.Start();
-            IEnumerable<object> result = pipeline.Run(input);
+            var result = pipeline.Post(input);
             stopWatch.Stop();
 
             //Total time 24032

@@ -34,14 +34,14 @@ namespace PipelineLauncher.Demo.Tests.Stages
     {
         public override Item Execute(Item item)
         {
-            return Remove(item);
+            //return Remove(item);
 
             item.Value = item.Value + "AsyncStage2->";
             Thread.Sleep(1000);
 
             item.ProcessedBy.Add(Thread.CurrentThread.ManagedThreadId);
 
-            //return Remove(item);
+            return item;
 
             //return "";
         }
@@ -67,6 +67,11 @@ namespace PipelineLauncher.Demo.Tests.Stages
             Thread.Sleep(1000);
 
             item.ProcessedBy.Add(Thread.CurrentThread.ManagedThreadId);
+
+            if (item.Value == "Item#0->AsyncStage1->AsyncStage2Alternative->")
+            {
+               //throw new Exception("dddddd");
+            }
 
             return item;
         }

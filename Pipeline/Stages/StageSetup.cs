@@ -1,104 +1,59 @@
-﻿using PipelineLauncher.Abstractions.Services;
-//using PipelineLauncher.Dataflow;
+﻿using PipelineLauncher.Abstractions.Dto;
+using PipelineLauncher.Abstractions.Services;
+using PipelineLauncher.Blocks;
 using PipelineLauncher.Jobs;
+using PipelineLauncher.PipelineJobs;
 using PipelineLauncher.Pipelines;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
-using PipelineLauncher.Abstractions.Dto;
-using PipelineLauncher.Blocks;
-using PipelineLauncher.PipelineJobs;
+using PipelineLauncher.Abstractions.Pipeline;
 
 namespace PipelineLauncher.Stages
 {
-
     public abstract class StageSetup<TFirstInput> : IStageSetup
     {
-        public IStage Current { get; }
-        //public StageType Type { get; }
-
-
-        protected readonly IJobService _jobService;
-
+        protected readonly IJobService JobService;
         protected IJobService GetJobService
         {
             get
             {
-                if (_jobService == null)
+                if (JobService == null)
                 {
                     throw new Exception($"'{nameof(IJobService)}' isn't provided, if you need to use Generic stage setups, provide service.");
                 }
 
-                return _jobService;
+                return JobService;
             }
         }
+
+        public IStage Current { get; }
 
         internal StageSetup(IStage stage, IJobService jobService)
         {
             Current = stage;
-            _jobService = jobService;
-            //Type = GetStageType(stage);
-        }
-
-        private StageType GetStageType(IStage stage)
-        {
-            if (IsInstanceOfGenericType(typeof(TransformBlock<,>), stage.ExecutionBlock))
-            {
-                return StageType.OneToOne;
-            }
-            else if (IsInstanceOfGenericType(typeof(TransformManyBlock<,>), stage.ExecutionBlock))
-            {
-                return StageType.ManyToOne;
-            }
-            else if (IsInstanceOfGenericType(typeof(BatchBlock<>), stage.ExecutionBlock))
-            {
-                return StageType.OneToMany;
-            }
-
-            throw new NotImplementedException();
-        }
-
-        private static bool IsInstanceOfGenericType(Type genericType, object instance)
-        {
-            Type type = instance.GetType();
-            while (type != null)
-            {
-                if (type.IsGenericType &&
-                    type.GetGenericTypeDefinition() == genericType)
-                {
-                    return true;
-                }
-                type = type.BaseType;
-            }
-            return false;
+            JobService = jobService;
         }
     }
 
-    public class StageSetupIn<TFirstInput, TInput> : StageSetup<TFirstInput>, IStageSetupIn<TInput> 
+    public class StageSetupIn<TFirstInput, TInput> : StageSetup<TFirstInput>, IStageSetupIn<TInput>
     {
-        private readonly IStageIn<TInput> _stage;
+        public IStageIn<TInput> Current => (IStageIn<TInput>)base.Current;
 
-        public IStageIn<TInput> Current => _stage;
-
-        protected StageSetupIn(IStageIn<TInput> stage, IJobService jobService) : base(stage, jobService)
-        {
-            _stage = stage;
-        }
+        internal StageSetupIn(IStageIn<TInput> stage, IJobService jobService)
+            : base(stage, jobService)
+        { }
     }
 
     public class StageSetupOut<TFirstInput, TOutput> : StageSetup<TFirstInput>, IStageSetupOut<TOutput>
     {
-        private readonly IStageOut<TOutput> _stage;
+        public IStageOut<TOutput> Current => (IStageOut<TOutput>)base.Current;
 
-        public IStageOut<TOutput> Current => _stage;
-
-        internal StageSetupOut(IStageOut<TOutput> stage, IJobService jobService): base(stage, jobService)
-        {
-            _stage = stage;
-        }
+        internal StageSetupOut(IStageOut<TOutput> stage, IJobService jobService)
+            : base(stage, jobService)
+        { }
 
         #region Generic Stages
 
@@ -182,200 +137,146 @@ namespace PipelineLauncher.Stages
 
         #endregion
 
-        #region Nongeneric Split
-
         #region Nongeneric Branch
+
+        public StageSetupOut<TFirstInput, TNexTOutput> Broadcast<TNexTOutput>(params (Predicate<TOutput> predicate,
+            Func<StageSetupOut<TFirstInput, TOutput>, StageSetupOut<TFirstInput, TNexTOutput>> branch)[] branches)
+        {
+            var newCurrentBlock = new BroadcastBlock<PipelineItem<TOutput>>(e => e);
+            var newCurrent = CreateNextBlock(newCurrentBlock);
+            return newCurrent.Branch(branches);
+        }
 
         public StageSetupOut<TFirstInput, TNexTOutput> Branch<TNexTOutput>(params (Predicate<TOutput> predicate,
                 Func<StageSetupOut<TFirstInput, TOutput>, StageSetupOut<TFirstInput, TNexTOutput>> branch)[] branches)
         {
-            var mergeBlock = new BatchBlockEx<PipelineItem<TNexTOutput>>(branches.Length, 100);
+            var mergeBlock = new TransformBlock<PipelineItem<TNexTOutput>, PipelineItem<TNexTOutput>>(e => e);
+            
 
+            IDataflowBlock[] headBranches = new IDataflowBlock[branches.Length];
+            IDataflowBlock[] tailBranches = new IDataflowBlock[branches.Length];
+
+            var branchId = 0;
             foreach (var branch in branches)
             {
-                var filterBlock = new TransformBlock<PipelineItem<TOutput>, PipelineItem<TOutput>>(e => e);
+                var newBranchHead = new TransformBlock<PipelineItem<TOutput>, PipelineItem<TOutput>>(e => e);
 
-                var nextStage = new StageOut<TOutput>(filterBlock, Current.CancellationToken)
+                headBranches[branchId] = newBranchHead;
+
+                var newtBranchStageHead = new StageOut<TOutput>(newBranchHead, Current.CancellationToken)
                 {
                     Previous = Current
                 };
+                Current.Next.Add(newtBranchStageHead);
 
-                Current.Next = nextStage;
+                var nextBlockAfterCurrent = new StageSetupOut<TFirstInput, TOutput>(newtBranchStageHead, JobService);
+                var newBranch = branch.branch(nextBlockAfterCurrent);
 
-                var nextBlock = new StageSetupOut<TFirstInput, TOutput>(nextStage, _jobService);
+                Current.ExecutionBlock.LinkTo(newBranchHead, e => branch.predicate(e.Item));//TODO AAAAA ctach
 
-                //var nextBlock = new TransformBlock<TOutput, TOutput>(e => e);
+                tailBranches[branchId] = newBranch.Current.ExecutionBlock;
 
-                //var nextStageSetup2 =
-                //    new StageSetup<TOutput, TOutput>(
-                //        new Stage<TOutput, TOutput>(null)
-                //        , _jobService);
+                newBranch.Current.ExecutionBlock.LinkTo(mergeBlock);
+                newBranch.Current.ExecutionBlock.Completion.ContinueWith(x =>
+                {
+                    if(tailBranches.All(e=>e.Completion.IsCompleted))
+                    { 
+                        mergeBlock.Complete();
+                    }
+                }, Current.CancellationToken);
 
-                var newBranch = branch.branch(nextBlock);
-
-                Current.ExecutionBlock.LinkTo(filterBlock, e=>branch.predicate(e.Item));//TODO AAAAA ctach
-
-                newBranch.Current.ExecutionBlock.LinkTo(mergeBlock); 
+                branchId++;
             }
 
-            //var nextStageSetup =
-            //    new StageSetup<TOutput, TOutput>(
-            //        new Stage<TOutput, TOutput>(filterBlock)
-            //        , _jobService);
-
-            //Current.ExecutionBlock.LinkTo(filterBlock);
-            //Current.Next = nextStageSetup.Current;    
-
-            var filterBlock2 = new TransformManyBlock<IEnumerable<PipelineItem<TNexTOutput>>, PipelineItem<TNexTOutput>>(e=>e);
-
-        mergeBlock.LinkTo(filterBlock2);
-
-            return new StageSetupOut<TFirstInput, TNexTOutput>(new StageOut<TNexTOutput>(filterBlock2, Current.CancellationToken)
+            Current.ExecutionBlock.Completion.ContinueWith(x =>
             {
-                Previous = Current //HACK
-            },
-                _jobService);
+                foreach (var headBranch in headBranches)
+                {
+                    headBranch.Complete();
+                }
+            }, Current.CancellationToken);
+
+            //mergeBlock.Completion.ContinueWith(x =>
+            //{
+            //    Console.Write("");
+            //});
+
+            return new StageSetupOut<TFirstInput, TNexTOutput>(new StageOut<TNexTOutput>(mergeBlock, Current.CancellationToken)
+            {
+                Previous = Current
+            }, JobService);
         }
 
         #endregion
 
-        #endregion
-
-        private StageSetupOut<TFirstInput, TNexTOutput> CreateNextStageAsync<TNexTOutput>(PipelineJobAsync<TOutput, TNexTOutput> asyncJob)
+        private StageSetupOut<TFirstInput, TNexTOutput> CreateNextStageAsync<TNexTOutput>(IPipelineJobAsync<TOutput, TNexTOutput> asyncJob)
         {
-            var nextBlock = new TransformBlock<PipelineItem<TOutput>, PipelineItem<TNexTOutput>>(async e => await asyncJob.InternalExecute(e, Current.CancellationToken) , new ExecutionDataflowBlockOptions() { MaxDegreeOfParallelism = asyncJob.MaxDegreeOfParallelism });
+            TransformBlock<PipelineItem<TOutput>, PipelineItem<TNexTOutput>> rePostBlock = null;
+            void RePostMessage(PipelineItem<TOutput> message)
+            {
+                rePostBlock?.Post(message);
+            }
+
+            var nextBlock = new TransformBlock<PipelineItem<TOutput>, PipelineItem<TNexTOutput>>(
+                async e => await asyncJob.InternalExecute(e, () => RePostMessage(e), Current.CancellationToken),
+                new ExecutionDataflowBlockOptions
+                {
+                    MaxDegreeOfParallelism = asyncJob.MaxDegreeOfParallelism
+                });
+
+            rePostBlock = nextBlock;
 
             return CreateNextBlock(nextBlock);
         }
 
-        //public static IPropagatorBlock<TIn, IList<TIn>> CreateBuffer<TIn>(TimeSpan timeSpan, int count)
-        //{
-        //    var inBlock = new BufferBlock<TIn>();
-        //    var outBlock = new BufferBlock<IList<TIn>>();
-
-        //    var outObserver = outBlock.AsObserver();
-        //    inBlock.AsObservable()
-        //        .Buffer(timeSpan, count)
-        //        .ObserveOn(TaskPoolScheduler.Default)
-        //        .Subscribe(outObserver);
-
-        //    return 
-
-        //}
-        private StageSetupOut<TFirstInput, TNexTOutput> CreateNextStage<TNexTOutput>(PipelineJobSync<TOutput, TNexTOutput> job)
+        private StageSetupOut<TFirstInput, TNexTOutput> CreateNextStage<TNexTOutput>(IPipelineJobSync<TOutput, TNexTOutput> job)
         {
-            //if(Current.Previous.Type == StageType.ManyToOne)
+            var buffer = new BatchBlockEx<PipelineItem<TOutput>>(7, 5000); //TODO
 
-            var nextBuffer = new BatchBlockEx<PipelineItem<TOutput>>(7, 5000);
-            //var newcurrent = CreateNextBlock(nextBuffer);
-            var g = new TransformManyBlock<IEnumerable<PipelineItem<TOutput>>, PipelineItem<TNexTOutput>>(async e =>
-                await job.InternalExecute(e, Current.CancellationToken), new ExecutionDataflowBlockOptions() { MaxDegreeOfParallelism = job.MaxDegreeOfParallelism });
+            TransformManyBlock<IEnumerable<PipelineItem<TOutput>>, PipelineItem<TNexTOutput>> rePostBlock = null;
+            void RePostMessages(IEnumerable<PipelineItem<TOutput>> messages)
+            {
+                rePostBlock?.Post(messages);
+            }
 
-            nextBuffer.LinkTo(g, new DataflowLinkOptions() { PropagateCompletion = true });
+            var nextBlock = new TransformManyBlock<IEnumerable<PipelineItem<TOutput>>, PipelineItem<TNexTOutput>>(
+                async e => await job.InternalExecute(e, () => RePostMessages(e), Current.CancellationToken),
+                new ExecutionDataflowBlockOptions
+                {
+                    MaxDegreeOfParallelism = job.MaxDegreeOfParallelism
+                });
+            
+            buffer.LinkTo(nextBlock, new DataflowLinkOptions() { PropagateCompletion = true });
+            rePostBlock = nextBlock;
 
+            buffer.Completion.ContinueWith(x =>
+            {
+                nextBlock.Complete();
+            }, Current.CancellationToken);
 
-
-
-            return CreateNextBlock(DataflowBlock.Encapsulate(nextBuffer, g));
-
-            //Current.ExecutionBlock.Completion.ContinueWith(f =>
-            //{
-            //    if (f.IsFaulted)
-            //    {
-            //        //((IDataflowBlock)_step2A).Fault(t.Exception);
-            //        //((IDataflowBlock)_step2B).Fault(t.Exception);
-            //    }
-            //    else
-            //    {
-            //        //nextBuffer.Complete();
-            //    }
-            //});
-
-            //Current.ExecutionBlock.LinkTo(nextBuffer);
-
-
-            //newcurrent.Current.ExecutionBlock.Completion.ContinueWith(f =>
-            //{
-            //    if (f.IsFaulted)
-            //    {
-            //        //((IDataflowBlock)_step2A).Fault(t.Exception);
-            //        //((IDataflowBlock)_step2B).Fault(t.Exception);
-            //    }
-            //    else
-            //    {
-            //        //nextBuffer.Complete();
-            //    }
-            //});
-
-            //var nextBlock = new TransformBlock<TOutput, TNexTOutput>((e, target) =>
-            //{
-            //    foreach (var result in job.Execute(e.ToArray()))
-            //    {
-            //        while (!target.TryAdd(result))
-            //        {
-
-            //        }
-            //    }
-
-            //    target.CompleteAdding();
-            //});
-
-
-            //ar nextBlock = new TransformBlock<TOutput[], IEnumerable<TNexTOutput>>(e => job.Execute(e));
-
-
+            return CreateNextBlock(DataflowBlock.Encapsulate(buffer, nextBlock));
         }
 
         internal StageSetupOut<TFirstInput, TNexTOutput> CreateNextBlock<TNexTOutput>(IPropagatorBlock<PipelineItem<TOutput>, PipelineItem<TNexTOutput>> nextBlock)
         {
             Current.ExecutionBlock.LinkTo(nextBlock, new DataflowLinkOptions() { PropagateCompletion = true });
 
-
-            if (null == null)
+            Current.ExecutionBlock.Completion.ContinueWith(x =>
             {
-            }
-            else
-            {
-                //Current.ExecutionBlock.LinkTo(nextBlock, (input, target) =>
-                //{
-                //    if (condition(input))
-                //    {
-                //        while (!target.TryAdd(input))
-                //        {
-
-                //        }
-
-                //    }
-                //});
-                throw new NotImplementedException("TODO 1");
-            }
-
-
-            Current.ExecutionBlock.Completion.ContinueWith(t =>
-            {
-                if (t.IsFaulted)
-                {
-                    var tf = t.Exception;
-                    //((IDataflowBlock)_step2A).Fault(t.Exception);
-                    //((IDataflowBlock)_step2B).Fault(t.Exception);
-                }
-                else
-                {
-                    //nextBlock.Complete();
-                }
-            });
+                nextBlock.Complete();
+            }, Current.CancellationToken);
 
             var nextStage = new StageOut<TNexTOutput>(nextBlock, Current.CancellationToken)
             {
                 Previous = Current
             };
 
-            Current.Next = nextStage;
+            Current.Next.Add(nextStage);
 
-            return new StageSetupOut<TFirstInput, TNexTOutput>(nextStage, _jobService);
+            return new StageSetupOut<TFirstInput, TNexTOutput>(nextStage, JobService);
         }
 
-        public IPipeline<TFirstInput, TOutput> From(CancellationToken cancellationToken)
+        public IAwaitablePipeline<TFirstInput, TOutput> From(CancellationToken cancellationToken)
         {
             var firstJobType = this.GetFirstStage().GetType();
 
@@ -383,13 +284,13 @@ namespace PipelineLauncher.Stages
             {
                 var firstStage = this.GetFirstStage();
 
-                return new BasicPipeline<TFirstInput, TOutput>(((IStageIn<TFirstInput>)firstStage).ExecutionBlock, Current.ExecutionBlock, cancellationToken);
+                return new AwaitablePipeline<TFirstInput, TOutput>(((IStageIn<TFirstInput>)firstStage).ExecutionBlock, Current.ExecutionBlock, cancellationToken);
             }
 
-            if (firstJobType != null)
+            if (firstJobType.BaseType != null)
             {
                 throw new Exception(
-                    $"Stages config expects '{firstJobType.GenericTypeArguments[0].Name}', but was recived '{typeof(TFirstInput).Name}'");
+                    $"Stages config expects '{firstJobType.GenericTypeArguments[0].Name}', but was received '{typeof(TFirstInput).Name}'");
             }
             else
             {
@@ -398,8 +299,7 @@ namespace PipelineLauncher.Stages
             }
         }
 
-        public IPipeline<TFirstInput, TOutput> From()
-            => From(CancellationToken.None);
+        public IAwaitablePipeline<TFirstInput, TOutput> From() => From(CancellationToken.None);
     }
 
     public class StageSetup<TFirstInput, TInput, TOutput> : StageSetupOut<TFirstInput, TOutput>, IStageSetupOut<TOutput>, IStageSetupIn<TInput>

@@ -12,7 +12,7 @@ namespace PipelineLauncher.PipelineJobs
     {
         public abstract Task<TOutput> ExecuteAsync(TInput input, CancellationToken cancellationToken);
 
-        public virtual async Task<PipelineItem<TOutput>> InternalExecute(PipelineItem<TInput> input, CancellationToken cancellationToken)
+        public virtual async Task<PipelineItem<TOutput>> InternalExecute(PipelineItem<TInput> input, Action reExecute, CancellationToken cancellationToken)
         {
             try
             {
@@ -30,10 +30,10 @@ namespace PipelineLauncher.PipelineJobs
                         return skipItem.Return<TOutput>();
 
                     case SkipItemTill<TInput> skipItemTill 
-                        when GetType() == skipItemTill.JobType:
+                        when GetType() == skipItemTill.SkipTillType:
                         return new PipelineItem<TOutput>(await ExecuteAsync((TInput)skipItemTill.OriginalItem, cancellationToken));
                     case SkipItemTill<TInput> skipItemTill 
-                        when GetType() != skipItemTill.JobType:
+                        when GetType() != skipItemTill.SkipTillType:
                         return skipItemTill.Return<TOutput>();
 
                     default:
@@ -46,7 +46,7 @@ namespace PipelineLauncher.PipelineJobs
             }
             catch (Exception e)
             {
-                return new ExceptionItem<TOutput>(e, input != null ? input.Item : default);
+                return new ExceptionItem<TOutput>(e, reExecute, GetType(), input != null ? input.Item : default);
             }
         }
     }

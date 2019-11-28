@@ -32,12 +32,12 @@ namespace PipelineLauncher.Attributes
 
         public PipelineItem<TInput> Skip(TInput item)
         {
-            return new SkipItem<TInput>(item);
+            return new SkipItem<TInput>(item, null);
         }
 
         public PipelineItem<TInput> SkipTo<TSkipToJob>(TInput item) where TSkipToJob : IPipelineJobIn<TInput>
         {
-            return new SkipItemTill<TInput>(typeof(TSkipToJob), item);
+            return new SkipItemTill<TInput>(typeof(TSkipToJob), item, null);
         }
     }
 

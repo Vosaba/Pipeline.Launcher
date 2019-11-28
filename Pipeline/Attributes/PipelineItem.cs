@@ -5,72 +5,74 @@ namespace PipelineLauncher.Attributes
 {
     internal abstract class NonResultItem<TItem> : PipelineItem<TItem>
     {
-        protected NonResultItem() : base(default) { }
+        public object OriginalItem { get; }
+        public Type StageType { get; }
+
+        protected NonResultItem(object originalItem, Type stageType) : base(default)
+        {
+            StageType = stageType;
+            OriginalItem = originalItem;
+
+        }
 
         public abstract NonResultItem<TNewItem> Return<TNewItem>();
     }
 
     internal class RemoveItem<TItem> : NonResultItem<TItem>
     {
-        public object OriginalItem { get; }
-
-        public RemoveItem(object originalItem)
+        public RemoveItem(object originalItem, Type stageType): base(originalItem, stageType)
         {
-            OriginalItem = originalItem;
         }
 
         public override NonResultItem<TNewItem> Return<TNewItem>()
         {
-            return new RemoveItem<TNewItem>(OriginalItem);
+            return new RemoveItem<TNewItem>(OriginalItem, StageType);
         }
     }
 
     internal class SkipItem<TItem> : NonResultItem<TItem>
     {
-        public object OriginalItem { get; }
-
-        public SkipItem(object originalItem)
+        public SkipItem(object originalItem, Type stageType) : base(originalItem, stageType)
         {
-            OriginalItem = originalItem;
         }
 
         public override NonResultItem<TNewItem> Return<TNewItem>()
         {
-            return new SkipItem<TNewItem>(OriginalItem);
+            return new SkipItem<TNewItem>(OriginalItem, StageType);
         }
     }
 
     internal class SkipItemTill<TItem> : NonResultItem<TItem>
     {
-        public object OriginalItem { get; }
-        public Type JobType { get; }
+        public Type SkipTillType { get; }
 
-        public SkipItemTill(Type jobType, object item)
+        public SkipItemTill(Type skipTillType, object originalItem, Type stageType) : base(originalItem, stageType)
         {
-            JobType = jobType;
-            OriginalItem = item;
+            SkipTillType = skipTillType;
         }
 
         public override NonResultItem<TNewItem> Return<TNewItem>()
         {
-            return new SkipItemTill<TNewItem>(JobType, OriginalItem);
+            return new SkipItemTill<TNewItem>(SkipTillType, OriginalItem, StageType);
         }
     }
 
     internal class ExceptionItem<TItem> : NonResultItem<TItem>
     {
-        public object[] FailedItems { get; }
+        public object[] FailedItems => (object[])OriginalItem;
         public Exception Exception { get; }
+        public Action ReProcessItems { get; }
 
-        public ExceptionItem(Exception exception, params object[] failedItems)
+        public ExceptionItem(Exception exception, Action reProcess, Type stageType, params object[] failedItems)
+            : base(failedItems, stageType)
         {
-            FailedItems = failedItems;
             Exception = exception;
+            ReProcessItems = reProcess;
         }
 
         public override NonResultItem<TNewItem> Return<TNewItem>()
         {
-            return new ExceptionItem<TNewItem>(Exception, FailedItems);
+            return new ExceptionItem<TNewItem>(Exception, ReProcessItems, StageType, FailedItems);
         }
     }
 }

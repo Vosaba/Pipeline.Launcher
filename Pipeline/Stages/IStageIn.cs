@@ -1,9 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using PipelineLauncher.Abstractions.Dto;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks.Dataflow;
-using PipelineLauncher.Abstractions.Dto;
-using PipelineLauncher.Abstractions.Pipeline;
-//using PipelineLauncher.Dataflow;
 
 namespace PipelineLauncher.Stages
 {
@@ -13,7 +11,7 @@ namespace PipelineLauncher.Stages
 
         CancellationToken CancellationToken { get; }
 
-        IStage Next { get; set; }
+        IList<IStage> Next { get; set; }
 
         IStage Previous { get; set; }
     }
