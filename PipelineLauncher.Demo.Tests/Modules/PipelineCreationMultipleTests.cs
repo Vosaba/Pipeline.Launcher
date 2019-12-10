@@ -33,7 +33,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
         public void Pipeline_Creation_Multiple_AsyncJobs()
         {
             //Test input 6 items
-            List<Item> input = MakeInput(3);
+            List<Item> input = MakeInput(30);
 
             //Configure stages
             var pipelineSetup = PipelineCreator
@@ -72,7 +72,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
                 //.AsyncStage(new AsyncStage3())
                 //.AsyncStage(new AsyncStage4())
                 //.AsyncStage(Task.FromResult) 
-                .AsyncStage((Item item, AsyncJobOption<Item, Item>  asyncJobOption) =>
+                .AsyncStage((Item item, AsyncJobOption<Item, Item> asyncJobOption) =>
                 {
                     if (item.Value.StartsWith("Item#0"))
                     {

@@ -1,11 +1,10 @@
-using System;
 using PipelineLauncher.Abstractions.Pipeline;
 using PipelineLauncher.Attributes;
 using PipelineLauncher.Exceptions;
 
 namespace PipelineLauncher.Dto
 {
-    public struct AsyncJobOption<TInput, TOutput> 
+    public struct AsyncJobOption<TInput, TOutput>
     {
         public TOutput Remove(TInput input)
         {

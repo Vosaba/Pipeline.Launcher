@@ -13,7 +13,7 @@ namespace PipelineLauncher.PipelineJobs
     {
         public abstract Task<IEnumerable<TOutput>> ExecuteAsync(IEnumerable<TInput> input, CancellationToken cancellationToken);
 
-        public virtual async Task<IEnumerable<PipelineItem<TOutput>>> InternalExecute(IEnumerable<PipelineItem<TInput>> input, Action reExecute, CancellationToken cancellationToken)
+        public async Task<IEnumerable<PipelineItem<TOutput>>> InternalExecute(IEnumerable<PipelineItem<TInput>> input, Action reExecute, CancellationToken cancellationToken)
         {
             var inputArray = input.ToArray();
             var result = new List<PipelineItem<TOutput>>();

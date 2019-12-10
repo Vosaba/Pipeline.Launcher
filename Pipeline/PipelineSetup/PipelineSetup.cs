@@ -257,6 +257,8 @@ namespace PipelineLauncher.PipelineSetup
                     new ExecutionDataflowBlockOptions
                     {
                         MaxDegreeOfParallelism = asyncJob.MaxDegreeOfParallelism
+                        ,
+                        MaxMessagesPerTask = 1
                     });
 
                 rePostBlock = nextBlock;
@@ -280,7 +282,7 @@ namespace PipelineLauncher.PipelineSetup
         {
             IPropagatorBlock<PipelineItem<TOutput>, PipelineItem<TNextOutput>> MakeNextBlock()
             {
-                var buffer = new BatchBlockEx<PipelineItem<TOutput>>(7, 5000); //TODO
+                var buffer = new BatchBlockEx<PipelineItem<TOutput>>(20, 5000); //TODO
 
                 TransformManyBlock<IEnumerable<PipelineItem<TOutput>>, PipelineItem<TNextOutput>> rePostBlock = null;
 
@@ -294,6 +296,7 @@ namespace PipelineLauncher.PipelineSetup
                     new ExecutionDataflowBlockOptions
                     {
                         MaxDegreeOfParallelism = job.MaxDegreeOfParallelism
+                        ,MaxMessagesPerTask = 1
                     });
 
                 buffer.LinkTo(nextBlock, new DataflowLinkOptions() { PropagateCompletion = true });
