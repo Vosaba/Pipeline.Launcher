@@ -1,11 +1,12 @@
 ﻿using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.Pipeline;
 using System;
+using System.Diagnostics;
 using System.Threading;
 
 namespace PipelineLauncher.PipelineJobs
 {
-
+    [DebuggerDisplay("Name = d")]
     public abstract class PipelineJob<TInput, TOutput>:  IPipelineJob<TInput, TOutput>
     {
         protected void NonOutputResult(PipelineItem<TInput> item, object output, CancellationToken cancellationToken)

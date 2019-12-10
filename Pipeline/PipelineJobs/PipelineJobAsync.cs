@@ -4,12 +4,15 @@ using System.Threading.Tasks;
 using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.Pipeline;
 using PipelineLauncher.Attributes;
+using PipelineLauncher.Dto;
 using PipelineLauncher.Exceptions;
 
 namespace PipelineLauncher.PipelineJobs
 {
     public abstract class PipelineJobAsync<TInput, TOutput> : PipelineJob<TInput, TOutput>, IPipelineJobAsync<TInput, TOutput>
     {
+        protected static AsyncJobOption<TInput, TOutput> AsyncJobOption = new AsyncJobOption<TInput, TOutput>();
+
         public abstract Task<TOutput> ExecuteAsync(TInput input, CancellationToken cancellationToken);
 
         public virtual async Task<PipelineItem<TOutput>> InternalExecute(PipelineItem<TInput> input, Action reExecute, CancellationToken cancellationToken)

@@ -35,7 +35,7 @@ namespace PipelineLauncher.PipelineJobs
                 }).Cast<SkipItem<TInput>>().ToArray();
 
                 var executedSkipItems = skipItems.Any() ? await ExecuteAsync(skipItems
-                    .Where(x => typeof(TInput) == x.OriginalItem.GetType()).Select(x => x.Item), cancellationToken) : Array.Empty<TOutput>();
+                    .Where(x => typeof(TInput) == x.OriginalItem.GetType()).Select(x => (TInput)x.OriginalItem), cancellationToken) : Array.Empty<TOutput>();
 
                 result.AddRange(executedSkipItems.Select(x => new PipelineItem<TOutput>(x)));
 
@@ -48,7 +48,7 @@ namespace PipelineLauncher.PipelineJobs
                 }).Cast<SkipItemTill<TInput>>().ToArray();
 
                 var executedSkipTillItems = skipTillItems.Any() ? await ExecuteAsync(skipTillItems
-                    .Where(x => GetType() == x.SkipTillType).Select(x => x.Item), cancellationToken) : Array.Empty<TOutput>();
+                    .Where(x => GetType() == x.SkipTillType).Select(x => (TInput)x.OriginalItem), cancellationToken) : Array.Empty<TOutput>();
 
                 result.AddRange(executedSkipTillItems.Select(x => new PipelineItem<TOutput>(x)));
 

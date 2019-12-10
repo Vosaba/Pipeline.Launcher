@@ -1,16 +1,17 @@
 ﻿using PipelineLauncher.Collections;
-using PipelineLauncher.Stages;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using PipelineLauncher.Abstractions.Collections;
 using PipelineLauncher.Abstractions.Pipeline;
+using PipelineLauncher.PipelineSetup;
+using PipelineLauncher.Stage;
 
 namespace PipelineLauncher
 {
     internal static class Helpers
     {
-        public static IStage GetFirstStage(this IStageSetup stageSetup)
+        public static IStageIn<TInput> GetFirstStage<TInput>(this IPipelineSetup stageSetup)
         {
             IStage stage = stageSetup.Current;
 
@@ -19,7 +20,7 @@ namespace PipelineLauncher
                 stage = stage.Previous;
             }
 
-            return stage;
+            return (IStageIn<TInput>)stage;
         }
 
         //public static IEnumerable<IEnumerable<IPipelineJob>> ToEnumerable(this IStageSetup stageSetup)

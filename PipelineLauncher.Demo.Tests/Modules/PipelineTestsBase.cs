@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using PipelineLauncher.Demo.Tests.Fakes;
+using PipelineLauncher.Pipelines;
 using Xunit.Abstractions;
 
 namespace PipelineLauncher.Demo.Tests.Modules

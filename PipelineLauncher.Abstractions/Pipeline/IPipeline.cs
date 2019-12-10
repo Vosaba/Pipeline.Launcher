@@ -1,11 +1,7 @@
-﻿using System;
-using PipelineLauncher.Abstractions.Collections;
-
-namespace PipelineLauncher.Abstractions.Pipeline
+﻿namespace PipelineLauncher.Abstractions.Pipeline
 {
     public interface IPipelineJob
     {
-        Type AcceptedType { get; }
     }
 
     public interface IPipelineJobIn<TInput>: IPipelineJob

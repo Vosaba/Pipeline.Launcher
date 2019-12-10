@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace PipelineLauncher.Abstractions.Dto
+﻿namespace PipelineLauncher.Abstractions.Dto
 {
     public class PipelineItem
     {
@@ -16,7 +12,12 @@ namespace PipelineLauncher.Abstractions.Dto
         }
     }
 
-    public class PipelineItem<TItem>: PipelineItem
+    public interface IPipelineItem<in TItem>
+    {
+        //TItem Item { get; }
+
+    }
+    public class PipelineItem<TItem>: PipelineItem//, IPipelineItem<TItem>
     {
         public new TItem Item { get; }
 

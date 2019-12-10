@@ -21,7 +21,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
             List<Item> input = MakeInput(6);
 
             //Configure stages
-            var stageSetup = new Pipeline(new FakeServicesRegistry.JobService())
+            var stageSetup = new PipelineCreator(new FakeServicesRegistry.JobService())
                 .Stage(new Stage1())
                 .Stage(new Stage2())
                 .Stage(new Stage3())
@@ -31,7 +31,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
             Stopwatch stopWatch = new Stopwatch();
 
             //Make pipeline from stageSetup
-            var pipeline = stageSetup.From();
+            var pipeline = stageSetup.CreateAwaitable();
 
             //run
             stopWatch.Start();
@@ -49,7 +49,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
             List<Item> input = MakeInput(6);
 
             //Configure stages
-            var stageSetup = new Pipeline(new FakeServicesRegistry.JobService())
+            var stageSetup = new PipelineCreator(new FakeServicesRegistry.JobService())
                 .Stage(new Stage1())
                 .Stage(new Stage2())
                 .Stage(new Stage3())
@@ -58,7 +58,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
             Stopwatch stopWatch = new Stopwatch();
 
             //Make pipeline from stageSetup
-            var pipeline = stageSetup.From();
+            var pipeline = stageSetup.CreateAwaitable();
 
             //run
             stopWatch.Start();
@@ -77,7 +77,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
             List<Item> input = MakeInput(6);
 
             //Configure stages
-            var stageSetup = new Pipeline(new FakeServicesRegistry.JobService())
+            var stageSetup = new PipelineCreator(new FakeServicesRegistry.JobService())
                 .Stage<Stage1, Item>()
                 .Stage<Stage2>()
                 .Stage<Stage3>()
@@ -87,7 +87,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
             Stopwatch stopWatch = new Stopwatch();
 
             //Make pipeline from stageSetup
-            var pipeline = stageSetup.From();
+            var pipeline = stageSetup.CreateAwaitable();
 
             //run
             stopWatch.Start();

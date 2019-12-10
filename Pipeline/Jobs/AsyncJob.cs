@@ -40,17 +40,17 @@ namespace PipelineLauncher.Jobs
 
         public TOutput Remove(TInput input)
         {
-            throw new NonParamException<TOutput>(new RemoveItem<TOutput>(input, GetType()));
+            return AsyncJobOption.Remove(input);
         }
 
         public TOutput Skip(TInput input)
         {
-            throw new NonParamException<TOutput>(new SkipItem<TOutput>(input, GetType()));
+            return AsyncJobOption.Skip(input);
         }
 
         public TOutput SkipTo<TSkipToJob>(TInput input) where TSkipToJob : IPipelineJobIn<TInput>
         {
-            throw new NonParamException<TOutput>(new SkipItemTill<TOutput>(typeof(TSkipToJob), input, GetType()));
+            return AsyncJobOption.SkipTo<TSkipToJob>(input);
         }
     }
 
