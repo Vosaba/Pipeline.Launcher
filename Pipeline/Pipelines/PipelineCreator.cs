@@ -33,7 +33,8 @@ namespace PipelineLauncher.Pipelines
             }
         }
 
-        public PipelineCreator(IJobService jobService) { 
+        public PipelineCreator(IJobService jobService)
+        {
             _jobService = jobService;
         }
 
@@ -105,7 +106,7 @@ namespace PipelineLauncher.Pipelines
             => CreateNextStage<TInput, TOutput>(job);
 
         public IPipelineSetup<TInput, TOutput> Stage<TInput, TOutput>(Func<IEnumerable<TInput>, IEnumerable<TOutput>> func)
-            => Stage(new LambdaJob<TInput, TOutput>(async x => await Task.FromResult(func(x))));
+            => Stage(new LambdaJob<TInput, TOutput>(func));
 
         public IPipelineSetup<TInput, TOutput> Stage<TInput, TOutput>(Func<IEnumerable<TInput>, Task<IEnumerable<TOutput>>> func)
             => Stage(new LambdaJob<TInput, TOutput>(func));
@@ -140,7 +141,7 @@ namespace PipelineLauncher.Pipelines
             IPropagatorBlock<PipelineItem<TInput>, PipelineItem<TOutput>> MakeNextBlock()
             {
 
-                var buffer = new BatchBlockEx<PipelineItem<TInput>>(int.MaxValue, 200); //TODO
+                var buffer = new BatchBlockEx<PipelineItem<TInput>>(job.Configuration.BatchItemsCount, job.Configuration.BatchItemsTimeOut); //TODO
 
                 TransformManyBlock<IEnumerable<PipelineItem<TInput>>, PipelineItem<TOutput>> rePostBlock = null;
 
@@ -153,10 +154,11 @@ namespace PipelineLauncher.Pipelines
                     async e => await job.InternalExecute(e, () => RePostMessages(e), _cancellationToken),
                     new ExecutionDataflowBlockOptions
                     {
-                        MaxDegreeOfParallelism = job.MaxDegreeOfParallelism
+                        MaxDegreeOfParallelism = job.Configuration.MaxDegreeOfParallelism,
+                        MaxMessagesPerTask = job.Configuration.MaxMessagesPerTask
                     });
 
-                buffer.LinkTo(nextBlock, new DataflowLinkOptions() {PropagateCompletion = true});
+                buffer.LinkTo(nextBlock, new DataflowLinkOptions() { PropagateCompletion = true });
                 rePostBlock = nextBlock;
 
                 buffer.Completion.ContinueWith(x => { nextBlock.Complete(); }, _cancellationToken);
@@ -181,7 +183,8 @@ namespace PipelineLauncher.Pipelines
                     async e => await asyncJob.InternalExecute(e, () => RePostMessage(e), _cancellationToken),
                     new ExecutionDataflowBlockOptions
                     {
-                        MaxDegreeOfParallelism = asyncJob.MaxDegreeOfParallelism
+                        MaxDegreeOfParallelism = asyncJob.Configuration.MaxDegreeOfParallelism,
+                        MaxMessagesPerTask = asyncJob.Configuration.MaxMessagesPerTask
                     });
 
                 rePostBlock = nextBlock;

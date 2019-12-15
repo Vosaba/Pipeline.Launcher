@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using PipelineLauncher.Abstractions.Configurations;
 using PipelineLauncher.Exceptions;
 
 namespace PipelineLauncher.Jobs
@@ -14,6 +15,8 @@ namespace PipelineLauncher.Jobs
         {
             _jobs = jobs;
         }
+
+        public override JobConfiguration Configuration => throw new System.NotImplementedException();
 
         public override async Task<IEnumerable<TOutput>> ExecuteAsync(IEnumerable<TInput> input, CancellationToken cancellationToken)
         {

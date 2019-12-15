@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using PipelineLauncher.Abstractions.Configurations;
 using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.Pipeline;
 using PipelineLauncher.Attributes;
@@ -40,5 +41,7 @@ namespace PipelineLauncher.PipelineJobs
         }
 
         public int MaxDegreeOfParallelism => Environment.ProcessorCount;
+
+        JobAsyncConfiguration IPipelineJobAsync<TInput, TInput>.Configuration => throw new NotImplementedException();
     }
 }

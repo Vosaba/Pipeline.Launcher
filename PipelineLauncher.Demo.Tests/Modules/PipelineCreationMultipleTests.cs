@@ -2,12 +2,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using PipelineLauncher.Demo.Tests.Fakes;
 using PipelineLauncher.Demo.Tests.Stages;
 using PipelineLauncher.Dto;
-using PipelineLauncher.Extensions;
-using PipelineLauncher.PipelineEvents;
 using PipelineLauncher.Pipelines;
 using PipelineLauncher.PipelineSetup;
 using Xunit;
@@ -33,7 +30,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
         public void Pipeline_Creation_Multiple_AsyncJobs()
         {
             //Test input 6 items
-            List<Item> input = MakeInput(30);
+            List<Item> input = MakeInput(3);
 
             //Configure stages
             var pipelineSetup = PipelineCreator

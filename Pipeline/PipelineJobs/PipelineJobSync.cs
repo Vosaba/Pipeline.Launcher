@@ -1,4 +1,5 @@
-﻿using PipelineLauncher.Abstractions.Dto;
+﻿using PipelineLauncher.Abstractions.Configurations;
+using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.Pipeline;
 using PipelineLauncher.Attributes;
 using System;
@@ -11,6 +12,8 @@ namespace PipelineLauncher.PipelineJobs
 {
     public abstract class PipelineJobSync<TInput, TOutput> : PipelineJob<TInput, TOutput>, IPipelineJobSync<TInput, TOutput>
     {
+        public abstract JobConfiguration Configuration { get; }
+
         public abstract Task<IEnumerable<TOutput>> ExecuteAsync(IEnumerable<TInput> input, CancellationToken cancellationToken);
 
         public async Task<IEnumerable<PipelineItem<TOutput>>> InternalExecute(IEnumerable<PipelineItem<TInput>> input, Action reExecute, CancellationToken cancellationToken)

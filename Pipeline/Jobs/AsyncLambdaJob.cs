@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using PipelineLauncher.Abstractions.Configurations;
 using PipelineLauncher.Dto;
 
 namespace PipelineLauncher.Jobs

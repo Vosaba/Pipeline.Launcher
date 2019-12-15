@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using PipelineLauncher.Abstractions.Configurations;
 using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.Pipeline;
 using PipelineLauncher.Attributes;
@@ -12,6 +13,8 @@ namespace PipelineLauncher.PipelineJobs
     public abstract class PipelineJobAsync<TInput, TOutput> : PipelineJob<TInput, TOutput>, IPipelineJobAsync<TInput, TOutput>
     {
         protected static AsyncJobOption<TInput, TOutput> AsyncJobOption = new AsyncJobOption<TInput, TOutput>();
+
+        public abstract JobAsyncConfiguration Configuration { get; }
 
         public abstract Task<TOutput> ExecuteAsync(TInput input, CancellationToken cancellationToken);
 

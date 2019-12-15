@@ -1,4 +1,5 @@
-﻿using PipelineLauncher.Abstractions.Pipeline;
+﻿using PipelineLauncher.Abstractions.Configurations;
+using PipelineLauncher.Abstractions.Pipeline;
 using System;
 using System.Diagnostics;
 
@@ -23,7 +24,5 @@ namespace PipelineLauncher.PipelineJobs
 
 
         public virtual bool Condition(TInput input) => true;
-
-        public virtual int MaxDegreeOfParallelism => Environment.ProcessorCount;
     }
 }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using PipelineLauncher.Abstractions.Configurations;
 using PipelineLauncher.Jobs;
 
 namespace PipelineLauncher.Demo.Tests.Stages
@@ -46,7 +47,6 @@ namespace PipelineLauncher.Demo.Tests.Stages
             //return "";
         }
 
-        public override int MaxDegreeOfParallelism => 2;
 
         public override bool Condition(Item input)
         {
@@ -76,7 +76,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
             return item;
         }
 
-        public override int MaxDegreeOfParallelism => 2;
+        public override JobAsyncConfiguration Configuration => new JobAsyncConfiguration { MaxDegreeOfParallelism = 2 };
 
         public override bool Condition(Item input)
         {

@@ -1,4 +1,5 @@
-﻿using PipelineLauncher.PipelineJobs;
+﻿using PipelineLauncher.Abstractions.Configurations;
+using PipelineLauncher.PipelineJobs;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -8,6 +9,9 @@ namespace PipelineLauncher.Jobs
 {
     public abstract class Job<TInput, TOutput> : PipelineJobSync<TInput, TOutput>
     {
+        public override JobConfiguration Configuration => new JobConfiguration();
+
+
         public override async Task<IEnumerable<TOutput>> ExecuteAsync(IEnumerable<TInput> input, CancellationToken cancellationToken)
         {
             return await ExecuteAsync(input);

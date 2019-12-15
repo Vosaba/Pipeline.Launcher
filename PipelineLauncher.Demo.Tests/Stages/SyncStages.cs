@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using PipelineLauncher.Abstractions.Configurations;
 using PipelineLauncher.Jobs;
 
 namespace PipelineLauncher.Demo.Tests.Stages
@@ -119,6 +120,11 @@ namespace PipelineLauncher.Demo.Tests.Stages
         {
             return "Stage4";
         }
+
+        public override JobConfiguration Configuration => new JobConfiguration {
+            BatchItemsCount = 10,
+            BatchItemsTimeOut = 3000
+        };
     }
 
     

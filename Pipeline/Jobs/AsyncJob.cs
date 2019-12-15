@@ -1,4 +1,5 @@
-﻿using PipelineLauncher.Abstractions.Pipeline;
+﻿using PipelineLauncher.Abstractions.Configurations;
+using PipelineLauncher.Abstractions.Pipeline;
 using PipelineLauncher.PipelineJobs;
 using System;
 using System.Threading;
@@ -15,6 +16,9 @@ namespace PipelineLauncher.Jobs
     /// <typeparam name="TOutput">The type of the result.</typeparam>
     public abstract class AsyncJob<TInput, TOutput> : PipelineJobAsync<TInput, TOutput>
     {
+        public override JobAsyncConfiguration Configuration => new JobAsyncConfiguration();
+
+
         /// <summary>
         /// Performs the job using the specified param.
         /// </summary>

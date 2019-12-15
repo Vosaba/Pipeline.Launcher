@@ -2,6 +2,7 @@
 using PipelineLauncher.PipelineSetup;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace PipelineLauncher.Extensions
 {
@@ -16,6 +17,28 @@ namespace PipelineLauncher.Extensions
                 var hash = hashFunc?.Invoke(input) ?? input.GetHashCode();
 
                 return !processedHash.TryAdd(hash, byte.MinValue) ? asyncJobOption.Remove(input) : input;
+            });
+        }
+
+        public static IPipelineSetup<TInput, TOutput> RemoveDuplicatesPermanent<TInput, TOutput>(this IPipelineSetup<TInput, TOutput> pipelineSetup, Func<TOutput, int> hashFunc = null)
+        {
+            var processedHash = new ConcurrentDictionary<int, byte>();
+
+            return pipelineSetup.Stage((IEnumerable<TOutput> inputs) =>
+            {
+                var result = new List<TOutput>();
+
+                foreach(var input in inputs)
+                {
+                    var hash = hashFunc?.Invoke(input) ?? input.GetHashCode();
+
+                    if (processedHash.TryAdd(hash, byte.MinValue))
+                    {
+                        result.Add(input);
+                    }
+                }
+
+                return result;
             });
         }
 

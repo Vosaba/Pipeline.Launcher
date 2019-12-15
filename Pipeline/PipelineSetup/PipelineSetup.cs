@@ -40,7 +40,7 @@ namespace PipelineLauncher.PipelineSetup
         }
     }
 
-    internal class PipelineSetup<TInput, TOutput> : PipelineSetup<TInput>, IStageSetupOut<TOutput> , IPipelineSetup<TInput, TOutput>
+    internal class PipelineSetup<TInput, TOutput> : PipelineSetup<TInput>, IStageSetupOut<TOutput>, IPipelineSetup<TInput, TOutput>
     {
         public new IStageOut<TOutput> Current => (IStageOut<TOutput>)base.Current;
 
@@ -110,7 +110,7 @@ namespace PipelineLauncher.PipelineSetup
             => CreateNextStage(job);
 
         public IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(Func<IEnumerable<TOutput>, IEnumerable<TNextOutput>> func)
-            => Stage(new LambdaJob<TOutput, TNextOutput>(async x => await Task.FromResult(func(x))));
+            => Stage(new LambdaJob<TOutput, TNextOutput>(func));
 
         public IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(Func<IEnumerable<TOutput>, Task<IEnumerable<TNextOutput>>> func)
             => Stage(new LambdaJob<TOutput, TNextOutput>(func));
@@ -146,7 +146,7 @@ namespace PipelineLauncher.PipelineSetup
         {
             BroadcastBlock<PipelineItem<TOutput>> MakeNextBlock()
             {
-                var broadcastBlock =  new BroadcastBlock<PipelineItem<TOutput>>(e => e);
+                var broadcastBlock = new BroadcastBlock<PipelineItem<TOutput>>(e => e);
 
                 Current.ExecutionBlock.LinkTo(broadcastBlock);
                 Current.ExecutionBlock.Completion.ContinueWith(x =>
@@ -159,7 +159,7 @@ namespace PipelineLauncher.PipelineSetup
             }
 
             var newCurrent = CreateNextBlock(MakeNextBlock);
-            return newCurrent.Branch(branches).RemoveDuplicates();
+            return newCurrent.Branch(branches).RemoveDuplicatesPermanent();
         }
 
         public IPipelineSetup<TInput, TNextOutput> Branch<TNextOutput>(params (Predicate<TOutput> predicate,
@@ -232,7 +232,7 @@ namespace PipelineLauncher.PipelineSetup
         public IAwaitablePipelineRunner<TInput, TOutput> CreateAwaitable()
         {
             var firstStage = this.GetFirstStage<TInput>();
-            return new AwaitablePipelineRunner<TInput, TOutput>(()=>firstStage.ExecutionBlock, ()=>Current.ExecutionBlock, Current.CancellationToken, () => DestroyStageBlocks(firstStage));
+            return new AwaitablePipelineRunner<TInput, TOutput>(() => firstStage.ExecutionBlock, () => Current.ExecutionBlock, Current.CancellationToken, () => DestroyStageBlocks(firstStage));
         }
 
         public IPipelineRunner<TInput, TOutput> Create()
@@ -256,9 +256,8 @@ namespace PipelineLauncher.PipelineSetup
                     async e => await asyncJob.InternalExecute(e, () => RePostMessage(e), Current.CancellationToken),
                     new ExecutionDataflowBlockOptions
                     {
-                        MaxDegreeOfParallelism = asyncJob.MaxDegreeOfParallelism
-                        ,
-                        MaxMessagesPerTask = 1
+                        MaxDegreeOfParallelism = asyncJob.Configuration.MaxDegreeOfParallelism,
+                        MaxMessagesPerTask = asyncJob.Configuration.MaxMessagesPerTask
                     });
 
                 rePostBlock = nextBlock;
@@ -282,7 +281,7 @@ namespace PipelineLauncher.PipelineSetup
         {
             IPropagatorBlock<PipelineItem<TOutput>, PipelineItem<TNextOutput>> MakeNextBlock()
             {
-                var buffer = new BatchBlockEx<PipelineItem<TOutput>>(20, 5000); //TODO
+                var buffer = new BatchBlockEx<PipelineItem<TOutput>>(job.Configuration.BatchItemsCount, job.Configuration.BatchItemsTimeOut); //TODO
 
                 TransformManyBlock<IEnumerable<PipelineItem<TOutput>>, PipelineItem<TNextOutput>> rePostBlock = null;
 
@@ -295,8 +294,8 @@ namespace PipelineLauncher.PipelineSetup
                     async e => await job.InternalExecute(e, () => RePostMessages(e), Current.CancellationToken),
                     new ExecutionDataflowBlockOptions
                     {
-                        MaxDegreeOfParallelism = job.MaxDegreeOfParallelism
-                        ,MaxMessagesPerTask = 1
+                        MaxDegreeOfParallelism = job.Configuration.MaxDegreeOfParallelism,
+                        MaxMessagesPerTask = job.Configuration.MaxMessagesPerTask
                     });
 
                 buffer.LinkTo(nextBlock, new DataflowLinkOptions() { PropagateCompletion = true });
