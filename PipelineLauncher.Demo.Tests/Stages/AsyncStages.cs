@@ -9,7 +9,7 @@ using PipelineLauncher.Jobs;
 
 namespace PipelineLauncher.Demo.Tests.Stages
 {
-    public class AsyncStage1 : AsyncJob<Item>
+    public class Stage1 : Job<Item>
     {
         public override Item Execute(Item item)
         {
@@ -31,7 +31,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
         }
     }
 
-    public class AsyncStage2 : AsyncJob<Item>
+    public class Stage2 : Job<Item>
     {
         public override Item Execute(Item item)
         {
@@ -59,7 +59,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
         }
     }
 
-    public class AsyncStage2Alternative : AsyncJob<Item>
+    public class Stage2Alternative : Job<Item>
     {
         public override Item Execute(Item item)
         {
@@ -76,7 +76,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
             return item;
         }
 
-        public override JobAsyncConfiguration Configuration => new JobAsyncConfiguration { MaxDegreeOfParallelism = 2 };
+        public override JobConfiguration Configuration => new JobConfiguration { MaxDegreeOfParallelism = 2 };
 
         public override bool Condition(Item input)
         {
@@ -89,7 +89,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
         }
     }
 
-    public class AsyncStage3 : AsyncJob<Item>
+    public class Stage3 : Job<Item>
     {
         public override Item Execute(Item item)
         {
@@ -107,7 +107,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
         }
     }
 
-    public class AsyncStage4 : AsyncJob<Item, Item>
+    public class Stage4 : Job<Item>
     {
         public override Item Execute(Item item)
         {
@@ -125,7 +125,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
         }
     }
 
-    public class AsyncStage_Item_To_String : Job<Item, string>
+    public class BulkcStage_Item_To_String : BulkJob<Item, string>
     {
         public override IEnumerable<string> Execute(IEnumerable<Item> items)
         {
@@ -146,7 +146,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
         }
     }
 
-    public class AsyncStage_String_To_Object : Job<string, object>
+    public class AsyncStage_String_To_Object : BulkJob<string, object>
     {
         public override IEnumerable<object> Execute(IEnumerable<string> items)
         {

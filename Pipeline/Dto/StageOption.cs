@@ -4,7 +4,7 @@ using PipelineLauncher.Exceptions;
 
 namespace PipelineLauncher.Dto
 {
-    public struct AsyncJobOption<TInput, TOutput>
+    public struct StageOption<TInput, TOutput>
     {
         public TOutput Remove(TInput input)
         {
@@ -20,5 +20,12 @@ namespace PipelineLauncher.Dto
         {
             throw new NonParamException<TOutput>(new SkipItemTill<TOutput>(typeof(TSkipToJob), input, GetType()));
         }
+    }
+
+    public enum ConditionExceptionScenario
+    {
+        GoToNextCondition,
+        BreakPipelineExecution,
+        AddExceptionAndGoToNextCondition
     }
 }

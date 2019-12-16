@@ -20,51 +20,51 @@ namespace PipelineLauncher.PipelineSetup
         #region Generic Stages
 
         #region Sync
-        IPipelineSetup<TInput, TNextOutput> Stage<TJob, TNextOutput>()
-            where TJob : Job<TOutput, TNextOutput>;
+        IPipelineSetup<TInput, TNextOutput> BulkStage<TJob, TNextOutput>()
+            where TJob : BulkJob<TOutput, TNextOutput>;
 
-        IPipelineSetup<TInput, TOutput> Stage<TJob>()
-            where TJob : Job<TOutput, TOutput>;
+        IPipelineSetup<TInput, TOutput> BulkStage<TJob>()
+            where TJob : BulkJob<TOutput, TOutput>;
 
-        IPipelineSetup<TInput, TNextOutput> Stage<TJob, TJob2, TNextOutput>()
-            where TJob : Job<TOutput, TNextOutput>
-            where TJob2 : Job<TOutput, TNextOutput>;
+        IPipelineSetup<TInput, TNextOutput> BulkStage<TJob, TJob2, TNextOutput>()
+            where TJob : BulkJob<TOutput, TNextOutput>
+            where TJob2 : BulkJob<TOutput, TNextOutput>;
 
-        IPipelineSetup<TInput, TNextOutput> Stage<TJob, TJob2, TJob3, TNextOutput>()
-            where TJob : Job<TOutput, TNextOutput>
-            where TJob2 : Job<TOutput, TNextOutput>
-            where TJob3 : Job<TOutput, TNextOutput>;
+        IPipelineSetup<TInput, TNextOutput> BulkStage<TJob, TJob2, TJob3, TNextOutput>()
+            where TJob : BulkJob<TOutput, TNextOutput>
+            where TJob2 : BulkJob<TOutput, TNextOutput>
+            where TJob3 : BulkJob<TOutput, TNextOutput>;
 
-        IPipelineSetup<TInput, TNextOutput> Stage<TJob, TJob2, TJob3, TJob4, TNextOutput>()
-            where TJob : Job<TOutput, TNextOutput>
-            where TJob2 : Job<TOutput, TNextOutput>
-            where TJob3 : Job<TOutput, TNextOutput>
-            where TJob4 : Job<TOutput, TNextOutput>;
+        IPipelineSetup<TInput, TNextOutput> BulkStage<TJob, TJob2, TJob3, TJob4, TNextOutput>()
+            where TJob : BulkJob<TOutput, TNextOutput>
+            where TJob2 : BulkJob<TOutput, TNextOutput>
+            where TJob3 : BulkJob<TOutput, TNextOutput>
+            where TJob4 : BulkJob<TOutput, TNextOutput>;
 
         #endregion
 
         #region Async
 
-        IPipelineSetup<TInput, TOutput> AsyncStage<TAsyncJob>()
-           where TAsyncJob : AsyncJob<TOutput, TOutput>;
+        IPipelineSetup<TInput, TOutput> Stage<TAsyncJob>()
+           where TAsyncJob : Job<TOutput, TOutput>;
 
-        IPipelineSetup<TInput, TNextOutput> AsyncStage<TAsyncJob, TNextOutput>()
-           where TAsyncJob : AsyncJob<TOutput, TNextOutput>;
+        IPipelineSetup<TInput, TNextOutput> Stage<TAsyncJob, TNextOutput>()
+           where TAsyncJob : Job<TOutput, TNextOutput>;
 
-        IPipelineSetup<TInput, TNextOutput> AsyncStage<TAsyncJob, TAsyncJob2, TNextOutput>()
-           where TAsyncJob : AsyncJob<TOutput, TNextOutput>
-           where TAsyncJob2 : AsyncJob<TOutput, TNextOutput>;
+        IPipelineSetup<TInput, TNextOutput> Stage<TAsyncJob, TAsyncJob2, TNextOutput>()
+           where TAsyncJob : Job<TOutput, TNextOutput>
+           where TAsyncJob2 : Job<TOutput, TNextOutput>;
 
-        IPipelineSetup<TInput, TNextOutput> AsyncStage<TAsyncJob, TAsyncJob2, TAsyncJob3, TNextOutput>()
-           where TAsyncJob : AsyncJob<TOutput, TNextOutput>
-           where TAsyncJob2 : AsyncJob<TOutput, TNextOutput>
-           where TAsyncJob3 : AsyncJob<TOutput, TNextOutput>;
+        IPipelineSetup<TInput, TNextOutput> Stage<TAsyncJob, TAsyncJob2, TAsyncJob3, TNextOutput>()
+           where TAsyncJob : Job<TOutput, TNextOutput>
+           where TAsyncJob2 : Job<TOutput, TNextOutput>
+           where TAsyncJob3 : Job<TOutput, TNextOutput>;
 
-        IPipelineSetup<TInput, TNextOutput> AsyncStage<TAsyncJob, TAsyncJob2, TAsyncJob3, TAsyncJob4, TNextOutput>()
-           where TAsyncJob : AsyncJob<TOutput, TNextOutput>
-           where TAsyncJob2 : AsyncJob<TOutput, TNextOutput>
-           where TAsyncJob3 : AsyncJob<TOutput, TNextOutput>
-           where TAsyncJob4 : AsyncJob<TOutput, TNextOutput>;
+        IPipelineSetup<TInput, TNextOutput> Stage<TAsyncJob, TAsyncJob2, TAsyncJob3, TAsyncJob4, TNextOutput>()
+           where TAsyncJob : Job<TOutput, TNextOutput>
+           where TAsyncJob2 : Job<TOutput, TNextOutput>
+           where TAsyncJob3 : Job<TOutput, TNextOutput>
+           where TAsyncJob4 : Job<TOutput, TNextOutput>;
 
         #endregion
         
@@ -74,29 +74,29 @@ namespace PipelineLauncher.PipelineSetup
 
         #region Sync
 
-        IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(Job<TOutput, TNextOutput> job);
+        IPipelineSetup<TInput, TNextOutput> BulkStage<TNextOutput>(BulkJob<TOutput, TNextOutput> job);
 
-        IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(Func<IEnumerable<TOutput>, IEnumerable<TNextOutput>> func);
+        IPipelineSetup<TInput, TNextOutput> BulkStage<TNextOutput>(Func<IEnumerable<TOutput>, IEnumerable<TNextOutput>> func);
 
-        IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(Func<IEnumerable<TOutput>, Task<IEnumerable<TNextOutput>>> func);
+        IPipelineSetup<TInput, TNextOutput> BulkStage<TNextOutput>(Func<IEnumerable<TOutput>, Task<IEnumerable<TNextOutput>>> func);
 
-        IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(params Job<TOutput, TNextOutput>[] jobs);
+        IPipelineSetup<TInput, TNextOutput> BulkStage<TNextOutput>(params BulkJob<TOutput, TNextOutput>[] jobs);
 
         #endregion
 
         #region Async
 
-        IPipelineSetup<TInput, TNextOutput> AsyncStage<TNextOutput>(AsyncJob<TOutput, TNextOutput> asyncJob);
+        IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(Job<TOutput, TNextOutput> job);
 
-        IPipelineSetup<TInput, TNextOutput> AsyncStage<TNextOutput>(Func<TOutput, TNextOutput> asyncFunc);
+        IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(Func<TOutput, TNextOutput> asyncFunc);
 
-        IPipelineSetup<TInput, TNextOutput> AsyncStage<TNextOutput>(Func<TOutput, AsyncJobOption<TOutput, TNextOutput>, TNextOutput> asyncFuncWithOption);
+        IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(Func<TOutput, StageOption<TOutput, TNextOutput>, TNextOutput> asyncFuncWithOption);
 
-        IPipelineSetup<TInput, TNextOutput> AsyncStage<TNextOutput>(Func<TOutput, Task<TNextOutput>> asyncFunc);
+        IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(Func<TOutput, Task<TNextOutput>> asyncFunc);
 
-        IPipelineSetup<TInput, TNextOutput> AsyncStage<TNextOutput>(Func<TOutput, AsyncJobOption<TOutput, TNextOutput>, Task<TNextOutput>> asyncFuncWithOption);
+        IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(Func<TOutput, StageOption<TOutput, TNextOutput>, Task<TNextOutput>> asyncFuncWithOption);
 
-        IPipelineSetup<TInput, TNextOutput> AsyncStage<TNextOutput>(params AsyncJob<TOutput, TNextOutput>[] asyncJobs);
+        IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(params Job<TOutput, TNextOutput>[] jobS);
 
         #endregion
 
@@ -109,6 +109,10 @@ namespace PipelineLauncher.PipelineSetup
 
         IPipelineSetup<TInput, TNextOutput> Branch<TNextOutput>(params (Predicate<TOutput> predicate,
             Func<IPipelineSetup<TInput, TOutput>, IPipelineSetup<TInput, TNextOutput>> branch)[] branches);
+
+        IPipelineSetup<TInput, TNextOutput> Branch<TNextOutput>(
+            ConditionExceptionScenario conditionExceptionScenario,
+            params (Predicate<TOutput> predicate, Func<IPipelineSetup<TInput, TOutput>, IPipelineSetup<TInput, TNextOutput>> branch)[] branches);
 
         #endregion
 

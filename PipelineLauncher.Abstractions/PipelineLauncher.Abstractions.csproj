@@ -16,8 +16,4 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DocumentationFile></DocumentationFile>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Folder Include="Configurations\" />
-  </ItemGroup>
 </Project>

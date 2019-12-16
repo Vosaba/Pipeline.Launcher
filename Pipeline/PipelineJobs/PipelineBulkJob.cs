@@ -10,9 +10,9 @@ using System.Threading.Tasks;
 
 namespace PipelineLauncher.PipelineJobs
 {
-    public abstract class PipelineJobSync<TInput, TOutput> : PipelineJob<TInput, TOutput>, IPipelineJobSync<TInput, TOutput>
+    public abstract class PipelineBulkJob<TInput, TOutput> : PipelineJobBase<TInput, TOutput>, IPipelineJobSync<TInput, TOutput>
     {
-        public abstract JobConfiguration Configuration { get; }
+        public abstract BulkJobConfiguration Configuration { get; }
 
         public abstract Task<IEnumerable<TOutput>> ExecuteAsync(IEnumerable<TInput> input, CancellationToken cancellationToken);
 

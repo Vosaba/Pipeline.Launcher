@@ -6,14 +6,15 @@ using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.Pipeline;
 using PipelineLauncher.Attributes;
 using PipelineLauncher.Dto;
+using PipelineLauncher.Jobs;
 
 namespace PipelineLauncher.PipelineJobs
 {
-    internal class PipelineFilterJobAsync<TInput> : PipelineJob<TInput, TInput>, IPipelineFilterAsync<TInput, TInput>
+    internal class PipelineBulkJobFilter<TInput> : BulkJob<TInput, TInput>, IPipelineBulkFilter<TInput, TInput>
     {
         private readonly PipelineFilterAttribute _pipelineFilter;
 
-        public PipelineFilterJobAsync(PipelineFilterAttribute pipelineFilter)
+        public PipelineBulkJobFilter(PipelineFilterAttribute pipelineFilter)
         {
             _pipelineFilter = pipelineFilter;
         }
@@ -42,6 +43,6 @@ namespace PipelineLauncher.PipelineJobs
 
         public int MaxDegreeOfParallelism => Environment.ProcessorCount;
 
-        JobAsyncConfiguration IPipelineJobAsync<TInput, TInput>.Configuration => throw new NotImplementedException();
+        JobConfiguration IPipelineBulkJob<TInput, TInput>.Configuration => throw new NotImplementedException();
     }
 }

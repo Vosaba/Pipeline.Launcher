@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using PipelineLauncher.Abstractions.Configurations;
 using PipelineLauncher.Jobs;
 
 namespace PipelineLauncher.Demo.Tests.Stages
 {
-    public class Stage1 : Job<Item>
+    public class BulkStage1 : BulkJob<Item>
     {
         public override IEnumerable<Item> Execute(IEnumerable<Item> items)
         {
@@ -29,7 +30,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
         }
     }
 
-    public class Stage2 : Job<Item>
+    public class BulkStage2 : BulkJob<Item>
     {
         public override IEnumerable<Item> Execute(IEnumerable<Item> items)
         {
@@ -55,7 +56,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
         }
     }
 
-    public class Stage2Alternative : Job<Item>
+    public class BulkStage2Alternative : BulkJob<Item>
     {
         public override IEnumerable<Item> Execute(IEnumerable<Item> items)
         {
@@ -81,16 +82,19 @@ namespace PipelineLauncher.Demo.Tests.Stages
         }
     }
 
-    public class Stage3 : Job<Item>
+    public class BulkStage3 : BulkJob<Item>
     {
-        public override IEnumerable<Item> Execute(IEnumerable<Item> items)
+        public override async Task<IEnumerable<Item>> ExecuteAsync(IEnumerable<Item> items, CancellationToken token)
         {
             foreach (var item in items)
             {
-                item.Value = item.Value + "Stage3->";
-                Thread.Sleep(1000);
+                if (!token.IsCancellationRequested)
+                {
+                    Thread.Sleep(1000);
+                    item.Value = item.Value + "Stage3->";
 
-                item.ProcessedBy.Add(Thread.CurrentThread.ManagedThreadId);
+                    item.ProcessedBy.Add(Thread.CurrentThread.ManagedThreadId);
+                }
             }
 
             return items;
@@ -101,7 +105,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
         }
     }
 
-    public class Stage4 : Job<Item>
+    public class BulkStage4 : BulkJob<Item>
     {
         public override IEnumerable<Item> Execute(IEnumerable<Item> items)
         {
@@ -121,7 +125,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
             return "Stage4";
         }
 
-        public override JobConfiguration Configuration => new JobConfiguration {
+        public override BulkJobConfiguration Configuration => new BulkJobConfiguration {
             BatchItemsCount = 10,
             BatchItemsTimeOut = 3000
         };
@@ -129,7 +133,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
 
     
 
-    public class IntStage : Job<int>
+    public class BulkIntStage : BulkJob<int>
     {
         public override IEnumerable<int> Execute(IEnumerable<int> items)
         {
@@ -142,7 +146,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
         }
     }
 
-    public class Stage_Item_To_String : Job<Item, string>
+    public class BulkStage_Item_To_String : BulkJob<Item, string>
     {
         public override IEnumerable<string> Execute(IEnumerable<Item> items)
         {
@@ -163,7 +167,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
         }
     }
 
-    public class Stage_String_To_Object : Job<string, object>
+    public class BulkStage_String_To_Object : BulkJob<string, object>
     {
         public override IEnumerable<object> Execute(IEnumerable<string> items)
         {

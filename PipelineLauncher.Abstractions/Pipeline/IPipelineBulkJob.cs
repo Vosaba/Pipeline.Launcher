@@ -6,9 +6,9 @@ using PipelineLauncher.Abstractions.Dto;
 
 namespace PipelineLauncher.Abstractions.Pipeline
 {
-    public interface IPipelineJobAsync<TInput, TOutput> : IPipelineJob<TInput, TOutput>
+    public interface IPipelineBulkJob<TInput, TOutput> : IPipelineJob<TInput, TOutput>
     {
         Task<PipelineItem<TOutput>> InternalExecute(PipelineItem<TInput> input, Action reExecute, CancellationToken cancellationToken);
-        JobAsyncConfiguration Configuration { get; }
+        JobConfiguration Configuration { get; }
     }
 }

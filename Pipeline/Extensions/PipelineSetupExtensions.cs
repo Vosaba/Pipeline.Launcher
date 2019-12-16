@@ -12,7 +12,7 @@ namespace PipelineLauncher.Extensions
         {
             var processedHash = new ConcurrentDictionary<int, byte>();
 
-            return pipelineSetup.AsyncStage((TOutput input, AsyncJobOption<TOutput, TOutput> asyncJobOption) =>
+            return pipelineSetup.Stage((TOutput input, StageOption<TOutput, TOutput> asyncJobOption) =>
             {
                 var hash = hashFunc?.Invoke(input) ?? input.GetHashCode();
 
@@ -24,7 +24,7 @@ namespace PipelineLauncher.Extensions
         {
             var processedHash = new ConcurrentDictionary<int, byte>();
 
-            return pipelineSetup.Stage((IEnumerable<TOutput> inputs) =>
+            return pipelineSetup.BulkStage(inputs =>
             {
                 var result = new List<TOutput>();
 
@@ -45,7 +45,7 @@ namespace PipelineLauncher.Extensions
         public static IPipelineSetup<TInput, TCast> Cast<TInput, TOutput, TCast>(this IPipelineSetup<TInput, TOutput> pipelineSetup)
             where TCast : class
         {
-            return pipelineSetup.AsyncStage(output => output as TCast);
+            return pipelineSetup.Stage(output => output as TCast);
         }
     }
 }

@@ -1,29 +1,46 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using PipelineLauncher.Abstractions.Configurations;
+using PipelineLauncher.Dto;
 
 namespace PipelineLauncher.Jobs
 {
     internal class LambdaJob<TInput, TOutput> : Job<TInput, TOutput>
     {
-        private readonly Func<IEnumerable<TInput>, Task<IEnumerable<TOutput>>> _funcAsync;
-        private readonly Func<IEnumerable<TInput>, IEnumerable<TOutput>> _func;
+        private readonly Func<TInput, StageOption<TInput, TOutput>, Task<TOutput>> _funcAsyncWithJobOption = null;
+        private readonly Func<TInput, StageOption<TInput, TOutput>, TOutput> _funcWithJobOption = null;
 
 
-        public LambdaJob(Func<IEnumerable<TInput>, Task<IEnumerable<TOutput>>> funcAsync)
+        private readonly Func<TInput, Task<TOutput>> _funcAsync = null;
+        private readonly Func<TInput, TOutput> _func = null;
+
+        internal LambdaJob(Func<TInput, StageOption<TInput, TOutput>, Task<TOutput>> funcAsyncWithJobOption)
+        {
+            _funcAsyncWithJobOption = funcAsyncWithJobOption;
+        }
+
+        internal LambdaJob(Func<TInput, StageOption<TInput, TOutput>, TOutput> funcWithJobOption)
+        {
+            _funcWithJobOption = funcWithJobOption;
+        }
+
+        internal LambdaJob(Func<TInput, Task<TOutput>> funcAsync)
         {
             _funcAsync = funcAsync;
         }
 
-        public LambdaJob(Func<IEnumerable<TInput>, IEnumerable<TOutput>> func)
+        internal LambdaJob(Func<TInput, TOutput> func)
         {
             _func = func;
         }
 
-        public override async Task<IEnumerable<TOutput>> ExecuteAsync(IEnumerable<TInput> input)
+        public override async Task<TOutput> ExecuteAsync(TInput input)
         {
-            return _funcAsync != null ? await _funcAsync(input) : _func(input);
+            return 
+                _funcAsyncWithJobOption != null ? await _funcAsyncWithJobOption(input, StageOption):
+                _funcWithJobOption != null ? _funcWithJobOption(input, StageOption) :
+                _funcAsync != null ? await _funcAsync(input): 
+                _func(input);
         }
     }
 }

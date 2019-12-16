@@ -10,11 +10,11 @@ using PipelineLauncher.Exceptions;
 
 namespace PipelineLauncher.PipelineJobs
 {
-    public abstract class PipelineJobAsync<TInput, TOutput> : PipelineJob<TInput, TOutput>, IPipelineJobAsync<TInput, TOutput>
+    public abstract class PipelineJob<TInput, TOutput> : PipelineJobBase<TInput, TOutput>, IPipelineBulkJob<TInput, TOutput>
     {
-        protected static AsyncJobOption<TInput, TOutput> AsyncJobOption = new AsyncJobOption<TInput, TOutput>();
+        protected static StageOption<TInput, TOutput> StageOption = new StageOption<TInput, TOutput>();
 
-        public abstract JobAsyncConfiguration Configuration { get; }
+        public abstract JobConfiguration Configuration { get; }
 
         public abstract Task<TOutput> ExecuteAsync(TInput input, CancellationToken cancellationToken);
 

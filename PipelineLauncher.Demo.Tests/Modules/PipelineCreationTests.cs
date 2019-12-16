@@ -22,10 +22,10 @@ namespace PipelineLauncher.Demo.Tests.Modules
 
             //Configure stages
             var stageSetup = new PipelineCreator(new FakeServicesRegistry.JobService())
-                .Stage(new Stage1())
-                .Stage(new Stage2())
-                .Stage(new Stage3())
-                .Stage(new Stage4());
+                .BulkStage(new BulkStage1())
+                .BulkStage(new BulkStage2())
+                .BulkStage(new BulkStage3())
+                .BulkStage(new BulkStage4());
                 
 
             Stopwatch stopWatch = new Stopwatch();
@@ -50,10 +50,10 @@ namespace PipelineLauncher.Demo.Tests.Modules
 
             //Configure stages
             var stageSetup = new PipelineCreator(new FakeServicesRegistry.JobService())
-                .Stage(new Stage1())
-                .Stage(new Stage2())
-                .Stage(new Stage3())
-                .Stage(new Stage_Item_To_String());
+                .BulkStage(new BulkStage1())
+                .BulkStage(new BulkStage2())
+                .BulkStage(new BulkStage3())
+                .BulkStage(new BulkStage_Item_To_String());
 
             Stopwatch stopWatch = new Stopwatch();
 
@@ -78,11 +78,11 @@ namespace PipelineLauncher.Demo.Tests.Modules
 
             //Configure stages
             var stageSetup = new PipelineCreator(new FakeServicesRegistry.JobService())
-                .Stage<Stage1, Item>()
-                .Stage<Stage2>()
-                .Stage<Stage3>()
-                .Stage<Stage_Item_To_String, string>()
-                .Stage<Stage_String_To_Object, object>();
+                .BulkStage<BulkStage1, Item>()
+                .BulkStage<BulkStage2>()
+                .BulkStage<BulkStage3>()
+                .BulkStage<BulkStage_Item_To_String, string>()
+                .BulkStage<BulkStage_String_To_Object, object>();
 
             Stopwatch stopWatch = new Stopwatch();
 

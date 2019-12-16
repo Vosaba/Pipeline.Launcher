@@ -6,7 +6,7 @@ using System.Diagnostics;
 namespace PipelineLauncher.PipelineJobs
 {
     [DebuggerDisplay("Name = d")]
-    public abstract class PipelineJob<TInput, TOutput>:  IPipelineJob<TInput, TOutput>
+    public abstract class PipelineJobBase<TInput, TOutput>:  IPipelineJob<TInput, TOutput>
     {
         protected static bool IsSubclassOfRawGeneric(Type generic, Type toCheck)
         {

@@ -1,10 +1,14 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.VisualBasic;
 using PipelineLauncher.Demo.Tests.Fakes;
 using PipelineLauncher.Demo.Tests.Stages;
 using PipelineLauncher.Dto;
+using PipelineLauncher.PipelineEvents;
 using PipelineLauncher.Pipelines;
 using PipelineLauncher.PipelineSetup;
 using Xunit;
@@ -16,7 +20,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
     {
         public static IPipelineSetup<TInput, int> MssCall<TInput>(this IPipelineSetup<TInput, Item> pipelineSetup, string someValue)
         {
-            return pipelineSetup.AsyncStage(e => e.GetHashCode());
+            return pipelineSetup.Stage(e => e.GetHashCode());
         }
     }
     public class PipelineCreationMultipleTests : PipelineTestsBase
@@ -32,14 +36,21 @@ namespace PipelineLauncher.Demo.Tests.Modules
             //Test input 6 items
             List<Item> input = MakeInput(3);
 
+            CancellationTokenSource source = new CancellationTokenSource();
+
             //Configure stages
             var pipelineSetup = PipelineCreator
-                .WithToken(CancellationToken.None)
-                .AsyncStage<AsyncStage1, Item, Item>()
+                .WithToken(source.Token)
+                .Stage<Stage1, Item, Item>()
+                .Branch(ConditionExceptionScenario.GoToNextCondition, 
+                    (item => throw new Exception(),
+                        branch => branch), 
+                    (item => true,
+                        branch => branch))
                 .Branch(
                     (item => item.Value == "Item#1->AsyncStage1->",
                         branch => branch
-                            .AsyncStage<AsyncStage2>()
+                            .Stage<Stage2>()
                         //.Stage(x =>
                         //{
                         //    var y = x.ToList();
@@ -50,35 +61,37 @@ namespace PipelineLauncher.Demo.Tests.Modules
                     ),
                     (item => true,
                         branch => branch
-                            .AsyncStage<AsyncStage2>()
+                            .Stage<Stage2>()
                             .Broadcast(
                                 (item => true, //=> "Item#NEW->AsyncStage3->AsyncStage4->Stage4->AsyncStage1->",
-                                    branch1 => branch1.AsyncStage(x =>
+                                    branch1 => branch1.Stage(x =>
                                     {
-                                        x.Value += "111111111111111111111111";
+                                       // Thread.Sleep(7000);
+                                        x.Value += "111111111111111111111111->";
                                         return x;
                                     })),
                                 (item => true,
-                                    branch1 => branch1.AsyncStage(x =>
+                                    branch1 => branch1.Stage(x =>
                                     {
-                                        x.Value += "222222222222222222222222";
+                                        x.Value += "222222222222222222222222->";
                                         return x;
                                     })))
                     ))
 
-                //.AsyncStage(new AsyncStage3())
-                //.AsyncStage(new AsyncStage4())
-                //.AsyncStage(Task.FromResult) 
-                .AsyncStage((Item item, AsyncJobOption<Item, Item> asyncJobOption) =>
+                .BulkStage(new BulkStage3())
+                .Stage(new Stage4())
+                .Stage(Task.FromResult) 
+                .Stage((Item item, StageOption<Item, Item> stageOption) =>
                 {
                     if (item.Value.StartsWith("Item#0"))
                     {
-                        return asyncJobOption.Skip(item);
+                        return stageOption.Skip(item);
                     }
+
                     return item;
-                })
-                .Stage(new Stage3())
-                .Stage(new Stage4());//.Cast<Item, Item, object>();
+                });
+                //.Stage(new Stage3())
+                //.Stage(new Stage4());//.Cast<Item, Item, object>();
                 //.AsyncStage(e => e.Value)
                 //.MssCall("fff");
 
@@ -89,12 +102,24 @@ namespace PipelineLauncher.Demo.Tests.Modules
 
             var pipeline = pipelineSetup.CreateAwaitable();
 
+            Task.Run(() =>
+            {
+                Thread.Sleep(2400);
+                //source.Cancel();
+            });
+
+            pipeline.ExceptionItemsReceivedEvent+= delegate(ExceptionItemsEventArgs items)
+            {
+
+            };
+
             //run
             stopWatch.Start();
             var result = pipeline.Process(input).ToArray();
+
             stopWatch.Stop();
 
-            PrintOutputAndTime(stopWatch.ElapsedMilliseconds, result);
+            PrintOutputAndTime(stopWatch.ElapsedMilliseconds, input);
             stopWatch.Reset();
 
             //var pipeline2 = pipelineSetup.CreateAwaitable();
@@ -159,10 +184,10 @@ namespace PipelineLauncher.Demo.Tests.Modules
 
             //Configure stages
             var stageSetup = new PipelineCreator(new FakeServicesRegistry.JobService())
-                .Stage(new Stage1())
-                .Stage(new Stage2())//, new Stage2Alternative())
-                .Stage(new Stage4())
-                .Stage(new Stage4());
+                .BulkStage(new BulkStage1())
+                .BulkStage(new BulkStage2())//, new Stage2Alternative())
+                .BulkStage(new BulkStage4())
+                .BulkStage(new BulkStage4());
 
             Stopwatch stopWatch = new Stopwatch();
 

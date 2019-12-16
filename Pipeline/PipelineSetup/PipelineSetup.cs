@@ -1,24 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Threading.Tasks.Dataflow;
-using PipelineLauncher.Abstractions.Dto;
+﻿using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.Pipeline;
 using PipelineLauncher.Abstractions.Services;
 using PipelineLauncher.Blocks;
 using PipelineLauncher.Dto;
-using PipelineLauncher.Extensions;
 using PipelineLauncher.Jobs;
 using PipelineLauncher.Pipelines;
 using PipelineLauncher.Stage;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
+using PipelineLauncher.Attributes;
+using PipelineLauncher.Extensions;
 
 namespace PipelineLauncher.PipelineSetup
 {
     internal abstract class PipelineSetup<TFirstInput> : IPipelineSetup
     {
         protected readonly IJobService JobService;
-        protected IJobService GetJobService
+        protected IJobService GeJobService
         {
             get
             {
@@ -50,92 +51,92 @@ namespace PipelineLauncher.PipelineSetup
 
         #region Generic Stages
 
-        public IPipelineSetup<TInput, TNextOutput> Stage<TJob, TNextOutput>()
-            where TJob : Job<TOutput, TNextOutput>
-            => CreateNextStage<TNextOutput>(GetJobService.GetJobInstance<TJob>());
+        public IPipelineSetup<TInput, TNextOutput> BulkStage<TBulkJob, TNextOutput>()
+            where TBulkJob : BulkJob<TOutput, TNextOutput>
+            => CreateNextStage<TNextOutput>(GeJobService.GetJobInstance<TBulkJob>());
+
+        public IPipelineSetup<TInput, TOutput> BulkStage<TBulkJob>()
+            where TBulkJob : BulkJob<TOutput, TOutput>
+            => CreateNextStage<TOutput>(GeJobService.GetJobInstance<TBulkJob>());
+
+        public IPipelineSetup<TInput, TNextOutput> BulkStage<TBulkJob, TBulkJob2, TNextOutput>()
+            where TBulkJob : BulkJob<TOutput, TNextOutput>
+            where TBulkJob2 : BulkJob<TOutput, TNextOutput>
+            => BulkStage(GeJobService.GetJobInstance<TBulkJob>(), GeJobService.GetJobInstance<TBulkJob2>());
+
+        public IPipelineSetup<TInput, TNextOutput> BulkStage<TBulkJob, TBulkJob2, TBulkJob3, TNextOutput>()
+            where TBulkJob : BulkJob<TOutput, TNextOutput>
+            where TBulkJob2 : BulkJob<TOutput, TNextOutput>
+            where TBulkJob3 : BulkJob<TOutput, TNextOutput>
+            => BulkStage(GeJobService.GetJobInstance<TBulkJob>(), GeJobService.GetJobInstance<TBulkJob2>(), GeJobService.GetJobInstance<TBulkJob3>());
+
+        public IPipelineSetup<TInput, TNextOutput> BulkStage<TBulkJob, TBulkJob2, TBulkJob3, TBulkJob4, TNextOutput>()
+            where TBulkJob : BulkJob<TOutput, TNextOutput>
+            where TBulkJob2 : BulkJob<TOutput, TNextOutput>
+            where TBulkJob3 : BulkJob<TOutput, TNextOutput>
+            where TBulkJob4 : BulkJob<TOutput, TNextOutput>
+            => BulkStage(GeJobService.GetJobInstance<TBulkJob>(), GeJobService.GetJobInstance<TBulkJob2>(), GeJobService.GetJobInstance<TBulkJob3>(), GeJobService.GetJobInstance<TBulkJob4>());
 
         public IPipelineSetup<TInput, TOutput> Stage<TJob>()
             where TJob : Job<TOutput, TOutput>
-            => CreateNextStage<TOutput>(GetJobService.GetJobInstance<TJob>());
+            => CreateNextStageAsync<TOutput>(GeJobService.GetJobInstance<TJob>());
+
+        public IPipelineSetup<TInput, TNextOutput> Stage<TJob, TNextOutput>()
+            where TJob : Job<TOutput, TNextOutput>
+            => CreateNextStageAsync<TNextOutput>(GeJobService.GetJobInstance<TJob>());
 
         public IPipelineSetup<TInput, TNextOutput> Stage<TJob, TJob2, TNextOutput>()
             where TJob : Job<TOutput, TNextOutput>
             where TJob2 : Job<TOutput, TNextOutput>
-            => Stage(GetJobService.GetJobInstance<TJob>(), GetJobService.GetJobInstance<TJob2>());
+            => Stage(GeJobService.GetJobInstance<TJob>(), GeJobService.GetJobInstance<TJob2>());
 
         public IPipelineSetup<TInput, TNextOutput> Stage<TJob, TJob2, TJob3, TNextOutput>()
             where TJob : Job<TOutput, TNextOutput>
             where TJob2 : Job<TOutput, TNextOutput>
             where TJob3 : Job<TOutput, TNextOutput>
-            => Stage(GetJobService.GetJobInstance<TJob>(), GetJobService.GetJobInstance<TJob2>(), GetJobService.GetJobInstance<TJob3>());
+            => Stage(GeJobService.GetJobInstance<TJob>(), GeJobService.GetJobInstance<TJob2>(), GeJobService.GetJobInstance<TJob3>());
 
         public IPipelineSetup<TInput, TNextOutput> Stage<TJob, TJob2, TJob3, TJob4, TNextOutput>()
             where TJob : Job<TOutput, TNextOutput>
             where TJob2 : Job<TOutput, TNextOutput>
             where TJob3 : Job<TOutput, TNextOutput>
             where TJob4 : Job<TOutput, TNextOutput>
-            => Stage(GetJobService.GetJobInstance<TJob>(), GetJobService.GetJobInstance<TJob2>(), GetJobService.GetJobInstance<TJob3>(), GetJobService.GetJobInstance<TJob4>());
-
-        public IPipelineSetup<TInput, TOutput> AsyncStage<TAsyncJob>()
-            where TAsyncJob : AsyncJob<TOutput, TOutput>
-            => CreateNextStageAsync<TOutput>(GetJobService.GetJobInstance<TAsyncJob>());
-
-        public IPipelineSetup<TInput, TNextOutput> AsyncStage<TAsyncJob, TNextOutput>()
-            where TAsyncJob : AsyncJob<TOutput, TNextOutput>
-            => CreateNextStageAsync<TNextOutput>(GetJobService.GetJobInstance<TAsyncJob>());
-
-        public IPipelineSetup<TInput, TNextOutput> AsyncStage<TAsyncJob, TAsyncJob2, TNextOutput>()
-            where TAsyncJob : AsyncJob<TOutput, TNextOutput>
-            where TAsyncJob2 : AsyncJob<TOutput, TNextOutput>
-            => AsyncStage(GetJobService.GetJobInstance<TAsyncJob>(), GetJobService.GetJobInstance<TAsyncJob2>());
-
-        public IPipelineSetup<TInput, TNextOutput> AsyncStage<TAsyncJob, TAsyncJob2, TAsyncJob3, TNextOutput>()
-            where TAsyncJob : AsyncJob<TOutput, TNextOutput>
-            where TAsyncJob2 : AsyncJob<TOutput, TNextOutput>
-            where TAsyncJob3 : AsyncJob<TOutput, TNextOutput>
-            => AsyncStage(GetJobService.GetJobInstance<TAsyncJob>(), GetJobService.GetJobInstance<TAsyncJob2>(), GetJobService.GetJobInstance<TAsyncJob3>());
-
-        public IPipelineSetup<TInput, TNextOutput> AsyncStage<TAsyncJob, TAsyncJob2, TAsyncJob3, TAsyncJob4, TNextOutput>()
-            where TAsyncJob : AsyncJob<TOutput, TNextOutput>
-            where TAsyncJob2 : AsyncJob<TOutput, TNextOutput>
-            where TAsyncJob3 : AsyncJob<TOutput, TNextOutput>
-            where TAsyncJob4 : AsyncJob<TOutput, TNextOutput>
-            => AsyncStage(GetJobService.GetJobInstance<TAsyncJob>(), GetJobService.GetJobInstance<TAsyncJob2>(), GetJobService.GetJobInstance<TAsyncJob3>(), GetJobService.GetJobInstance<TAsyncJob4>());
+            => Stage(GeJobService.GetJobInstance<TJob>(), GeJobService.GetJobInstance<TJob2>(), GeJobService.GetJobInstance<TJob3>(), GeJobService.GetJobInstance<TJob4>());
 
         #endregion
 
         #region Nongeneric Stages
 
-        public IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(Job<TOutput, TNextOutput> job)
+        public IPipelineSetup<TInput, TNextOutput> BulkStage<TNextOutput>(BulkJob<TOutput, TNextOutput> job)
             => CreateNextStage(job);
 
-        public IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(Func<IEnumerable<TOutput>, IEnumerable<TNextOutput>> func)
-            => Stage(new LambdaJob<TOutput, TNextOutput>(func));
+        public IPipelineSetup<TInput, TNextOutput> BulkStage<TNextOutput>(Func<IEnumerable<TOutput>, IEnumerable<TNextOutput>> func)
+            => BulkStage(new LambdaBulkJob<TOutput, TNextOutput>(func));
 
-        public IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(Func<IEnumerable<TOutput>, Task<IEnumerable<TNextOutput>>> func)
-            => Stage(new LambdaJob<TOutput, TNextOutput>(func));
+        public IPipelineSetup<TInput, TNextOutput> BulkStage<TNextOutput>(Func<IEnumerable<TOutput>, Task<IEnumerable<TNextOutput>>> func)
+            => BulkStage(new LambdaBulkJob<TOutput, TNextOutput>(func));
 
-        public IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(params Job<TOutput, TNextOutput>[] jobs)
-            => Stage(new ConditionJob<TOutput, TNextOutput>(jobs));
+        public IPipelineSetup<TInput, TNextOutput> BulkStage<TNextOutput>(params BulkJob<TOutput, TNextOutput>[] jobs)
+            => BulkStage(new ConditionBulkJob<TOutput, TNextOutput>(jobs));
 
-        public IPipelineSetup<TInput, TNextOutput> AsyncStage<TNextOutput>(AsyncJob<TOutput, TNextOutput> asyncJob)
-            => CreateNextStageAsync(asyncJob);
+        public IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(Job<TOutput, TNextOutput> job)
+            => CreateNextStageAsync(job);
 
-        public IPipelineSetup<TInput, TNextOutput> AsyncStage<TNextOutput>(Func<TOutput, TNextOutput> asyncFunc)
-            => AsyncStage(new AsyncLambdaJob<TOutput, TNextOutput>(asyncFunc));
+        public IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(Func<TOutput, TNextOutput> asyncFunc)
+            => Stage(new LambdaJob<TOutput, TNextOutput>(asyncFunc));
 
-        public IPipelineSetup<TInput, TNextOutput> AsyncStage<TNextOutput>(Func<TOutput, AsyncJobOption<TOutput, TNextOutput>, TNextOutput> asyncFuncWithOption)
-            => AsyncStage(new AsyncLambdaJob<TOutput, TNextOutput>(asyncFuncWithOption));
+        public IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(Func<TOutput, StageOption<TOutput, TNextOutput>, TNextOutput> asyncFuncWithOption)
+            => Stage(new LambdaJob<TOutput, TNextOutput>(asyncFuncWithOption));
 
-        public IPipelineSetup<TInput, TNextOutput> AsyncStage<TNextOutput>(Func<TOutput, Task<TNextOutput>> asyncFunc)
-            => AsyncStage(new AsyncLambdaJob<TOutput, TNextOutput>(asyncFunc));
+        public IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(Func<TOutput, Task<TNextOutput>> asyncFunc)
+            => Stage(new LambdaJob<TOutput, TNextOutput>(asyncFunc));
 
-        public IPipelineSetup<TInput, TNextOutput> AsyncStage<TNextOutput>(Func<TOutput, AsyncJobOption<TOutput, TNextOutput>, Task<TNextOutput>> asyncFuncWithOption)
-            => AsyncStage(new AsyncLambdaJob<TOutput, TNextOutput>(asyncFuncWithOption));
+        public IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(Func<TOutput, StageOption<TOutput, TNextOutput>, Task<TNextOutput>> asyncFuncWithOption)
+            => Stage(new LambdaJob<TOutput, TNextOutput>(asyncFuncWithOption));
 
 
-        public IPipelineSetup<TInput, TNextOutput> AsyncStage<TNextOutput>(params AsyncJob<TOutput, TNextOutput>[] asyncJobs)
-            => AsyncStage(new ConditionAsyncJob<TOutput, TNextOutput>(asyncJobs));
+        public IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(params Job<TOutput, TNextOutput>[] jobS)
+            => Stage(new ConditionJob<TOutput, TNextOutput>(jobS));
 
         #endregion
 
@@ -162,8 +163,13 @@ namespace PipelineLauncher.PipelineSetup
             return newCurrent.Branch(branches).RemoveDuplicatesPermanent();
         }
 
-        public IPipelineSetup<TInput, TNextOutput> Branch<TNextOutput>(params (Predicate<TOutput> predicate,
+        public IPipelineSetup<TInput, TNextOutput> Branch<TNextOutput>((Predicate<TOutput> predicate,
             Func<IPipelineSetup<TInput, TOutput>, IPipelineSetup<TInput, TNextOutput>> branch)[] branches)
+        {
+            return Branch(ConditionExceptionScenario.GoToNextCondition, branches);
+        }
+
+        public IPipelineSetup<TInput, TNextOutput> Branch<TNextOutput>(ConditionExceptionScenario conditionExceptionScenario, (Predicate<TOutput> predicate, Func<IPipelineSetup<TInput, TOutput>, IPipelineSetup<TInput, TNextOutput>> branch)[] branches)
         {
             IPropagatorBlock<PipelineItem<TNextOutput>, PipelineItem<TNextOutput>> MakeNextBlock()
             {
@@ -189,7 +195,28 @@ namespace PipelineLauncher.PipelineSetup
                     var nextBlockAfterCurrent = new PipelineSetup<TInput, TOutput>(newtBranchStageHead, JobService);
                     var newBranch = branch.branch(nextBlockAfterCurrent);
 
-                    Current.ExecutionBlock.LinkTo(newBranchHead, e => branch.predicate(e.Item)); //TODO AAAAA ctach
+                    Current.ExecutionBlock.LinkTo(newBranchHead,
+                        e =>
+                        {
+                            try
+                            {
+                                return branch.predicate(e.Item);
+                            }
+                            catch (Exception ex)
+                            {
+                                switch (conditionExceptionScenario)
+                                {
+                                    case ConditionExceptionScenario.GoToNextCondition:
+                                        return false;
+                                    case ConditionExceptionScenario.AddExceptionAndGoToNextCondition:
+                                        mergeBlock.Post(new ExceptionItem<TNextOutput>(ex, null, branch.predicate.GetType(), e.Item));
+                                        return false;
+                                    case ConditionExceptionScenario.BreakPipelineExecution:
+                                    default:
+                                        throw;
+                                }
+                            }
+                        });
 
                     tailBranches[branchId] = newBranch.Current.ExecutionBlock;
 
@@ -241,7 +268,7 @@ namespace PipelineLauncher.PipelineSetup
             return new PipelineRunner<TInput, TOutput>(firstStage.ExecutionBlock, Current.ExecutionBlock, Current.CancellationToken);
         }
 
-        private PipelineSetup<TInput, TNextOutput> CreateNextStageAsync<TNextOutput>(IPipelineJobAsync<TOutput, TNextOutput> asyncJob)
+        private PipelineSetup<TInput, TNextOutput> CreateNextStageAsync<TNextOutput>(IPipelineBulkJob<TOutput, TNextOutput> bulkJob)
         {
             IPropagatorBlock<PipelineItem<TOutput>, PipelineItem<TNextOutput>> MakeNextBlock()
             {
@@ -253,19 +280,17 @@ namespace PipelineLauncher.PipelineSetup
                 }
 
                 var nextBlock = new TransformBlock<PipelineItem<TOutput>, PipelineItem<TNextOutput>>(
-                    async e => await asyncJob.InternalExecute(e, () => RePostMessage(e), Current.CancellationToken),
+                    async e => await bulkJob.InternalExecute(e, () => RePostMessage(e), Current.CancellationToken),
                     new ExecutionDataflowBlockOptions
                     {
-                        MaxDegreeOfParallelism = asyncJob.Configuration.MaxDegreeOfParallelism,
-                        MaxMessagesPerTask = asyncJob.Configuration.MaxMessagesPerTask
+                        MaxDegreeOfParallelism = bulkJob.Configuration.MaxDegreeOfParallelism,
+                        MaxMessagesPerTask = bulkJob.Configuration.MaxMessagesPerTask,
+                        CancellationToken = Current.CancellationToken
                     });
 
                 rePostBlock = nextBlock;
 
-                //var next = DataflowBlock.Encapsulate(buffer, nextBlock);
-
                 Current.ExecutionBlock.LinkTo(nextBlock, new DataflowLinkOptions() { PropagateCompletion = true });
-
                 Current.ExecutionBlock.Completion.ContinueWith(x =>
                 {
                     nextBlock.Complete();
@@ -295,13 +320,17 @@ namespace PipelineLauncher.PipelineSetup
                     new ExecutionDataflowBlockOptions
                     {
                         MaxDegreeOfParallelism = job.Configuration.MaxDegreeOfParallelism,
-                        MaxMessagesPerTask = job.Configuration.MaxMessagesPerTask
+                        MaxMessagesPerTask = job.Configuration.MaxMessagesPerTask,
+                        CancellationToken = Current.CancellationToken
                     });
 
                 buffer.LinkTo(nextBlock, new DataflowLinkOptions() { PropagateCompletion = true });
                 rePostBlock = nextBlock;
 
-                buffer.Completion.ContinueWith(x => { nextBlock.Complete(); }, Current.CancellationToken);
+                buffer.Completion.ContinueWith(x =>
+                {
+                    nextBlock.Complete();
+                }, Current.CancellationToken);
 
                 var next = DataflowBlock.Encapsulate(buffer, nextBlock);
 

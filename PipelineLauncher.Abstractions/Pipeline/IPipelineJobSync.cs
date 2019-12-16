@@ -11,6 +11,6 @@ namespace PipelineLauncher.Abstractions.Pipeline
     {
         Task<IEnumerable<PipelineItem<TOutput>>> InternalExecute(IEnumerable<PipelineItem<TInput>> input, Action reExecute, CancellationToken cancellationToken);
 
-        JobConfiguration Configuration { get; }
+        BulkJobConfiguration Configuration { get; }
     }
 }
