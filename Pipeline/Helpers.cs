@@ -23,6 +23,22 @@ namespace PipelineLauncher
             return (IStageIn<TInput>)stage;
         }
 
+        public static void DestroyStageBlocks(this IStage stage)
+        {
+            if (stage == null)
+            {
+                return;
+            }
+
+            stage.DestroyBlock();
+
+            if (stage.Next == null || !stage.Next.Any()) return;
+            foreach (var nextStage in stage.Next)
+            {
+                DestroyStageBlocks(nextStage);
+            }
+        }
+
         //public static IEnumerable<IEnumerable<IPipelineJob>> ToEnumerable(this IStageSetup stageSetup)
         //{
         //    return stageSetup.ToTree();

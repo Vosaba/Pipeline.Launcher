@@ -1,28 +1,59 @@
-﻿using PipelineLauncher.Abstractions.Configurations;
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
+using PipelineLauncher.Abstractions.Configurations;
+using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.Pipeline;
-using System;
-using System.Diagnostics;
+using PipelineLauncher.Attributes;
+using PipelineLauncher.Dto;
+using PipelineLauncher.Exceptions;
 
 namespace PipelineLauncher.PipelineJobs
 {
-    [DebuggerDisplay("Name = d")]
-    public abstract class PipelineJobBase<TInput, TOutput>:  IPipelineJob<TInput, TOutput>
+    public abstract class PipelineJob<TInput, TOutput> : PipelineJobBase<TInput, TOutput>, IPipelineBulkJob<TInput, TOutput>
     {
-        protected static bool IsSubclassOfRawGeneric(Type generic, Type toCheck)
+        protected static StageOption<TInput, TOutput> StageOption = new StageOption<TInput, TOutput>();
+
+        public abstract JobConfiguration Configuration { get; }
+
+        public abstract Task<TOutput> ExecuteAsync(TInput input, CancellationToken cancellationToken);
+
+        public async Task<PipelineItem<TOutput>> InternalExecute(PipelineItem<TInput> input, Action reExecute, CancellationToken cancellationToken)
         {
-            while (toCheck != null && toCheck != typeof(object))
+            try
             {
-                var cur = toCheck.IsGenericType ? toCheck.GetGenericTypeDefinition() : toCheck;
-                if (generic == cur)
+                switch (input)
                 {
-                    return true;
+                    case RemoveItem<TInput> removeItem:
+                        return removeItem.Return<TOutput>();
+
+                    case ExceptionItem<TInput> exceptionItem:
+                        return exceptionItem.Return<TOutput>();
+
+                    case SkipItem<TInput> skipItem when typeof(TInput) == skipItem.OriginalItem.GetType():
+                        return new PipelineItem<TOutput>(await ExecuteAsync((TInput)skipItem.OriginalItem, cancellationToken));
+                    case SkipItem<TInput> skipItem when typeof(TInput) != skipItem.OriginalItem.GetType():
+                        return skipItem.Return<TOutput>();
+
+                    case SkipItemTill<TInput> skipItemTill 
+                        when GetType() == skipItemTill.SkipTillType:
+                        return new PipelineItem<TOutput>(await ExecuteAsync((TInput)skipItemTill.OriginalItem, cancellationToken));
+                    case SkipItemTill<TInput> skipItemTill 
+                        when GetType() != skipItemTill.SkipTillType:
+                        return skipItemTill.Return<TOutput>();
+
+                    default:
+                        return new PipelineItem<TOutput>(await ExecuteAsync(input.Item, cancellationToken));
                 }
-                toCheck = toCheck.BaseType;
             }
-            return false;
+            catch (NonParamException<TOutput> e)
+            {
+                return e.Item;
+            }
+            catch (Exception e)
+            {
+                return new ExceptionItem<TOutput>(e, reExecute, GetType(), input != null ? input.Item : default);
+            }
         }
-
-
-        public virtual bool Condition(TInput input) => true;
     }
 }

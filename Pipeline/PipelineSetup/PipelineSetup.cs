@@ -79,11 +79,11 @@ namespace PipelineLauncher.PipelineSetup
 
         public IPipelineSetup<TInput, TOutput> Stage<TJob>()
             where TJob : Job<TOutput, TOutput>
-            => CreateNextStageAsync<TOutput>(GeJobService.GetJobInstance<TJob>());
+            => CreateNextBulkStage<TOutput>(GeJobService.GetJobInstance<TJob>());
 
         public IPipelineSetup<TInput, TNextOutput> Stage<TJob, TNextOutput>()
             where TJob : Job<TOutput, TNextOutput>
-            => CreateNextStageAsync<TNextOutput>(GeJobService.GetJobInstance<TJob>());
+            => CreateNextBulkStage<TNextOutput>(GeJobService.GetJobInstance<TJob>());
 
         public IPipelineSetup<TInput, TNextOutput> Stage<TJob, TJob2, TNextOutput>()
             where TJob : Job<TOutput, TNextOutput>
@@ -120,7 +120,7 @@ namespace PipelineLauncher.PipelineSetup
             => BulkStage(new ConditionBulkJob<TOutput, TNextOutput>(jobs));
 
         public IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(Job<TOutput, TNextOutput> job)
-            => CreateNextStageAsync(job);
+            => CreateNextBulkStage(job);
 
         public IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(Func<TOutput, TNextOutput> asyncFunc)
             => Stage(new LambdaJob<TOutput, TNextOutput>(asyncFunc));
@@ -147,7 +147,7 @@ namespace PipelineLauncher.PipelineSetup
         {
             BroadcastBlock<PipelineItem<TOutput>> MakeNextBlock()
             {
-                var broadcastBlock = new BroadcastBlock<PipelineItem<TOutput>>(e => e);
+                var broadcastBlock = new BroadcastBlock<PipelineItem<TOutput>>(x => x);
 
                 Current.ExecutionBlock.LinkTo(broadcastBlock);
                 Current.ExecutionBlock.Completion.ContinueWith(x =>
@@ -173,7 +173,7 @@ namespace PipelineLauncher.PipelineSetup
         {
             IPropagatorBlock<PipelineItem<TNextOutput>, PipelineItem<TNextOutput>> MakeNextBlock()
             {
-                var mergeBlock = new TransformBlock<PipelineItem<TNextOutput>, PipelineItem<TNextOutput>>(e => e);
+                var mergeBlock = new TransformBlock<PipelineItem<TNextOutput>, PipelineItem<TNextOutput>>(x => x);
 
                 IDataflowBlock[] headBranches = new IDataflowBlock[branches.Length];
                 IDataflowBlock[] tailBranches = new IDataflowBlock[branches.Length];
@@ -181,7 +181,7 @@ namespace PipelineLauncher.PipelineSetup
                 var branchId = 0;
                 foreach (var branch in branches)
                 {
-                    var newBranchHead = new TransformBlock<PipelineItem<TOutput>, PipelineItem<TOutput>>(e => e);
+                    var newBranchHead = new TransformBlock<PipelineItem<TOutput>, PipelineItem<TOutput>>(x => x);
 
                     headBranches[branchId] = newBranchHead;
 
@@ -196,11 +196,11 @@ namespace PipelineLauncher.PipelineSetup
                     var newBranch = branch.branch(nextBlockAfterCurrent);
 
                     Current.ExecutionBlock.LinkTo(newBranchHead,
-                        e =>
+                        x =>
                         {
                             try
                             {
-                                return branch.predicate(e.Item);
+                                return branch.predicate(x.Item);
                             }
                             catch (Exception ex)
                             {
@@ -209,7 +209,7 @@ namespace PipelineLauncher.PipelineSetup
                                     case ConditionExceptionScenario.GoToNextCondition:
                                         return false;
                                     case ConditionExceptionScenario.AddExceptionAndGoToNextCondition:
-                                        mergeBlock.Post(new ExceptionItem<TNextOutput>(ex, null, branch.predicate.GetType(), e.Item));
+                                        mergeBlock.Post(new ExceptionItem<TNextOutput>(ex, null, branch.predicate.GetType(), x.Item));
                                         return false;
                                     case ConditionExceptionScenario.BreakPipelineExecution:
                                     default:
@@ -224,7 +224,7 @@ namespace PipelineLauncher.PipelineSetup
 
                     newBranch.Current.ExecutionBlock.Completion.ContinueWith(x =>
                     {
-                        if (tailBranches.All(e => e.Completion.IsCompleted))
+                        if (tailBranches.All(tail => tail.Completion.IsCompleted))
                         {
                             mergeBlock.Complete();
                         }
@@ -259,7 +259,7 @@ namespace PipelineLauncher.PipelineSetup
         public IAwaitablePipelineRunner<TInput, TOutput> CreateAwaitable()
         {
             var firstStage = this.GetFirstStage<TInput>();
-            return new AwaitablePipelineRunner<TInput, TOutput>(() => firstStage.ExecutionBlock, () => Current.ExecutionBlock, Current.CancellationToken, () => DestroyStageBlocks(firstStage));
+            return new AwaitablePipelineRunner<TInput, TOutput>(() => firstStage.ExecutionBlock, () => Current.ExecutionBlock, Current.CancellationToken, () => firstStage.DestroyStageBlocks());
         }
 
         public IPipelineRunner<TInput, TOutput> Create()
@@ -268,7 +268,7 @@ namespace PipelineLauncher.PipelineSetup
             return new PipelineRunner<TInput, TOutput>(firstStage.ExecutionBlock, Current.ExecutionBlock, Current.CancellationToken);
         }
 
-        private PipelineSetup<TInput, TNextOutput> CreateNextStageAsync<TNextOutput>(IPipelineBulkJob<TOutput, TNextOutput> bulkJob)
+        private PipelineSetup<TInput, TNextOutput> CreateNextBulkStage<TNextOutput>(IPipelineBulkJob<TOutput, TNextOutput> bulkJob)
         {
             IPropagatorBlock<PipelineItem<TOutput>, PipelineItem<TNextOutput>> MakeNextBlock()
             {
@@ -280,7 +280,7 @@ namespace PipelineLauncher.PipelineSetup
                 }
 
                 var nextBlock = new TransformBlock<PipelineItem<TOutput>, PipelineItem<TNextOutput>>(
-                    async e => await bulkJob.InternalExecute(e, () => RePostMessage(e), Current.CancellationToken),
+                    async x => await bulkJob.InternalExecute(x, () => RePostMessage(x), Current.CancellationToken),
                     new ExecutionDataflowBlockOptions
                     {
                         MaxDegreeOfParallelism = bulkJob.Configuration.MaxDegreeOfParallelism,
@@ -316,7 +316,7 @@ namespace PipelineLauncher.PipelineSetup
                 }
 
                 var nextBlock = new TransformManyBlock<IEnumerable<PipelineItem<TOutput>>, PipelineItem<TNextOutput>>(
-                    async e => await job.InternalExecute(e, () => RePostMessages(e), Current.CancellationToken),
+                    async x => await job.InternalExecute(x, () => RePostMessages(x), Current.CancellationToken),
                     new ExecutionDataflowBlockOptions
                     {
                         MaxDegreeOfParallelism = job.Configuration.MaxDegreeOfParallelism,
@@ -357,22 +357,6 @@ namespace PipelineLauncher.PipelineSetup
             Current.Next.Add(nextStage);
 
             return new PipelineSetup<TInput, TNextOutput>(nextStage, JobService);
-        }
-
-        private static void DestroyStageBlocks(IStage stage)
-        {
-            if (stage == null)
-            {
-                return;
-            }
-
-            stage.DestroyBlock();
-
-            if (stage.Next == null || !stage.Next.Any()) return;
-            foreach (var nextStage in stage.Next)
-            {
-                DestroyStageBlocks(nextStage);
-            }
         }
     }
 }
