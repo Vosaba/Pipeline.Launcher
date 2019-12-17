@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using PipelineLauncher.Attributes;
 using PipelineLauncher.PipelineEvents;
+using PipelineLauncher.Dto;
 
 namespace PipelineLauncher.Pipelines
 {
@@ -78,6 +79,7 @@ namespace PipelineLauncher.Pipelines
         private readonly Func<ISourceBlock<PipelineItem<TOutput>>> _getLastBlock;
         private readonly Action _destroyTaskStages;
 
+
         internal AwaitablePipelineRunner(
             Func<ITargetBlock<PipelineItem<TInput>>> firstBlock,
             Func<ISourceBlock<PipelineItem<TOutput>>> lastBlock,
@@ -90,7 +92,10 @@ namespace PipelineLauncher.Pipelines
             _destroyTaskStages = destroyTaskStages;
 
             ItemReceivedEvent += AwaitablePipeline_ItemReceivedEvent;
+            PipelineConfig = new AwaitablePipelineConfig();
         }
+
+        public AwaitablePipelineConfig PipelineConfig { get; set; }
 
         public IEnumerable<TOutput> Process(TInput input)
         {
@@ -119,11 +124,6 @@ namespace PipelineLauncher.Pipelines
 
             Post(input);
             _firstBlock.Complete();
-
-
-            //_sortingBlock.().OnNext(e);
-
-
 
             await _sortingBlock.Completion;
             foreach (var item in _processedItems)

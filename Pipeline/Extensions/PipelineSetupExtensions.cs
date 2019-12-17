@@ -3,6 +3,7 @@ using PipelineLauncher.PipelineSetup;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace PipelineLauncher.Extensions
 {
@@ -28,7 +29,7 @@ namespace PipelineLauncher.Extensions
             {
                 var result = new List<TOutput>();
 
-                foreach(var input in inputs)
+                foreach (var input in inputs)
                 {
                     var hash = hashFunc?.Invoke(input) ?? input.GetHashCode();
 
@@ -46,6 +47,31 @@ namespace PipelineLauncher.Extensions
             where TCast : class
         {
             return pipelineSetup.Stage(output => output as TCast);
+        }
+
+        public static IPipelineSetup<TInput, TOutput> Delay<TInput, TOutput>(this IPipelineSetup<TInput, TOutput> pipelineSetup, int millisecondsDelay)
+        {
+            return pipelineSetup.Stage(async (TOutput input) =>
+            {
+                await Task.Delay(millisecondsDelay);
+                return input;
+            });
+        }
+
+        public static IPipelineSetup<TInput, TOutput> CallWithTimeDelay<TInput, TOutput>(this IPipelineSetup<TInput, TOutput> pipelineSetup, int millisecondsDelay)
+        {
+            var processedHash = new ConcurrentDictionary<int, byte>();
+            IPipelineSetup<TInput, TOutput> pipeLineConfig;
+
+           // _ = pipeLineConfig.Current.Next[0].PipelineBaseConfiguration;
+
+            pipeLineConfig = pipelineSetup.Stage(async (TOutput input) =>
+            {
+                await Task.Delay(millisecondsDelay);
+                return input;
+            });
+
+            return pipeLineConfig;
         }
     }
 }

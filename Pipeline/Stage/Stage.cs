@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks.Dataflow;
+using PipelineLauncher.Abstractions.Configurations;
 using PipelineLauncher.Abstractions.Dto;
 
 namespace PipelineLauncher.Stage
@@ -10,6 +11,7 @@ namespace PipelineLauncher.Stage
     {
         private IDataflowBlock _executionBlock;
 
+        public PipelineBaseConfiguration PipelineBaseConfiguration { get; set; }
         public Func<IDataflowBlock> CreateBlock { get; }
         public CancellationToken CancellationToken { get; set; }
         public IList<IStage> Next { get; set; } = new List<IStage>();
@@ -19,6 +21,7 @@ namespace PipelineLauncher.Stage
             get => _executionBlock ??= CreateBlock();
             set => _executionBlock = value;
         }
+
 
         public Stage(Func<IDataflowBlock> createTerra, CancellationToken cancellationToken)
         {

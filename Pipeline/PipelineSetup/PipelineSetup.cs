@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using PipelineLauncher.Attributes;
 using PipelineLauncher.Extensions;
+using PipelineLauncher.Abstractions.Configurations;
 
 namespace PipelineLauncher.PipelineSetup
 {
@@ -110,11 +111,11 @@ namespace PipelineLauncher.PipelineSetup
         public IPipelineSetup<TInput, TNextOutput> BulkStage<TNextOutput>(BulkJob<TOutput, TNextOutput> job)
             => CreateNextStage(job);
 
-        public IPipelineSetup<TInput, TNextOutput> BulkStage<TNextOutput>(Func<IEnumerable<TOutput>, IEnumerable<TNextOutput>> func)
-            => BulkStage(new LambdaBulkJob<TOutput, TNextOutput>(func));
+        public IPipelineSetup<TInput, TNextOutput> BulkStage<TNextOutput>(Func<IEnumerable<TOutput>, IEnumerable<TNextOutput>> func, BulkJobConfiguration bulkJobConfiguration)
+            => BulkStage(new LambdaBulkJob<TOutput, TNextOutput>(func, bulkJobConfiguration));
 
-        public IPipelineSetup<TInput, TNextOutput> BulkStage<TNextOutput>(Func<IEnumerable<TOutput>, Task<IEnumerable<TNextOutput>>> func)
-            => BulkStage(new LambdaBulkJob<TOutput, TNextOutput>(func));
+        public IPipelineSetup<TInput, TNextOutput> BulkStage<TNextOutput>(Func<IEnumerable<TOutput>, Task<IEnumerable<TNextOutput>>> func, BulkJobConfiguration bulkJobConfiguration)
+            => BulkStage(new LambdaBulkJob<TOutput, TNextOutput>(func, bulkJobConfiguration));
 
         public IPipelineSetup<TInput, TNextOutput> BulkStage<TNextOutput>(params BulkJob<TOutput, TNextOutput>[] jobs)
             => BulkStage(new ConditionBulkJob<TOutput, TNextOutput>(jobs));
@@ -159,7 +160,7 @@ namespace PipelineLauncher.PipelineSetup
                 return broadcastBlock;
             }
 
-            var newCurrent = CreateNextBlock(MakeNextBlock);
+            var newCurrent = CreateNextBlock(MakeNextBlock, Current.PipelineBaseConfiguration);
             return newCurrent.Branch(branches).RemoveDuplicatesPermanent();
         }
 
@@ -299,7 +300,7 @@ namespace PipelineLauncher.PipelineSetup
                 return nextBlock;
             }
 
-            return CreateNextBlock(MakeNextBlock);
+            return CreateNextBlock(MakeNextBlock, bulkJob.Configuration);
         }
 
         private PipelineSetup<TInput, TNextOutput> CreateNextStage<TNextOutput>(IPipelineJobSync<TOutput, TNextOutput> job)
@@ -344,14 +345,15 @@ namespace PipelineLauncher.PipelineSetup
                 return next;
             }
 
-            return CreateNextBlock(MakeNextBlock);
+            return CreateNextBlock(MakeNextBlock, job.Configuration);
         }
 
-        private PipelineSetup<TInput, TNextOutput> CreateNextBlock<TNextOutput>(Func<IPropagatorBlock<PipelineItem<TOutput>, PipelineItem<TNextOutput>>> nextBlock)
+        private PipelineSetup<TInput, TNextOutput> CreateNextBlock<TNextOutput>(Func<IPropagatorBlock<PipelineItem<TOutput>, PipelineItem<TNextOutput>>> nextBlock, PipelineBaseConfiguration pipelineBaseConfiguration)
         {
             var nextStage = new StageOut<TNextOutput>(nextBlock, Current.CancellationToken)
             {
-                Previous = Current
+                Previous = Current,
+                PipelineBaseConfiguration = pipelineBaseConfiguration
             };
 
             Current.Next.Add(nextStage);

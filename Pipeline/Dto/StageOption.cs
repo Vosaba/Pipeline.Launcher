@@ -22,10 +22,8 @@ namespace PipelineLauncher.Dto
         }
     }
 
-    public enum ConditionExceptionScenario
+    public class AwaitablePipelineConfig
     {
-        GoToNextCondition,
-        BreakPipelineExecution,
-        AddExceptionAndGoToNextCondition
+        public bool ThrowExceptionOccured { get; set; }
     }
 }
