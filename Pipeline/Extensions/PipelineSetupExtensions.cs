@@ -49,12 +49,23 @@ namespace PipelineLauncher.Extensions
             return pipelineSetup.Stage(output => output as TCast);
         }
 
-        public static IPipelineSetup<TInput, TOutput> Delay<TInput, TOutput>(this IPipelineSetup<TInput, TOutput> pipelineSetup, int millisecondsDelay)
+        public static IPipelineSetup<TInput, TOutput> Delay<TInput, TOutput>(this IPipelineSetup<TInput, TOutput> pipelineSetup, long millisecondsDelay)
         {
-            return pipelineSetup.Stage(async (TOutput input) =>
+            object @lock = new object();
+            DateTime performedTime = DateTime.Now;
+
+            return pipelineSetup.Stage(input =>
             {
-                await Task.Delay(millisecondsDelay);
-                return input;
+                lock (@lock)
+                {
+                    var lastPerformedTime = performedTime;
+                    while (lastPerformedTime.AddMilliseconds(millisecondsDelay) > DateTime.Now)
+                    { }
+
+                    performedTime = DateTime.Now;
+                    //(input as dynamic).Value += $"[{performedTime.Second + "." + performedTime.Millisecond}]->";
+                    return input;
+                }
             });
         }
 
@@ -63,9 +74,11 @@ namespace PipelineLauncher.Extensions
             var processedHash = new ConcurrentDictionary<int, byte>();
             IPipelineSetup<TInput, TOutput> pipeLineConfig;
 
-           // _ = pipeLineConfig.Current.Next[0].PipelineBaseConfiguration;
+           var config  = pipelineSetup.Current.Previous.PipelineBaseConfiguration;
 
-            pipeLineConfig = pipelineSetup.Stage(async (TOutput input) =>
+
+
+           pipeLineConfig = pipelineSetup.Stage(async (TOutput input) =>
             {
                 await Task.Delay(millisecondsDelay);
                 return input;

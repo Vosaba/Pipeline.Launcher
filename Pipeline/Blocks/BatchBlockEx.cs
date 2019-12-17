@@ -73,7 +73,7 @@ namespace PipelineLauncher.Blocks
                     while (!_cancellationToken.IsCancellationRequested)
                     {
                         await _asyncAutoResetEvent.WaitAsync()
-                                                   .ConfigureAwait(false);
+                                    .ConfigureAwait(false);
 
                         await Task.Delay(_triggerTimeMs, _cancellationToken)
                                     .ConfigureAwait(false);
