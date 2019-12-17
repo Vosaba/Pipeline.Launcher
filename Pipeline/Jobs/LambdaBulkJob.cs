@@ -9,14 +9,22 @@ namespace PipelineLauncher.Jobs
     {
         private readonly Func<IEnumerable<TInput>, Task<IEnumerable<TOutput>>> _funcAsync;
         private readonly Func<IEnumerable<TInput>, IEnumerable<TOutput>> _func;
+        private readonly BulkJobConfiguration _configuration;
+        public override BulkJobConfiguration Configuration => _configuration != null? _configuration: base.Configuration;
 
+        private LambdaBulkJob(BulkJobConfiguration bulkJobConfiguration)
+        {
+           _configuration = bulkJobConfiguration;
+        }
 
-        public LambdaBulkJob(Func<IEnumerable<TInput>, Task<IEnumerable<TOutput>>> funcAsync)
+        public LambdaBulkJob(Func<IEnumerable<TInput>, Task<IEnumerable<TOutput>>> funcAsync, BulkJobConfiguration bulkJobConfiguration)
+            : this(bulkJobConfiguration)
         {
             _funcAsync = funcAsync;
         }
 
-        public LambdaBulkJob(Func<IEnumerable<TInput>, IEnumerable<TOutput>> func)
+        public LambdaBulkJob(Func<IEnumerable<TInput>, IEnumerable<TOutput>> func, BulkJobConfiguration bulkJobConfiguration)
+            : this(bulkJobConfiguration)
         {
             _func = func;
         }

@@ -109,10 +109,10 @@ namespace PipelineLauncher.Demo.Tests.Stages
 
     public class Stage4 : Job<Item>
     {
-        public override Item Execute(Item item)
+        public override async Task<Item> ExecuteAsync(Item item)
         {
             item.Value = item.Value + "AsyncStage4->";
-            Thread.Sleep(1000);
+            await Task.Delay(1000);
 
             item.ProcessedBy.Add(Thread.CurrentThread.ManagedThreadId);
 

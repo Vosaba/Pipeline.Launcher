@@ -11,6 +11,7 @@ using PipelineLauncher.Dto;
 using PipelineLauncher.PipelineEvents;
 using PipelineLauncher.Pipelines;
 using PipelineLauncher.PipelineSetup;
+using PipelineLauncher.Extensions;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -37,16 +38,11 @@ namespace PipelineLauncher.Demo.Tests.Modules
             List<Item> input = MakeInput(3);
 
             CancellationTokenSource source = new CancellationTokenSource();
-
             //Configure stages
             var pipelineSetup = PipelineCreator
                 .WithToken(source.Token)
-                .Stage<Stage1, Item, Item>()
-                .Branch(ConditionExceptionScenario.GoToNextCondition, 
-                    (item => throw new Exception(),
-                        branch => branch), 
-                    (item => true,
-                        branch => branch))
+                .Stage(new Stage1())
+               
                 .Branch(
                     (item => item.Value == "Item#1->AsyncStage1->",
                         branch => branch
@@ -64,20 +60,21 @@ namespace PipelineLauncher.Demo.Tests.Modules
                             .Stage<Stage2>()
                             .Broadcast(
                                 (item => true, //=> "Item#NEW->AsyncStage3->AsyncStage4->Stage4->AsyncStage1->",
-                                    branch1 => branch1.Stage(x =>
+                                    branch1 => branch1
+                                    .Stage( x =>
                                     {
-                                       // Thread.Sleep(7000);
                                         x.Value += "111111111111111111111111->";
                                         return x;
                                     })),
                                 (item => true,
-                                    branch1 => branch1.Stage(x =>
+                                    branch1 => branch1
+                                    .Stage(x =>
                                     {
                                         x.Value += "222222222222222222222222->";
                                         return x;
                                     })))
                     ))
-
+                .Delay(12000)
                 .BulkStage(new BulkStage3())
                 .Stage(new Stage4())
                 .Stage(Task.FromResult) 
@@ -104,7 +101,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
 
             Task.Run(() =>
             {
-                Thread.Sleep(2400);
+                Thread.Sleep(7000);
                 //source.Cancel();
             });
 
@@ -119,7 +116,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
 
             stopWatch.Stop();
 
-            PrintOutputAndTime(stopWatch.ElapsedMilliseconds, input);
+            PrintOutputAndTime(stopWatch.ElapsedMilliseconds, result);
             stopWatch.Reset();
 
             //var pipeline2 = pipelineSetup.CreateAwaitable();

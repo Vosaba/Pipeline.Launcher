@@ -1,4 +1,5 @@
-﻿using PipelineLauncher.PipelineEvents;
+﻿using PipelineLauncher.Dto;
+using PipelineLauncher.PipelineEvents;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -16,6 +17,8 @@ namespace PipelineLauncher.Pipelines
 
     public interface IAwaitablePipelineRunner<in TInput, out TOutput> : IPipelineRunner<TInput, TOutput>
     {
+        AwaitablePipelineConfig PipelineConfig { get; set; }
+
         IEnumerable<TOutput> Process(TInput input);
         IEnumerable<TOutput> Process(IEnumerable<TInput> input);
 
