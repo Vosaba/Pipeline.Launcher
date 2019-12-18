@@ -52,6 +52,9 @@ namespace PipelineLauncher.PipelineSetup
 
         #region Generic Stages
 
+        IPipelineSetupOut<TNextOutput> IPipelineSetupOut<TOutput>.BulkStage<TJob, TNextOutput>()
+            => BulkStage<TJob, TNextOutput>();
+
         public IPipelineSetup<TInput, TNextOutput> BulkStage<TBulkJob, TNextOutput>()
             where TBulkJob : BulkJob<TOutput, TNextOutput>
             => CreateNextBulkStage<TNextOutput>(GeJobService.GetJobInstance<TBulkJob>());
@@ -120,6 +123,12 @@ namespace PipelineLauncher.PipelineSetup
         public IPipelineSetup<TInput, TNextOutput> BulkStage<TNextOutput>(params BulkJob<TOutput, TNextOutput>[] jobs)
             => BulkStage(new ConditionBulkJob<TOutput, TNextOutput>(jobs));
 
+        IPipelineSetupOut<TNextOutput> IPipelineSetupOut<TOutput>.Stage<TNextOutput>(Job<TOutput, TNextOutput> job)
+            => Stage<TNextOutput>(job);
+
+        IPipelineSetupOut<TNextOutput> IPipelineSetupOut<TOutput>.Stage<TNextOutput>(Func<TOutput, TNextOutput> asyncFunc)
+            => Stage(asyncFunc);
+
         public IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(Job<TOutput, TNextOutput> job)
             => CreateNextStage(job);
 
@@ -161,7 +170,7 @@ namespace PipelineLauncher.PipelineSetup
             }
 
             var newCurrent = CreateNextBlock(MakeNextBlock, Current.PipelineBaseConfiguration);
-            return newCurrent.Branch(branches).RemoveDuplicates();
+            return newCurrent.Branch(branches).RemoveDuplicatesPermanent();
         }
 
         public IPipelineSetup<TInput, TNextOutput> Branch<TNextOutput>((Predicate<TOutput> predicate,

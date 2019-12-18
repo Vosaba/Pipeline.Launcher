@@ -14,14 +14,13 @@ namespace PipelineLauncher.PipelineSetup
         IStage Current { get; }
     }
 
-    public interface IPipelineSetup<TInput, TOutput> : IPipelineSetup
+    public interface IPipelineSetup<TInput, TOutput> : IPipelineSetupOut<TOutput>
     {
-        new IStageOut<TOutput> Current { get; }
+        #region Generic
 
-        #region Generic Stages
+        #region BulkStages
 
-        #region Sync
-        IPipelineSetup<TInput, TNextOutput> BulkStage<TJob, TNextOutput>()
+        new IPipelineSetup<TInput, TNextOutput> BulkStage<TJob, TNextOutput>()
             where TJob : BulkJob<TOutput, TNextOutput>;
 
         IPipelineSetup<TInput, TOutput> BulkStage<TJob>()
@@ -44,7 +43,7 @@ namespace PipelineLauncher.PipelineSetup
 
         #endregion
 
-        #region Async
+        #region Stages
 
         IPipelineSetup<TInput, TOutput> Stage<TAsyncJob>()
            where TAsyncJob : Job<TOutput, TOutput>;
@@ -68,12 +67,12 @@ namespace PipelineLauncher.PipelineSetup
            where TAsyncJob4 : Job<TOutput, TNextOutput>;
 
         #endregion
-        
+
         #endregion
 
-        #region Nongeneric Stages
+        #region Nongeneric
 
-        #region Sync
+        #region BulkStages
 
         IPipelineSetup<TInput, TNextOutput> BulkStage<TNextOutput>(BulkJob<TOutput, TNextOutput> job);
 
@@ -85,7 +84,7 @@ namespace PipelineLauncher.PipelineSetup
 
         #endregion
 
-        #region Async
+        #region Stages
 
         IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(Job<TOutput, TNextOutput> job);
 
@@ -103,7 +102,7 @@ namespace PipelineLauncher.PipelineSetup
 
         #endregion
 
-        #region Branch
+        #region Branches
 
         IPipelineSetup<TInput, TNextOutput> Broadcast<TNextOutput>(params (Predicate<TOutput> predicate,
             Func<IPipelineSetup<TInput, TOutput>, IPipelineSetup<TInput, TNextOutput>> branch)[] branches);

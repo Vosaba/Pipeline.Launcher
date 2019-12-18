@@ -17,4 +17,10 @@ namespace PipelineLauncher.Demo.Tests
             return $"Processed by:  '{{{string.Join("}, {", ProcessedBy.ToArray())}}}'; Result: '{Value}'";
         }
     }
+
+    public class Item2 : Item {
+        public Item2(string value) : base(value)
+        {
+        }
+    }
 }

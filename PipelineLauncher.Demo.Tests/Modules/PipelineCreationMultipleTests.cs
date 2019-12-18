@@ -20,7 +20,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
 {
     public static class PipelineExtensions
     {
-        public static IPipelineSetup<TInput, int> MssCall<TInput>(this IPipelineSetup<TInput, Item> pipelineSetup, string someValue)
+        public static IPipelineSetupOut<int> MssCall(this IPipelineSetupOut<Item> pipelineSetup, string someValue)
         {
             return pipelineSetup.Stage(e => e.GetHashCode());
         }
@@ -61,44 +61,44 @@ namespace PipelineLauncher.Demo.Tests.Modules
                             .Broadcast(
                                 (item => true, //=> "Item#NEW->AsyncStage3->AsyncStage4->Stage4->AsyncStage1->",
                                     branch1 => branch1
-                                    .Stage(x =>
-                                   {
-                                       x.Value += "111111111111111111111111->";
-                                       return x;
-                                   })),
+                                        .Stage(x =>
+                                        {
+                                            x.Value += "111111111111111111111111->";
+                                            return x;
+                                        })),
                                 (item => true,
                                     branch1 => branch1
-                                    .Stage(x =>
-                                    {
-                                        x.Value += "222222222222222222222222->";
-                                        return x;
-                                    })))
+                                        .Stage(x =>
+                                        {
+                                            x.Value += "222222222222222222222222->";
+                                            return x;
+                                        })))
                     ))
                 //.Delay(12000)
                 //.BulkStage(new BulkStage3())
                 .BulkStage((items) =>
-                {
-                    var count = items.Count();
-                    return items;
-                }, 
-                new BulkJobConfiguration()
-                {
-                    BatchItemsCount = 5,
-                    BatchItemsTimeOut = 4000
-                })
+                    {
+                        var count = items.Count();
+                        return items;
+                    },
+                    new BulkJobConfiguration()
+                    {
+                        BatchItemsCount = 5,
+                        BatchItemsTimeOut = 4000
+                    })
                 .Stage(new Stage4())
                 //s.Stage(Task.FromResult)
                 //.BulkDelay(5000)
                 .BulkStage((items) =>
-                {
-                    var count = items.Count();
-                    return items;
-                },
-                new BulkJobConfiguration()
-                {
-                    BatchItemsCount = 5,
-                    BatchItemsTimeOut = 4000
-                })
+                    {
+                        var count = items.Count();
+                        return items;
+                    },
+                    new BulkJobConfiguration()
+                    {
+                        BatchItemsCount = 5,
+                        BatchItemsTimeOut = 4000
+                    })
                 .Stage((Item item, StageOption<Item, Item> stageOption) =>
                 {
 
@@ -108,21 +108,18 @@ namespace PipelineLauncher.Demo.Tests.Modules
                     }
 
                     var t = DateTime.Now;
-                    item.Value += $"[{t.Second + "." +t.Millisecond}]->";
+                    item.Value += $"[{t.Second + "." + t.Millisecond}]->";
 
                     return item;
                 });
-                //.Stage(new Stage3())
-                //.Stage(new Stage4());//.Cast<Item, Item, object>();
-                //.AsyncStage(e => e.Value)
-                //.MssCall("fff");
+                
 
             Stopwatch stopWatch = new Stopwatch();
             //var skippedItems = new List<Item>();
             //Make pipeline from stageSetup
             //pipeline.SkippedItemReceivedEvent += delegate(SkippedItemEventArgs item) { skippedItems.Add(item.Item); };
 
-            var pipeline = pipelineSetup.CreateAwaitable(new AwaitablePipelineConfig { ThrowExceptionOccured = true });
+            var pipeline = pipelineSetup.CreateAwaitable(new AwaitablePipelineConfig { ThrowExceptionOccured = false });
 
             //Task.Run(() =>
             //{
@@ -130,7 +127,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
             //    //source.Cancel();
             //});
 
-            pipeline.ExceptionItemsReceivedEvent+= delegate(ExceptionItemsEventArgs items)
+            pipeline.ExceptionItemsReceivedEvent+= delegate(ExceptionItemsEventArgs args)
             {
 
             };

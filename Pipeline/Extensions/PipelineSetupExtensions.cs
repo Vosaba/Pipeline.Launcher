@@ -3,7 +3,6 @@ using PipelineLauncher.PipelineSetup;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace PipelineLauncher.Extensions
 {
@@ -43,13 +42,7 @@ namespace PipelineLauncher.Extensions
             });
         }
 
-        public static IPipelineSetup<TInput, TCast> Cast<TInput, TOutput, TCast>(this IPipelineSetup<TInput, TOutput> pipelineSetup)
-            where TCast : class
-        {
-            return pipelineSetup.Stage(output => output as TCast);
-        }
-
-        public static IPipelineSetup<TInput, TOutput> Delay<TInput, TOutput>(this IPipelineSetup<TInput, TOutput> pipelineSetup, long millisecondsDelay)
+        public static IPipelineSetup<TInput, TOutput> DelayWithLock<TInput, TOutput>(this IPipelineSetup<TInput, TOutput> pipelineSetup, long millisecondsDelay)
         {
             object @lock = new object();
             DateTime performedTime = DateTime.Now;
@@ -68,41 +61,15 @@ namespace PipelineLauncher.Extensions
             });
         }
 
-        public static IPipelineSetup<TInput, TOutput> BulkDelay<TInput, TOutput>(this IPipelineSetup<TInput, TOutput> pipelineSetup, long millisecondsDelay)
+        public static IPipelineSetup<TInput, TNextOutput> ExtensionContext<TInput, TOutput, TNextOutput>(this IPipelineSetup<TInput, TOutput> pipelineSetup, Func<IPipelineSetupOut<TOutput>, IPipelineSetupOut<TNextOutput>> extension)
         {
-            object @lock = new object();
-            DateTime performedTime = DateTime.Now;
-
-            return pipelineSetup.BulkStage(inputs =>
-            {
-                lock (@lock)
-                {
-                    var lastPerformedTime = performedTime;
-                    while (lastPerformedTime.AddMilliseconds(millisecondsDelay) > DateTime.Now)
-                    { }
-
-                    performedTime = DateTime.Now;
-                    return inputs;
-                }
-            });
+            return (IPipelineSetup<TInput, TNextOutput>)extension(pipelineSetup);
         }
 
-        public static IPipelineSetup<TInput, TOutput> CallWithTimeDelay<TInput, TOutput>(this IPipelineSetup<TInput, TOutput> pipelineSetup, int millisecondsDelay)
+        public static IPipelineSetupOut<TCast> Cast<TOutput, TCast>(this IPipelineSetupOut<TOutput> pipelineSetup)
+            where TCast : class
         {
-            var processedHash = new ConcurrentDictionary<int, byte>();
-            IPipelineSetup<TInput, TOutput> pipeLineConfig;
-
-           var config  = pipelineSetup.Current.Previous.PipelineBaseConfiguration;
-
-
-
-           pipeLineConfig = pipelineSetup.Stage(async (TOutput input) =>
-            {
-                await Task.Delay(millisecondsDelay);
-                return input;
-            });
-
-            return pipeLineConfig;
+            return pipelineSetup.Stage(output => output as TCast);
         }
     }
 }
