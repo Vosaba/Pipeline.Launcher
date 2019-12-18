@@ -1,12 +1,10 @@
-﻿using PipelineLauncher.Abstractions.Configurations;
-using PipelineLauncher.Abstractions.Pipeline;
+﻿using PipelineLauncher.Abstractions.Pipeline;
 using System;
-using System.Diagnostics;
 
 namespace PipelineLauncher.PipelineJobs
 {
-    [DebuggerDisplay("Name = d")]
-    public abstract class PipelineJobBase<TInput, TOutput>:  IPipelineJob<TInput, TOutput>
+    //[DebuggerDisplay("Name = d")]
+    public abstract class PipelineBase<TInput, TOutput>:  IPipeline<TInput, TOutput>
     {
         protected static bool IsSubclassOfRawGeneric(Type generic, Type toCheck)
         {

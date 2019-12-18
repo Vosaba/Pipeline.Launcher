@@ -13,26 +13,23 @@ namespace PipelineLauncher.Pipelines
     {
         IPipelineCreator WithToken(CancellationToken cancellationToken);
 
+        IPipelineSetup<TInput, TInput> Prepare<TInput>();
+
+        IPipelineSetup<TInput, TInput> BulkPrepare<TInput>(BulkJobConfiguration jobConfiguration = null);
+
+        #region Generic
+
+        #region BulkStages
+
         IPipelineSetup<TInput, TOutput> BulkStage<TBulkJob, TInput, TOutput>()
-            where TBulkJob : BulkJob<TInput, TOutput>;
+            where TBulkJob : Bulk<TInput, TOutput>;
 
         IPipelineSetup<TInput, TInput> BulkStage<TBulkJob, TInput>()
-            where TBulkJob : BulkJob<TInput, TInput>;
+            where TBulkJob : Bulk<TInput, TInput>;
 
-        IPipelineSetup<TInput, TOutput> BulkStage<TBulkJob, TBulkJob2, TInput, TOutput>()
-            where TBulkJob : BulkJob<TInput, TOutput>
-            where TBulkJob2 : BulkJob<TInput, TOutput>;
+        #endregion
 
-        IPipelineSetup<TInput, TOutput> BulkStage<TBulkJob, TBulkJob2, TBulkJob3, TInput, TOutput>()
-            where TBulkJob : BulkJob<TInput, TOutput>
-            where TBulkJob2 : BulkJob<TInput, TOutput>
-            where TBulkJob3 : BulkJob<TInput, TOutput>;
-
-        IPipelineSetup<TInput, TOutput> BulkStage<TBulkJob, TBulkJob2, TBulkJob3, TBulkJob4, TInput, TOutput>()
-            where TBulkJob : BulkJob<TInput, TOutput>
-            where TBulkJob2 : BulkJob<TInput, TOutput>
-            where TBulkJob3 : BulkJob<TInput, TOutput>
-            where TBulkJob4 : BulkJob<TInput, TOutput>;
+        #region Stages
 
         IPipelineSetup<TInput, TOutput> Stage<TJob, TInput, TOutput>()
             where TJob : Job<TInput, TOutput>;
@@ -40,28 +37,23 @@ namespace PipelineLauncher.Pipelines
         IPipelineSetup<TInput, TInput> Stage<TJob, TInput>()
             where TJob : Job<TInput, TInput>;
 
-        IPipelineSetup<TInput, TOutput> Stage<TJob, TJob2, TInput, TOutput>()
-            where TJob : Job<TInput, TOutput>
-            where TJob2 : Job<TInput, TOutput>;
+        #endregion
 
-        IPipelineSetup<TInput, TOutput> Stage<TJob, TJob2, TJob3, TInput, TOutput>()
-            where TJob : Job<TInput, TOutput>
-            where TJob2 : Job<TInput, TOutput>
-            where TJob3 : Job<TInput, TOutput>;
+        #endregion
 
-        IPipelineSetup<TInput, TOutput> Stage<TJob, TJob2, TJob3, TJob4, TInput, TOutput>()
-            where TJob : Job<TInput, TOutput>
-            where TJob2 : Job<TInput, TOutput>
-            where TJob3 : Job<TInput, TOutput>
-            where TJob4 : Job<TInput, TOutput>;
+        #region Nongeneric
 
-        IPipelineSetup<TInput, TOutput> BulkStage<TInput, TOutput>(BulkJob<TInput, TOutput> bulkJob);
+        #region BulkStages
+
+        IPipelineSetup<TInput, TOutput> BulkStage<TInput, TOutput>(Bulk<TInput, TOutput> bulk);
 
         IPipelineSetup<TInput, TOutput> BulkStage<TInput, TOutput>(Func<IEnumerable<TInput>, IEnumerable<TOutput>> bulkFunc, BulkJobConfiguration bulkJobConfiguration = null);
 
         IPipelineSetup<TInput, TOutput> BulkStage<TInput, TOutput>(Func<IEnumerable<TInput>, Task<IEnumerable<TOutput>>> bulkFunc, BulkJobConfiguration bulkJobConfiguration = null);
 
-        IPipelineSetup<TInput, TOutput> BulkStage<TInput, TOutput>(params BulkJob<TInput, TOutput>[] bulkJobs);
+        #endregion
+
+        #region Stages
 
         IPipelineSetup<TInput, TOutput> Stage<TInput, TOutput>(Job<TInput, TOutput> job);
 
@@ -73,6 +65,8 @@ namespace PipelineLauncher.Pipelines
 
         IPipelineSetup<TInput, TOutput> Stage<TInput, TOutput>(Func<TInput, StageOption<TInput, TOutput>, Task<TOutput>> funcWithOption);
 
-        IPipelineSetup<TInput, TOutput> Stage<TInput, TOutput>(params Job<TInput, TOutput>[] jobs);
+        #endregion
+
+        #endregion
     }
 }

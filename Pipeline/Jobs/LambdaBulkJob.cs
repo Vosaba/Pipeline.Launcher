@@ -5,25 +5,25 @@ using PipelineLauncher.Abstractions.Configurations;
 
 namespace PipelineLauncher.Jobs
 {
-    internal class LambdaBulkJob<TInput, TOutput> : BulkJob<TInput, TOutput>
+    internal class LambdaBulk<TInput, TOutput> : Bulk<TInput, TOutput>
     {
         private readonly Func<IEnumerable<TInput>, Task<IEnumerable<TOutput>>> _funcAsync;
         private readonly Func<IEnumerable<TInput>, IEnumerable<TOutput>> _func;
         private readonly BulkJobConfiguration _configuration;
         public override BulkJobConfiguration Configuration => _configuration != null? _configuration: base.Configuration;
 
-        private LambdaBulkJob(BulkJobConfiguration bulkJobConfiguration)
+        private LambdaBulk(BulkJobConfiguration bulkJobConfiguration)
         {
            _configuration = bulkJobConfiguration;
         }
 
-        public LambdaBulkJob(Func<IEnumerable<TInput>, Task<IEnumerable<TOutput>>> funcAsync, BulkJobConfiguration bulkJobConfiguration)
+        public LambdaBulk(Func<IEnumerable<TInput>, Task<IEnumerable<TOutput>>> funcAsync, BulkJobConfiguration bulkJobConfiguration)
             : this(bulkJobConfiguration)
         {
             _funcAsync = funcAsync;
         }
 
-        public LambdaBulkJob(Func<IEnumerable<TInput>, IEnumerable<TOutput>> func, BulkJobConfiguration bulkJobConfiguration)
+        public LambdaBulk(Func<IEnumerable<TInput>, IEnumerable<TOutput>> func, BulkJobConfiguration bulkJobConfiguration)
             : this(bulkJobConfiguration)
         {
             _func = func;

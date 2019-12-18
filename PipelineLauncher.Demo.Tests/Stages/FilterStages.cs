@@ -1,11 +1,4 @@
-﻿using PipelineLauncher.Attributes;
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using PipelineLauncher.Abstractions.Dto;
-using PipelineLauncher.Jobs;
-
-namespace PipelineLauncher.Demo.Tests.Stages
+﻿namespace PipelineLauncher.Demo.Tests.Stages
 {
     //public class RemoveFilter : FilterService<Item>
     //{

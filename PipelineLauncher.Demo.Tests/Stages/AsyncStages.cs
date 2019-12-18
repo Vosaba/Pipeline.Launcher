@@ -125,7 +125,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
         }
     }
 
-    public class BulkcStage_Item_To_String : BulkJob<Item, string>
+    public class BulkcStage_Item_To_String : Bulk<Item, string>
     {
         public override IEnumerable<string> Execute(IEnumerable<Item> items)
         {
@@ -146,7 +146,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
         }
     }
 
-    public class AsyncStage_String_To_Object : BulkJob<string, object>
+    public class AsyncStage_String_To_Object : Bulk<string, object>
     {
         public override IEnumerable<object> Execute(IEnumerable<string> items)
         {

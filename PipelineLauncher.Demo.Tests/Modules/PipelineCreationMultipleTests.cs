@@ -42,7 +42,8 @@ namespace PipelineLauncher.Demo.Tests.Modules
             //Configure stages
             var pipelineSetup = PipelineCreator
                 .WithToken(source.Token)
-                .Stage(new Stage1())
+                .Prepare<Item>()
+                //.Stage(new Stage1())
                 .Branch(
                     (item => item.Value == "Item#1->AsyncStage1->",
                         branch => branch
@@ -111,7 +112,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
                     item.Value += $"[{t.Second + "." + t.Millisecond}]->";
 
                     return item;
-                });
+                }).ExtensionContext(extensionContext => extensionContext.MssCall(""));
                 
 
             Stopwatch stopWatch = new Stopwatch();

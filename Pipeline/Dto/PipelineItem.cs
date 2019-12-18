@@ -1,7 +1,7 @@
 ﻿using System;
 using PipelineLauncher.Abstractions.Dto;
 
-namespace PipelineLauncher.Attributes
+namespace PipelineLauncher.Dto
 {
     internal abstract class NonResultItem<TItem> : PipelineItem<TItem>
     {

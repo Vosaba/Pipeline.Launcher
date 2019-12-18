@@ -12,12 +12,7 @@
         }
     }
 
-    public interface IPipelineItem<in TItem>
-    {
-        //TItem Item { get; }
-
-    }
-    public class PipelineItem<TItem>: PipelineItem//, IPipelineItem<TItem>
+    public class PipelineItem<TItem>: PipelineItem
     {
         public new TItem Item { get; }
 

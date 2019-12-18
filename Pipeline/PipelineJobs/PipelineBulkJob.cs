@@ -1,16 +1,16 @@
 ﻿using PipelineLauncher.Abstractions.Configurations;
 using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.Pipeline;
-using PipelineLauncher.Attributes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using PipelineLauncher.Dto;
 
 namespace PipelineLauncher.PipelineJobs
 {
-    public abstract class PipelineBulkJob<TInput, TOutput> : PipelineJobBase<TInput, TOutput>, IPipelineJobSync<TInput, TOutput>
+    public abstract class PipelineBulk<TInput, TOutput> : PipelineBase<TInput, TOutput>, IPipelineBulkJob<TInput, TOutput>
     {
         public abstract BulkJobConfiguration Configuration { get; }
 

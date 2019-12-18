@@ -1,5 +1,4 @@
 using PipelineLauncher.Abstractions.Pipeline;
-using PipelineLauncher.Attributes;
 using PipelineLauncher.Exceptions;
 
 namespace PipelineLauncher.Dto
@@ -16,7 +15,7 @@ namespace PipelineLauncher.Dto
             throw new NonParamException<TOutput>(new SkipItem<TOutput>(input, GetType()));
         }
 
-        public TOutput SkipTo<TSkipToJob>(TInput input) where TSkipToJob : IPipelineJobIn<TInput>
+        public TOutput SkipTo<TSkipToJob>(TInput input) where TSkipToJob : IPipelineIn<TInput>
         {
             throw new NonParamException<TOutput>(new SkipItemTill<TOutput>(typeof(TSkipToJob), input, GetType()));
         }

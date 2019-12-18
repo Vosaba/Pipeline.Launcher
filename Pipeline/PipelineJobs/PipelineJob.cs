@@ -4,13 +4,12 @@ using System.Threading.Tasks;
 using PipelineLauncher.Abstractions.Configurations;
 using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.Pipeline;
-using PipelineLauncher.Attributes;
 using PipelineLauncher.Dto;
 using PipelineLauncher.Exceptions;
 
 namespace PipelineLauncher.PipelineJobs
 {
-    public abstract class PipelineJob<TInput, TOutput> : PipelineJobBase<TInput, TOutput>, IPipelineBulkJob<TInput, TOutput>
+    public abstract class Pipeline<TInput, TOutput> : PipelineBase<TInput, TOutput>, IPipelineJob<TInput, TOutput>
     {
         protected static StageOption<TInput, TOutput> StageOption = new StageOption<TInput, TOutput>();
 

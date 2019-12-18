@@ -14,7 +14,7 @@ namespace PipelineLauncher.Jobs
     /// </summary>
     /// <typeparam name="TInput">The type of the param.</typeparam>
     /// <typeparam name="TOutput">The type of the result.</typeparam>
-    public abstract class Job<TInput, TOutput> : PipelineJob<TInput, TOutput>
+    public abstract class Job<TInput, TOutput> : Pipeline<TInput, TOutput>
     {
         public override JobConfiguration Configuration => new JobConfiguration();
 
@@ -50,7 +50,7 @@ namespace PipelineLauncher.Jobs
             return StageOption.Skip(input);
         }
 
-        public TOutput SkipTo<TSkipToJob>(TInput input) where TSkipToJob : IPipelineJobIn<TInput>
+        public TOutput SkipTo<TSkipToJob>(TInput input) where TSkipToJob : IPipelineIn<TInput>
         {
             return StageOption.SkipTo<TSkipToJob>(input);
         }
