@@ -73,6 +73,7 @@ namespace PipelineLauncher.Pipelines
 
     internal class AwaitablePipelineRunner<TInput, TOutput> : PipelineRunner<TInput, TOutput>,  IAwaitablePipelineRunner<TInput, TOutput>
     {
+        private readonly AwaitablePipelineConfig _pipelineConfig;
         private readonly ConcurrentBag<TOutput> _processedItems = new ConcurrentBag<TOutput>();
 
         private readonly Func<ITargetBlock<PipelineItem<TInput>>> _getFirstBlock;
@@ -84,18 +85,18 @@ namespace PipelineLauncher.Pipelines
             Func<ITargetBlock<PipelineItem<TInput>>> firstBlock,
             Func<ISourceBlock<PipelineItem<TOutput>>> lastBlock,
             CancellationToken cancellationToken,
-            Action destroyTaskStages)
+            Action destroyTaskStages,
+            AwaitablePipelineConfig pipelineConfig)
             : base(null, null, cancellationToken, false)
         {
+            _pipelineConfig = pipelineConfig;
             _getFirstBlock = firstBlock;
             _getLastBlock = lastBlock;
             _destroyTaskStages = destroyTaskStages;
 
             ItemReceivedEvent += AwaitablePipeline_ItemReceivedEvent;
-            PipelineConfig = new AwaitablePipelineConfig();
+            ExceptionItemsReceivedEvent += AwaitablePipelineRunner_ExceptionItemsReceivedEvent;
         }
-
-        public AwaitablePipelineConfig PipelineConfig { get; set; }
 
         public IEnumerable<TOutput> Process(TInput input)
         {
@@ -135,6 +136,14 @@ namespace PipelineLauncher.Pipelines
         private void AwaitablePipeline_ItemReceivedEvent(TOutput item)
         {
             _processedItems.Add(item);
+        }
+
+        private void AwaitablePipelineRunner_ExceptionItemsReceivedEvent(ExceptionItemsEventArgs items)
+        {
+            if (_pipelineConfig != null && _pipelineConfig.ThrowExceptionOccured)
+            {
+                throw items.Exception;
+            }
         }
 
         private void InitFirstLastSortingBlocks()

@@ -257,10 +257,10 @@ namespace PipelineLauncher.PipelineSetup
 
         #endregion
 
-        public IAwaitablePipelineRunner<TInput, TOutput> CreateAwaitable()
+        public IAwaitablePipelineRunner<TInput, TOutput> CreateAwaitable(AwaitablePipelineConfig pipelineConfig = null)
         {
             var firstStage = this.GetFirstStage<TInput>();
-            return new AwaitablePipelineRunner<TInput, TOutput>(() => firstStage.ExecutionBlock, () => Current.ExecutionBlock, Current.CancellationToken, () => firstStage.DestroyStageBlocks());
+            return new AwaitablePipelineRunner<TInput, TOutput>(() => firstStage.ExecutionBlock, () => Current.ExecutionBlock, Current.CancellationToken, () => firstStage.DestroyStageBlocks(), pipelineConfig);
         }
 
         public IPipelineRunner<TInput, TOutput> Create()

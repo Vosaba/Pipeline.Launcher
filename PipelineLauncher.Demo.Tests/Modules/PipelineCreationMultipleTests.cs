@@ -43,58 +43,68 @@ namespace PipelineLauncher.Demo.Tests.Modules
             var pipelineSetup = PipelineCreator
                 .WithToken(source.Token)
                 .Stage(new Stage1())
-                //.Branch(
-                //    (item => item.Value == "Item#1->AsyncStage1->",
-                //        branch => branch
-                //            .Stage<Stage2>()
-                //        //.Stage(x =>
-                //        //{
-                //        //    var y = x.ToList();
+                .Branch(
+                    (item => item.Value == "Item#1->AsyncStage1->",
+                        branch => branch
+                            .Stage<Stage2>()
+                        //.Stage(x =>
+                        //{
+                        //    var y = x.ToList();
 
-                //        //    y.Add(new Item("Item#NEW->"));
-                //        //    return y;
-                //        //})
-                //    ),
-                //    (item => true,
-                //        branch => branch
-                //            .Stage<Stage2>()
-                //            .Broadcast(
-                //                (item => true, //=> "Item#NEW->AsyncStage3->AsyncStage4->Stage4->AsyncStage1->",
-                //                    branch1 => branch1
-                //                    .Stage( x =>
-                //                    {
-                //                        x.Value += "111111111111111111111111->";
-                //                        return x;
-                //                    })),
-                //                (item => true,
-                //                    branch1 => branch1
-                //                    .Stage(x =>
-                //                    {
-                //                        x.Value += "222222222222222222222222->";
-                //                        return x;
-                //                    })))
-                //    ))
-                ////.Delay(12000)
-                ////.BulkStage(new BulkStage3())
-                //.BulkStage((items) =>
-                //{
-                //    var count = items.Count();
-                //    return items;
-                //},
-                //new BulkJobConfiguration()
-                //{
-                //    BatchItemsCount = 5,
-                //    BatchItemsTimeOut = 4000
-                //})
+                        //    y.Add(new Item("Item#NEW->"));
+                        //    return y;
+                        //})
+                    ),
+                    (item => true,
+                        branch => branch
+                            .Stage<Stage2>()
+                            .Broadcast(
+                                (item => true, //=> "Item#NEW->AsyncStage3->AsyncStage4->Stage4->AsyncStage1->",
+                                    branch1 => branch1
+                                    .Stage(x =>
+                                   {
+                                       x.Value += "111111111111111111111111->";
+                                       return x;
+                                   })),
+                                (item => true,
+                                    branch1 => branch1
+                                    .Stage(x =>
+                                    {
+                                        x.Value += "222222222222222222222222->";
+                                        return x;
+                                    })))
+                    ))
+                //.Delay(12000)
+                //.BulkStage(new BulkStage3())
+                .BulkStage((items) =>
+                {
+                    var count = items.Count();
+                    return items;
+                }, 
+                new BulkJobConfiguration()
+                {
+                    BatchItemsCount = 5,
+                    BatchItemsTimeOut = 4000
+                })
                 .Stage(new Stage4())
                 //s.Stage(Task.FromResult)
-                .Delay(3000)
+                //.BulkDelay(5000)
+                .BulkStage((items) =>
+                {
+                    var count = items.Count();
+                    return items;
+                },
+                new BulkJobConfiguration()
+                {
+                    BatchItemsCount = 5,
+                    BatchItemsTimeOut = 4000
+                })
                 .Stage((Item item, StageOption<Item, Item> stageOption) =>
                 {
 
                     if (item.Value.StartsWith("Item#0"))
                     {
-                        //return stageOption.Skip(item);
+                        throw new Exception("Test exception");
                     }
 
                     var t = DateTime.Now;
@@ -112,7 +122,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
             //Make pipeline from stageSetup
             //pipeline.SkippedItemReceivedEvent += delegate(SkippedItemEventArgs item) { skippedItems.Add(item.Item); };
 
-            var pipeline = pipelineSetup.CreateAwaitable();
+            var pipeline = pipelineSetup.CreateAwaitable(new AwaitablePipelineConfig { ThrowExceptionOccured = true });
 
             //Task.Run(() =>
             //{
@@ -188,6 +198,50 @@ namespace PipelineLauncher.Demo.Tests.Modules
 
         }
 
+        [Fact]
+        public void Pipeline_Creation_Multiple_AsyncJobs_Simple()
+        {
+            //Test input 6 items
+            List<Item> input = MakeInput(8);
+
+            CancellationTokenSource source = new CancellationTokenSource();
+            //Configure stages
+            var pipelineSetup = PipelineCreator
+                .WithToken(source.Token)
+                .Stage(async (Item item) =>
+                {
+                    await Task.Delay(1000);
+                    return item;
+                });
+                
+
+            Stopwatch stopWatch = new Stopwatch();
+
+            var pipeline = pipelineSetup.CreateAwaitable();
+
+            pipeline.ExceptionItemsReceivedEvent += delegate (ExceptionItemsEventArgs items)
+            {
+
+            };
+
+            //run
+            stopWatch.Start();
+            var result = pipeline.Process(input).ToArray();
+
+            stopWatch.Stop();
+
+            PrintOutputAndTime(stopWatch.ElapsedMilliseconds, result);
+            stopWatch.Reset();
+
+            //run
+            stopWatch.Start();
+            var result2 = pipeline.Process(result).ToArray();
+            stopWatch.Stop();
+
+            //Total time 24032
+            PrintOutputAndTime(stopWatch.ElapsedMilliseconds, result2);
+            stopWatch.Reset();
+        }
         [Fact]
         public void Pipeline_Creation_Multiple_SyncJobs()
         {

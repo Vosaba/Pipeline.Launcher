@@ -63,8 +63,26 @@ namespace PipelineLauncher.Extensions
                     { }
 
                     performedTime = DateTime.Now;
-                    //(input as dynamic).Value += $"[{performedTime.Second + "." + performedTime.Millisecond}]->";
                     return input;
+                }
+            });
+        }
+
+        public static IPipelineSetup<TInput, TOutput> BulkDelay<TInput, TOutput>(this IPipelineSetup<TInput, TOutput> pipelineSetup, long millisecondsDelay)
+        {
+            object @lock = new object();
+            DateTime performedTime = DateTime.Now;
+
+            return pipelineSetup.BulkStage(inputs =>
+            {
+                lock (@lock)
+                {
+                    var lastPerformedTime = performedTime;
+                    while (lastPerformedTime.AddMilliseconds(millisecondsDelay) > DateTime.Now)
+                    { }
+
+                    performedTime = DateTime.Now;
+                    return inputs;
                 }
             });
         }
