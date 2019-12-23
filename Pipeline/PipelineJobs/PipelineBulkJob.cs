@@ -27,7 +27,7 @@ namespace PipelineLauncher.PipelineJobs
                 {
                     var type = x.GetType();
                     return type == typeof(RemoveItem<TInput>) || type == typeof(ExceptionItem<TInput>);
-                }).Cast<NonResultItem<TInput>>().Select(x => x.Return<TOutput>());
+                }).Cast<NoneResultItem<TInput>>().Select(x => x.Return<TOutput>());
 
                 result.AddRange(removeAndExceptionItems);
 
