@@ -8,7 +8,7 @@ namespace PipelineLauncher.Demo.Tests.Fakes
     {
         public class JobService : IJobService
         {
-            public TPipelineJob GetJobInstance<TPipelineJob>() where TPipelineJob : IPipelineJob
+            public TPipelineJob GetJobInstance<TPipelineJob>() where TPipelineJob : class, IPipelineJob
             {
                 return (TPipelineJob)Activator.CreateInstance(typeof(TPipelineJob));
             }

@@ -18,19 +18,7 @@ namespace PipelineLauncher.PipelineSetup
 {
     internal abstract class PipelineSetup<TFirstInput> : IPipelineSetup
     {
-        protected readonly IJobService JobService;
-        protected IJobService GeJobService
-        {
-            get
-            {
-                if (JobService == null)
-                {
-                    throw new Exception($"'{nameof(IJobService)}' isn't provided, if you need to use Generic stage setups, provide service.");
-                }
-
-                return JobService;
-            }
-        }
+        protected IJobService JobService { get; }
 
         public IStage Current { get; }
 
@@ -55,11 +43,11 @@ namespace PipelineLauncher.PipelineSetup
 
         public IPipelineSetup<TInput, TNextOutput> BulkStage<TBulkJob, TNextOutput>()
             where TBulkJob : Bulk<TOutput, TNextOutput>
-            => CreateNextBulkStage<TNextOutput>(GeJobService.GetJobInstance<TBulkJob>());
+            => CreateNextBulkStage<TNextOutput>(JobService.GetJobInstance<TBulkJob>());
 
         public IPipelineSetup<TInput, TOutput> BulkStage<TBulkJob>()
             where TBulkJob : Bulk<TOutput, TOutput>
-            => CreateNextBulkStage<TOutput>(GeJobService.GetJobInstance<TBulkJob>());
+            => CreateNextBulkStage<TOutput>(JobService.GetJobInstance<TBulkJob>());
 
         #endregion
 
@@ -67,11 +55,11 @@ namespace PipelineLauncher.PipelineSetup
 
         public IPipelineSetup<TInput, TOutput> Stage<TJob>()
             where TJob : Job<TOutput, TOutput>
-            => CreateNextStage<TOutput>(GeJobService.GetJobInstance<TJob>());
+            => CreateNextStage<TOutput>(JobService.GetJobInstance<TJob>());
 
         public IPipelineSetup<TInput, TNextOutput> Stage<TJob, TNextOutput>()
             where TJob : Job<TOutput, TNextOutput>
-            => CreateNextStage<TNextOutput>(GeJobService.GetJobInstance<TJob>());
+            => CreateNextStage<TNextOutput>(JobService.GetJobInstance<TJob>());
 
         #endregion
 

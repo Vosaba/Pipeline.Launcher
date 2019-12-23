@@ -1,10 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.VisualBasic;
 using PipelineLauncher.Abstractions.Configurations;
 using PipelineLauncher.Demo.Tests.Fakes;
 using PipelineLauncher.Demo.Tests.Stages;
@@ -12,7 +5,12 @@ using PipelineLauncher.Dto;
 using PipelineLauncher.PipelineEvents;
 using PipelineLauncher.Pipelines;
 using PipelineLauncher.PipelineSetup;
-using PipelineLauncher.Extensions;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -27,7 +25,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
     }
     public class PipelineCreationMultipleTests : PipelineTestsBase
     {
-        public IPipelineCreator PipelineCreator = new PipelineCreator(new FakeServicesRegistry.JobService());
+        public IPipelineCreator PipelineCreator = new PipelineCreator();
 
         public PipelineCreationMultipleTests(ITestOutputHelper output)
             : base(output) { }
@@ -59,6 +57,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
                     (item => true,
                         branch => branch
                             .Stage<Stage2>()
+                            .Stage<Stage2>()
                             .Broadcast(
                                 (item => true, //=> "Item#NEW->AsyncStage3->AsyncStage4->Stage4->AsyncStage1->",
                                     branch1 => branch1
@@ -87,7 +86,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
                         BatchItemsCount = 5,
                         BatchItemsTimeOut = 4000
                     })
-                .Stage(new Stage4())
+                .Stage<Stage4>()
                 //s.Stage(Task.FromResult)
                 //.BulkDelay(5000)
                 .BulkStage((items) =>
@@ -112,7 +111,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
                     item.Value += $"[{t.Second + "." + t.Millisecond}]->";
 
                     return item;
-                }).ExtensionContext(extensionContext => extensionContext.MssCall(""));
+                });//.ExtensionContext(extensionContext => extensionContext.MssCall(""));
                 
 
             Stopwatch stopWatch = new Stopwatch();
@@ -120,7 +119,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
             //Make pipeline from stageSetup
             //pipeline.SkippedItemReceivedEvent += delegate(SkippedItemEventArgs item) { skippedItems.Add(item.Item); };
 
-            var pipeline = pipelineSetup.CreateAwaitable(new AwaitablePipelineConfig { ThrowExceptionOccured = false });
+            var pipeline = pipelineSetup.CreateAwaitable();
 
             //Task.Run(() =>
             //{
@@ -128,9 +127,9 @@ namespace PipelineLauncher.Demo.Tests.Modules
             //    //source.Cancel();
             //});
 
-            pipeline.ExceptionItemsReceivedEvent+= delegate(ExceptionItemsEventArgs args)
+            pipeline.ExceptionItemsReceivedEvent += delegate(ExceptionItemsEventArgs args)
             {
-
+                
             };
 
             //run
@@ -194,6 +193,131 @@ namespace PipelineLauncher.Demo.Tests.Modules
             //PrintOutputAndTime(stopWatch.ElapsedMilliseconds, input);
 
 
+        }
+
+        [Fact]
+        public void Pipeline_Creation_Multiple_Jobs()
+        {
+            //Test input 6 items
+            List<Item> input = MakeInput(5);
+
+            CancellationTokenSource source = new CancellationTokenSource();
+
+            //Configure stages
+            var pipelineSetup = PipelineCreator
+                .WithToken(source.Token)
+                .Stage(new Stage1())
+                .Stage<Stage1>()
+                .Branch(
+                    (item => item.Value == "Item#1->AsyncStage1->",
+                        branch => branch
+                            .Stage<Stage2>()
+                            .BulkStage(items =>
+                            {
+                                var itemsArray = items.ToList();
+
+                                itemsArray.Add(new Item("Item#NEW->"));
+
+                                return itemsArray;
+                            })
+                    ),
+                    (item => true,
+                        branch => branch
+                            .Stage<Stage2>()
+                            .Stage<Stage2>()
+                            .Broadcast(
+                                (item => true, //=> "Item#NEW->AsyncStage3->AsyncStage4->Stage4->AsyncStage1->",
+                                    branch1 => branch1
+                                        .Stage(x =>
+                                        {
+                                            x.Value += "111111111111111111111111->";
+                                            return x;
+                                        })),
+                                (item => true,
+                                    branch1 => branch1
+                                        .Stage(x =>
+                                        {
+                                            x.Value += "222222222222222222222222->";
+                                            return x;
+                                        })))
+                    ))
+                //.Delay(12000)
+                //.BulkStage(new BulkStage3())
+                .BulkStage((items) =>
+                {
+                    var count = items.Count();
+                    return items;
+                },
+                    new BulkJobConfiguration()
+                    {
+                        BatchItemsCount = 5,
+                        BatchItemsTimeOut = 4000
+                    })
+                .Stage<Stage4>()
+                //s.Stage(Task.FromResult)
+                //.BulkDelay(5000)
+                .BulkStage((items) =>
+                {
+                    var count = items.Count();
+                    return items;
+                },
+                    new BulkJobConfiguration()
+                    {
+                        BatchItemsCount = 5,
+                        BatchItemsTimeOut = 4000
+                    })
+                .Stage((Item item, StageOption<Item, Item> stageOption) =>
+                {
+
+                    if (item.Value.StartsWith("Item#0"))
+                    {
+                        throw new Exception("Test exception");
+                    }
+
+                    var t = DateTime.Now;
+                    item.Value += $"[{t.Second + "." + t.Millisecond}]->";
+
+                    return item;
+                });//.ExtensionContext(extensionContext => extensionContext.MssCall(""));
+
+
+            Stopwatch stopWatch = new Stopwatch();
+            //var skippedItems = new List<Item>();
+            //Make pipeline from stageSetup
+            //pipeline.SkippedItemReceivedEvent += delegate(SkippedItemEventArgs item) { skippedItems.Add(item.Item); };
+
+            var pipeline = pipelineSetup.CreateAwaitable();
+
+            //Task.Run(() =>
+            //{
+            //    Thread.Sleep(7000);
+            //    //source.Cancel();
+            //});
+
+            pipeline.ExceptionItemsReceivedEvent += delegate (ExceptionItemsEventArgs args)
+            {
+
+            };
+
+            //run
+            stopWatch.Start();
+            var result = pipeline.Process(input).ToArray();
+
+            stopWatch.Stop();
+
+            PrintOutputAndTime(stopWatch.ElapsedMilliseconds, result);
+            stopWatch.Reset();
+
+            //var pipeline2 = pipelineSetup.CreateAwaitable();
+
+            //run
+            stopWatch.Start();
+            var result2 = result;//pipeline.Process(result).ToArray();
+            stopWatch.Stop();
+
+            //Total time 24032
+            PrintOutputAndTime(stopWatch.ElapsedMilliseconds, result2);
+            stopWatch.Reset();
         }
 
         [Fact]

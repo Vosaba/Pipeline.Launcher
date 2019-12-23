@@ -9,7 +9,7 @@ using PipelineLauncher.PipelineEvents;
 
 namespace PipelineLauncher.Pipelines
 {
-    internal class AwaitablePipelineRunner<TInput, TOutput> : PipelineRunner<TInput, TOutput>,  IAwaitablePipelineRunner<TInput, TOutput>
+    internal class AwaitablePipelineRunner<TInput, TOutput> : PipelineRunner<TInput, TOutput>, IAwaitablePipelineRunner<TInput, TOutput>
     {
         private readonly AwaitablePipelineConfig _pipelineConfig;
         private readonly ConcurrentBag<TOutput> _processedItems = new ConcurrentBag<TOutput>();
@@ -17,7 +17,6 @@ namespace PipelineLauncher.Pipelines
         private readonly Func<ITargetBlock<PipelineItem<TInput>>> _getFirstBlock;
         private readonly Func<ISourceBlock<PipelineItem<TOutput>>> _getLastBlock;
         private readonly Action _destroyTaskStages;
-
 
         internal AwaitablePipelineRunner(
             Func<ITargetBlock<PipelineItem<TInput>>> firstBlock,

@@ -12,21 +12,31 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
+using PipelineLauncher.DI;
 
 namespace PipelineLauncher.Pipelines
 {
     public class PipelineCreator : IPipelineCreator
     {
-        private readonly IJobService _jobService;
+        private IJobService _jobService;
         private CancellationToken _cancellationToken = default;
 
-        private IJobService GetJobService
+        public bool TryUseDefaultServiceResolver { get; set; } = true;
+
+        private IJobService JobService
         {
             get
             {
                 if (_jobService == null)
                 {
-                    throw new Exception($"'{nameof(IJobService)}' isn't provided, if you need to use Generic stage setups, provide service.");
+                    if (TryUseDefaultServiceResolver)
+                    {
+                        _jobService = new DefaultJobService();
+                    }
+                    else
+                    {
+                        throw new Exception($"'{nameof(IJobService)}' isn't provided, if you need to use Generic stage setups, provide service.");
+                    }
                 }
 
                 return _jobService;
@@ -56,11 +66,11 @@ namespace PipelineLauncher.Pipelines
 
         public IPipelineSetup<TInput, TOutput> BulkStage<TBulkJob, TInput, TOutput>()
             where TBulkJob : Bulk<TInput, TOutput>
-            => CreateNextBulkStage<TInput, TOutput>(GetJobService.GetJobInstance<TBulkJob>());
+            => CreateNextBulkStage<TInput, TOutput>(JobService.GetJobInstance<TBulkJob>());
 
         public IPipelineSetup<TInput, TInput> BulkStage<TBulkJob, TInput>()
             where TBulkJob : Bulk<TInput, TInput>
-            => CreateNextBulkStage<TInput, TInput>(GetJobService.GetJobInstance<TBulkJob>());
+            => CreateNextBulkStage<TInput, TInput>(JobService.GetJobInstance<TBulkJob>());
 
         #endregion
 
@@ -68,11 +78,11 @@ namespace PipelineLauncher.Pipelines
 
         public IPipelineSetup<TInput, TOutput> Stage<TJob, TInput, TOutput>()
             where TJob : Job<TInput, TOutput>
-            => CreateNextStage<TInput, TOutput>(GetJobService.GetJobInstance<TJob>());
+            => CreateNextStage<TInput, TOutput>(JobService.GetJobInstance<TJob>());
 
         public IPipelineSetup<TInput, TInput> Stage<TJob, TInput>()
             where TJob : Job<TInput, TInput>
-            => CreateNextStage<TInput, TInput>(GetJobService.GetJobInstance<TJob>());
+            => CreateNextStage<TInput, TInput>(JobService.GetJobInstance<TJob>());
 
         #endregion
 
@@ -187,7 +197,7 @@ namespace PipelineLauncher.Pipelines
 
         private PipelineSetup<TInput, TOutput> AppendStage<TInput, TOutput>(IStage<TInput, TOutput> stage)
         {
-            return new PipelineHeadSetup<TInput, TInput, TOutput>(stage, _jobService);
+            return new PipelineHeadSetup<TInput, TInput, TOutput>(stage, JobService);
         }
     }
 }

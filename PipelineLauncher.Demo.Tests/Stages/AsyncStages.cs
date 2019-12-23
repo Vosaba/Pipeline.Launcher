@@ -31,8 +31,22 @@ namespace PipelineLauncher.Demo.Tests.Stages
         }
     }
 
+    public interface IInterface
+    {
+        
+    }
+
+    public class F : IInterface
+    {
+
+    }
     public class Stage2 : Job<Item>
     {
+        public Stage2(F s )
+        {
+            
+        }
+
         public override Item Execute(Item item)
         {
             //return Remove(item);
@@ -109,6 +123,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
 
     public class Stage4 : Job<Item>
     {
+
         public override async Task<Item> ExecuteAsync(Item item)
         {
             item.Value = item.Value + "AsyncStage4->";
