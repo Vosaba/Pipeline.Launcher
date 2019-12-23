@@ -4,6 +4,7 @@ using PipelineLauncher.PipelineJobs;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using PipelineLauncher.Dto;
 
 namespace PipelineLauncher.Jobs
 {
@@ -42,17 +43,17 @@ namespace PipelineLauncher.Jobs
 
         public TOutput Remove(TInput input)
         {
-            return StageOption.Remove(input);
+            return new StageOption<TInput, TOutput>().Remove(input);
         }
 
         public TOutput Skip(TInput input)
         {
-            return StageOption.Skip(input);
+            return new StageOption<TInput, TOutput>().Skip(input);
         }
 
         public TOutput SkipTo<TSkipToJob>(TInput input) where TSkipToJob : IPipelineIn<TInput>
         {
-            return StageOption.SkipTo<TSkipToJob>(input);
+            return new StageOption<TInput, TOutput>().SkipTo<TSkipToJob>(input);
         }
     }
 

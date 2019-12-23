@@ -10,6 +10,8 @@ namespace PipelineLauncher.Jobs
         private readonly Func<TInput, StageOption<TInput, TOutput>, Task<TOutput>> _funcAsyncWithJobOption = null;
         private readonly Func<TInput, StageOption<TInput, TOutput>, TOutput> _funcWithJobOption = null;
 
+        private static readonly StageOption<TInput, TOutput> StageOption = new StageOption<TInput, TOutput>();
+
 
         private readonly Func<TInput, Task<TOutput>> _funcAsync = null;
         private readonly Func<TInput, TOutput> _func = null;

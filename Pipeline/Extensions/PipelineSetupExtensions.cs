@@ -3,6 +3,9 @@ using PipelineLauncher.PipelineSetup;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Reflection;
+using PipelineLauncher.Abstractions.Services;
 
 namespace PipelineLauncher.Extensions
 {
@@ -42,6 +45,15 @@ namespace PipelineLauncher.Extensions
             });
         }
 
+        public static IJobService AccessJobService<TInput, TOutput>(this IPipelineSetup<TInput, TOutput> pipelineSetup)
+        {
+            var ty = pipelineSetup.GetType();
+            var pi = ty.GetProperty("JobService", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.GetProperty);
+            object o = pi.GetValue(pipelineSetup, null);
+
+            return (IJobService)o;
+        }
+
         public static IPipelineSetup<TInput, TOutput> DelayWithLock<TInput, TOutput>(this IPipelineSetup<TInput, TOutput> pipelineSetup, long millisecondsDelay)
         {
             object @lock = new object();
@@ -59,17 +71,6 @@ namespace PipelineLauncher.Extensions
                     return input;
                 }
             });
-        }
-
-        public static IPipelineSetup<TInput, TNextOutput> ExtensionContext<TInput, TOutput, TNextOutput>(this IPipelineSetup<TInput, TOutput> pipelineSetup, Func<IPipelineSetupOut<TOutput>, IPipelineSetupOut<TNextOutput>> extension)
-        {
-            return (IPipelineSetup<TInput, TNextOutput>)extension(pipelineSetup);
-        }
-
-        public static IPipelineSetupOut<TCast> Cast<TOutput, TCast>(this IPipelineSetupOut<TOutput> pipelineSetup)
-            where TCast : class
-        {
-            return pipelineSetup.Stage(output => output as TCast);
         }
     }
 }

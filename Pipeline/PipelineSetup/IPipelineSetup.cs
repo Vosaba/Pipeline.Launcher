@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using PipelineLauncher.Abstractions.Configurations;
+﻿using PipelineLauncher.Abstractions.Configurations;
 using PipelineLauncher.Dto;
 using PipelineLauncher.Jobs;
 using PipelineLauncher.Pipelines;
 using PipelineLauncher.Stage;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace PipelineLauncher.PipelineSetup
 {

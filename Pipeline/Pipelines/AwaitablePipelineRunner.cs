@@ -53,20 +53,36 @@ namespace PipelineLauncher.Pipelines
             return _processedItems;
         }
 
-        public async IAsyncEnumerable<TOutput> Process(IEnumerable<TInput> input, bool f)
+        public IObservable<TOutput> ProcessAsObservable(TInput input)
+        {
+            return ProcessAsObservable(new [] {input});
+        }
+
+        public IObservable<TOutput> ProcessAsObservable(IEnumerable<TInput> input)
         {
             InitBlocks();
             _processedItems.Clear();
 
             Post(input);
             FirstBlock.Complete();
-
-            await SortingBlock.Completion;
-            foreach (var item in _processedItems)
-            {
-                yield return item;
-            }
+            throw new Exception();
+            //return ResultConsumerBlock.AsObservable();
         }
+
+        //public async IAsyncEnumerable<TOutput> Process(IEnumerable<TInput> input, bool f)
+        //{
+        //    InitBlocks();
+        //    _processedItems.Clear();
+
+        //    Post(input);
+        //    FirstBlock.Complete();
+
+        //    await ResultConsumerBlock.Completion;
+        //    foreach (var item in _processedItems)
+        //    {
+        //        yield return item;
+        //    }
+        //}
 
         private void AwaitablePipeline_ItemReceivedEvent(TOutput item)
         {
@@ -92,6 +108,8 @@ namespace PipelineLauncher.Pipelines
             LastBlock.Completion.ContinueWith(x =>
             {
                 SortingBlock.Complete();
+                //ExceptionConsumerBlock.Complete();
+                //SkippedConsumerBlock.Complete();
             });
         }
     }

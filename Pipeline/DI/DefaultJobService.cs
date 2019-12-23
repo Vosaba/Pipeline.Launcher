@@ -3,6 +3,7 @@ using Autofac.Features.ResolveAnything;
 using PipelineLauncher.Abstractions.Pipeline;
 using PipelineLauncher.Abstractions.Services;
 using System;
+using Autofac.Builder;
 
 namespace PipelineLauncher.DI
 {
@@ -17,7 +18,14 @@ namespace PipelineLauncher.DI
             _defaultServiceContainer.RegisterDefaultServices();
 
             _containerBuilder.RegisterAssemblyModules(AppDomain.CurrentDomain.GetAssemblies());
-            _containerBuilder.RegisterSource(new AnyConcreteTypeNotAlreadyRegisteredSource());
+            _containerBuilder.RegisterSource(new AnyConcreteTypeNotAlreadyRegisteredSource()
+            {
+                RegistrationConfiguration =
+                    (IRegistrationBuilder<object, ConcreteReflectionActivatorData, SingleRegistrationStyle> registrationBuilder) =>
+                    {
+                        //registrationBuilder
+                    }
+            });
 
             _container = _containerBuilder.Build();
         }

@@ -7,17 +7,17 @@ namespace PipelineLauncher.Dto
     {
         public TOutput Remove(TInput input)
         {
-            throw new NonParamException<TOutput>(new RemoveItem<TOutput>(input, GetType()));
+            throw new NoneParamException<TOutput>(new RemoveItem<TOutput>(input, GetType()));
         }
 
         public TOutput Skip(TInput input)
         {
-            throw new NonParamException<TOutput>(new SkipItem<TOutput>(input, GetType()));
+            throw new NoneParamException<TOutput>(new SkipItem<TOutput>(input, GetType()));
         }
 
         public TOutput SkipTo<TSkipToJob>(TInput input) where TSkipToJob : IPipelineIn<TInput>
         {
-            throw new NonParamException<TOutput>(new SkipItemTill<TOutput>(typeof(TSkipToJob), input, GetType()));
+            throw new NoneParamException<TOutput>(new SkipItemTill<TOutput>(typeof(TSkipToJob), input, GetType()));
         }
     }
 

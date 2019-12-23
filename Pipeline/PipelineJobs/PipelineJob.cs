@@ -11,8 +11,6 @@ namespace PipelineLauncher.PipelineJobs
 {
     public abstract class Pipeline<TInput, TOutput> : PipelineBase<TInput, TOutput>, IPipelineJob<TInput, TOutput>
     {
-        protected static StageOption<TInput, TOutput> StageOption = new StageOption<TInput, TOutput>();
-
         public abstract JobConfiguration Configuration { get; }
 
         public abstract Task<TOutput> ExecuteAsync(TInput input, CancellationToken cancellationToken);
@@ -45,7 +43,7 @@ namespace PipelineLauncher.PipelineJobs
                         return new PipelineItem<TOutput>(await ExecuteAsync(input.Item, cancellationToken));
                 }
             }
-            catch (NonParamException<TOutput> e)
+            catch (NoneParamException<TOutput> e)
             {
                 return e.Item;
             }

@@ -3,10 +3,10 @@ using System;
 
 namespace PipelineLauncher.Exceptions
 {
-    internal class NonParamException<TItem> : Exception
+    internal class NoneParamException<TItem> : Exception
     {
         public PipelineItem<TItem> Item { get; }
-        public NonParamException(PipelineItem<TItem> item)
+        public NoneParamException(PipelineItem<TItem> item)
         {
             Item = item;
         }
