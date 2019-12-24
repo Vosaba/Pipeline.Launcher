@@ -217,7 +217,7 @@ namespace PipelineLauncher.PipelineSetup
 
         #endregion
 
-        public IPipelineSetup<TInput, TNextOutput> ContinueWith<TNextOutput>(IPipelineSetup<TOutput, TNextOutput> pipelineSetup)
+        public IPipelineSetup<TInput, TNextOutput> MergeWith<TNextOutput>(IPipelineSetup<TOutput, TNextOutput> pipelineSetup)
         {
             var nextBlock = pipelineSetup.GetFirstStage<TOutput>();
 
@@ -252,7 +252,7 @@ namespace PipelineLauncher.PipelineSetup
 
         public static PipelineSetup<TInput, TOutput> operator +(PipelineSetup<TInput, TOutput> pipelineSetup, PipelineSetup<TOutput, TOutput> pipelineSetup2)
         {
-            var y =  pipelineSetup.ContinueWith(pipelineSetup2);
+            var y =  pipelineSetup.MergeWith(pipelineSetup2);
 
             return (PipelineSetup<TInput, TOutput>) y;
         }

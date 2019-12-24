@@ -172,9 +172,9 @@ namespace PipelineLauncher.Demo.Tests.Modules
             //Make pipeline from stageSetup
             //pipeline.SkippedItemReceivedEvent += delegate(SkippedItemEventArgs item) { skippedItems.Add(item.Item); };
 
-            pipelineSetup = pipelineSetup.ContinueWith(pipelineSetup1);
+            pipelineSetup = pipelineSetup.MergeWith(pipelineSetup1);
 
-            pipelineSetup = pipelineSetup.ContinueWith(pipelineSetup2);
+            pipelineSetup = pipelineSetup.MergeWith(pipelineSetup2);
 
             var pipeline = pipelineSetup.CreateAwaitable();
 
