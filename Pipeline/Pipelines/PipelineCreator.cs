@@ -2,6 +2,7 @@
 using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.Services;
 using PipelineLauncher.Blocks;
+using PipelineLauncher.DI;
 using PipelineLauncher.Dto;
 using PipelineLauncher.Jobs;
 using PipelineLauncher.PipelineJobs;
@@ -12,7 +13,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
-using PipelineLauncher.DI;
 
 namespace PipelineLauncher.Pipelines
 {
@@ -197,7 +197,7 @@ namespace PipelineLauncher.Pipelines
 
         private PipelineSetup<TInput, TOutput> AppendStage<TInput, TOutput>(IStage<TInput, TOutput> stage)
         {
-            return new PipelineHeadSetup<TInput, TInput, TOutput>(stage, JobService);
+            return new PipelineSetup<TInput, TOutput>(stage, JobService);
         }
     }
 }

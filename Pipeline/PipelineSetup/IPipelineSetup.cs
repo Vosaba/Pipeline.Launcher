@@ -82,6 +82,8 @@ namespace PipelineLauncher.PipelineSetup
 
         #endregion
 
+        IPipelineSetup<TInput, TNextOutput> ContinueWith<TNextOutput>(IPipelineSetup<TOutput, TNextOutput> pipelineSetup);
+
         IAwaitablePipelineRunner<TInput, TOutput> CreateAwaitable(AwaitablePipelineConfig pipelineConfig = null);
 
         IPipelineRunner<TInput, TOutput> Create();

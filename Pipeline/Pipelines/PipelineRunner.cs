@@ -1,10 +1,10 @@
 ﻿using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Dto;
-using PipelineLauncher.PipelineEvents;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks.Dataflow;
+using PipelineLauncher.Abstractions.PipelineEvents;
 
 namespace PipelineLauncher.Pipelines
 {

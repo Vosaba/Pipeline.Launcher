@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace PipelineLauncher.PipelineEvents
+namespace PipelineLauncher.Abstractions.PipelineEvents
 {
     public class PipelineEventArgs
     {

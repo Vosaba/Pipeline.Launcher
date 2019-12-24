@@ -217,6 +217,46 @@ namespace PipelineLauncher.PipelineSetup
 
         #endregion
 
+        public IPipelineSetup<TInput, TNextOutput> ContinueWith<TNextOutput>(IPipelineSetup<TOutput, TNextOutput> pipelineSetup)
+        {
+            var nextBlock = pipelineSetup.GetFirstStage<TOutput>();
+
+            ISourceBlock<PipelineItem<TNextOutput>> MakeNextBlock()
+            {
+                Current.Next.Add(nextBlock);
+                nextBlock.Previous = Current;
+
+                Current.ExecutionBlock.LinkTo(nextBlock.ExecutionBlock, new DataflowLinkOptions() { PropagateCompletion = true });
+                Current.ExecutionBlock.Completion.ContinueWith(x =>
+                {
+                    nextBlock.ExecutionBlock.Complete();
+                }, Current.CancellationToken);
+
+                Current.ExecutionBlock.Completion.ContinueWith(x =>
+                {
+                    nextBlock.ExecutionBlock.Complete();
+                }, Current.CancellationToken);
+
+                return pipelineSetup.Current.ExecutionBlock;
+            };
+
+            var t = new StageOut<TNextOutput>(MakeNextBlock, Current.CancellationToken)
+            {
+                Previous = Current
+            };
+
+            Current.Next.Add(t); // Hack with cross linking to destroy
+
+            return new PipelineSetup<TInput, TNextOutput>(t, JobService);
+        }
+
+        public static PipelineSetup<TInput, TOutput> operator +(PipelineSetup<TInput, TOutput> pipelineSetup, PipelineSetup<TOutput, TOutput> pipelineSetup2)
+        {
+            var y =  pipelineSetup.ContinueWith(pipelineSetup2);
+
+            return (PipelineSetup<TInput, TOutput>) y;
+        }
+
         public IAwaitablePipelineRunner<TInput, TOutput> CreateAwaitable(AwaitablePipelineConfig pipelineConfig = null)
         {
             var firstStage = this.GetFirstStage<TInput>();

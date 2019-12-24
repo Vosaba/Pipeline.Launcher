@@ -2,17 +2,18 @@ using PipelineLauncher.Abstractions.Configurations;
 using PipelineLauncher.Demo.Tests.Fakes;
 using PipelineLauncher.Demo.Tests.Stages;
 using PipelineLauncher.Dto;
-using PipelineLauncher.PipelineEvents;
+using PipelineLauncher.Extensions;
+using PipelineLauncher.Jobs;
 using PipelineLauncher.Pipelines;
 using PipelineLauncher.PipelineSetup;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using PipelineLauncher.Extensions;
-using PipelineLauncher.Jobs;
+using PipelineLauncher.Abstractions.PipelineEvents;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -50,7 +51,11 @@ namespace PipelineLauncher.Demo.Tests.Modules
             //Configure stages
             var pipelineSetup = PipelineCreator
                     .WithToken(source.Token)
-                    .Prepare<Item>()
+                    .Stage((Item item) =>
+                    {
+                        
+                        return item;
+                    })
                     //.Stage(new Stage1())
                     .Branch(
                         (item => item.Value == "Item#1->AsyncStage1->",
@@ -118,17 +123,58 @@ namespace PipelineLauncher.Demo.Tests.Modules
                         }
 
                         var t = DateTime.Now;
-                        item.Value += $"[{t.Second + "." + t.Millisecond}]->";
+                        //item.Value += $"[{t.Second + "." + t.Millisecond}]->";
 
                         return item;
                     })
                 ;
-                
+
+
+            var pipelineSetup1 = PipelineCreator
+                //.WithToken(source.Token)
+                .Stage((Item item) =>
+                {
+                    item.Value += "nextConfig->";
+                    return item;
+                })
+                .Stage((Item item) =>
+                {
+                    item.Value += "nextConfig222->";
+                    return item;
+                })
+                .Stage((Item item) =>
+                {
+                    item.Value += "nextConfig333->";
+                    return item;
+                });
+
+            var pipelineSetup2 = PipelineCreator
+                //.WithToken(source.Token)
+                .Stage((Item item) =>
+                {
+                    item.Value += "2nextConfig->";
+                    return item;
+                })
+                .Stage((Item item) =>
+                {
+                    item.Value += "2nextConfig222->";
+                    return item;
+                })
+                .Stage((Item item) =>
+                {
+                    item.Value += "2nextConfig333->";
+                    return item;
+                });
+            //.Stage(e=>e.Value);
 
             Stopwatch stopWatch = new Stopwatch();
             //var skippedItems = new List<Item>();
             //Make pipeline from stageSetup
             //pipeline.SkippedItemReceivedEvent += delegate(SkippedItemEventArgs item) { skippedItems.Add(item.Item); };
+
+            pipelineSetup = pipelineSetup.ContinueWith(pipelineSetup1);
+
+            pipelineSetup = pipelineSetup.ContinueWith(pipelineSetup2);
 
             var pipeline = pipelineSetup.CreateAwaitable();
 
@@ -156,7 +202,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
 
             //run
             stopWatch.Start();
-            var result2 = result;//pipeline.Process(result).ToArray();
+            var result2 = pipeline.Process(result).ToArray();
             stopWatch.Stop();
 
             //Total time 24032
@@ -209,6 +255,10 @@ namespace PipelineLauncher.Demo.Tests.Modules
         [Fact]
         public void Pipeline_Creation_Multiple_Jobs()
         {
+            var t = Assembly.GetExecutingAssembly();
+
+            var y = t.GetReferencedAssemblies();
+
             //Test input 6 items
             List<Item> input = MakeInput(5);
 

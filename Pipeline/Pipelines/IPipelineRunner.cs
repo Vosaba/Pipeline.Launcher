@@ -1,7 +1,5 @@
-﻿using PipelineLauncher.Dto;
-using PipelineLauncher.PipelineEvents;
+﻿using PipelineLauncher.Abstractions.PipelineEvents;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace PipelineLauncher.Pipelines
 {

@@ -1,4 +1,4 @@
-﻿namespace PipelineLauncher.PipelineEvents
+﻿namespace PipelineLauncher.Abstractions.PipelineEvents
 {
     public delegate void ExceptionItemsReceivedEventHandler(ExceptionItemsEventArgs args);
     public delegate void SkippedItemReceivedEventHandler(SkippedItemEventArgs args);
