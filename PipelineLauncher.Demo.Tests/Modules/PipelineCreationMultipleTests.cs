@@ -54,7 +54,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
                     .WithToken(source.Token)
                     .WithDiagnostic(e => 
                     {
-                        Output.WriteLine($"WD: {e.StageType.Name}: {e.FinishReason}");
+                        Output.WriteLine($"WD: {e.StageType.Name}: {e.State}");
                     })
                     .Stage((Item item) =>
                     {

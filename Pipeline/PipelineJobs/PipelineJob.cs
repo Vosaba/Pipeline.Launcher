@@ -18,49 +18,56 @@ namespace PipelineLauncher.PipelineJobs
 
         public async Task<PipelineItem<TOutput>> InternalExecute(PipelineItem<TInput> input, CancellationToken cancellationToken, ActionsSet actionsSet)
         {
-            DiagnosticEventArgs diagnosticEventArgs = default;
-
-            if (actionsSet.DiagnosticAction != null)
-            {
-                diagnosticEventArgs = new DiagnosticEventArgs(GetType());
-            }
+            DiagnosticEventArgs diagnosticEventArgs = new DiagnosticEventArgs(GetType());
+            actionsSet.DiagnosticAction?.Invoke(diagnosticEventArgs);
 
             try
             {
+                PipelineItem<TOutput> result;
                 switch (input)
                 {
                     case RemoveItem<TInput> removeItem:
-                        return removeItem.Return<TOutput>();
+                        result = removeItem.Return<TOutput>();
+                        break;
 
                     case ExceptionItem<TInput> exceptionItem:
-                        return exceptionItem.Return<TOutput>();
+                        result = exceptionItem.Return<TOutput>();
+                        break;
 
                     case SkipItem<TInput> skipItem when typeof(TInput) == skipItem.OriginalItem.GetType():
-                        return new PipelineItem<TOutput>(await ExecuteAsync((TInput) skipItem.OriginalItem,
+                        result = new PipelineItem<TOutput>(await ExecuteAsync((TInput) skipItem.OriginalItem,
                             cancellationToken));
+                        break;
                     case SkipItem<TInput> skipItem when typeof(TInput) != skipItem.OriginalItem.GetType():
-                        return skipItem.Return<TOutput>();
+                        result = skipItem.Return<TOutput>();
+                        break;
 
                     case SkipItemTill<TInput> skipItemTill
                         when GetType() == skipItemTill.SkipTillType:
-                        return new PipelineItem<TOutput>(await ExecuteAsync((TInput) skipItemTill.OriginalItem,
+                        result = new PipelineItem<TOutput>(await ExecuteAsync((TInput) skipItemTill.OriginalItem,
                             cancellationToken));
+                        break;
                     case SkipItemTill<TInput> skipItemTill
                         when GetType() != skipItemTill.SkipTillType:
-                        return skipItemTill.Return<TOutput>();
+                        result = skipItemTill.Return<TOutput>();
+                        break;
 
                     default:
-                        return new PipelineItem<TOutput>(await ExecuteAsync(input.Item, cancellationToken));
+                        result = new PipelineItem<TOutput>(await ExecuteAsync(input.Item, cancellationToken));
+                        break;
                 }
+
+                actionsSet.DiagnosticAction?.Invoke(diagnosticEventArgs.Finish());
+                return result;
             }
             catch (NoneParamException<TOutput> e)
             {
-                actionsSet.DiagnosticAction?.Invoke(diagnosticEventArgs.Finish(DiagnosticFinishReason.NoneParamException));
+                actionsSet.DiagnosticAction?.Invoke(diagnosticEventArgs.Finish(DiagnosticState.Skipped));
                 return e.Item;
             }
             catch (Exception e)
             {
-                actionsSet.DiagnosticAction?.Invoke(diagnosticEventArgs.Finish(DiagnosticFinishReason.Exception));
+                actionsSet.DiagnosticAction?.Invoke(diagnosticEventArgs.Finish(DiagnosticState.ExceptionOccured));
                 return new ExceptionItem<TOutput>(e, actionsSet.ReExecute, GetType(), input != null ? input.Item : default);
             }
         }

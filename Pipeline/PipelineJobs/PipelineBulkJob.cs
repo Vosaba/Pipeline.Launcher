@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using PipelineLauncher.Abstractions.PipelineEvents;
 using PipelineLauncher.Dto;
 
 namespace PipelineLauncher.PipelineJobs
@@ -18,6 +19,9 @@ namespace PipelineLauncher.PipelineJobs
 
         public async Task<IEnumerable<PipelineItem<TOutput>>> InternalExecute(IEnumerable<PipelineItem<TInput>> input, CancellationToken cancellationToken, ActionsSet actionsSet)
         {
+            DiagnosticEventArgs diagnosticEventArgs = new DiagnosticEventArgs(GetType());
+            actionsSet.DiagnosticAction?.Invoke(diagnosticEventArgs);
+
             var inputArray = input.ToArray();
             var result = new List<PipelineItem<TOutput>>();
 
@@ -60,10 +64,12 @@ namespace PipelineLauncher.PipelineJobs
                 var executedItems = await ExecuteAsync(inputArray.Where(x => x.GetType() == typeof(PipelineItem<TInput>)).Select(x => x.Item), cancellationToken);
                 result.AddRange(executedItems.Select(x => new PipelineItem<TOutput>(x)));
 
+                actionsSet.DiagnosticAction?.Invoke(diagnosticEventArgs.Finish());
                 return result;
             }
             catch (Exception ex)
             {
+                actionsSet.DiagnosticAction?.Invoke(diagnosticEventArgs.Finish());
                 return new[] { new ExceptionItem<TOutput>(ex, actionsSet.ReExecute, GetType(), inputArray.Select(e => e.Item)) };
             }
         }

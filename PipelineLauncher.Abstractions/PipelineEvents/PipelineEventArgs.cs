@@ -46,7 +46,8 @@ namespace PipelineLauncher.Abstractions.PipelineEvents
         public TimeSpan StartTime { get; } 
         public TimeSpan FinishTime { get; private set; }
 
-        public DiagnosticFinishReason FinishReason { get; private set; }
+        public DiagnosticState State { get; private set; }
+        public string Message { get; private set; }
 
         public TimeSpan RunningTime => StartTime - FinishTime;
 
@@ -55,23 +56,26 @@ namespace PipelineLauncher.Abstractions.PipelineEvents
             StageType = stageType;
             StartTime = DateTime.Now.TimeOfDay;
             FinishTime = StartTime;
-            FinishReason = DiagnosticFinishReason.None;
+            State = DiagnosticState.Started;
+            Message = null;
         }
 
-        public DiagnosticEventArgs Finish(DiagnosticFinishReason diagnosticFinishReason = DiagnosticFinishReason.Finish)
+        public DiagnosticEventArgs Finish(DiagnosticState diagnosticState = DiagnosticState.Finished, string message = null)
         {
             FinishTime = DateTime.Now.TimeOfDay;
-            FinishReason = diagnosticFinishReason;
+            State = diagnosticState;
+            Message = message;
 
             return this;
         }
     }
 
-    public enum DiagnosticFinishReason
+
+    public enum DiagnosticState
     {
-        None,
-        Finish,
-        Exception,
-        NoneParamException
+        Started,
+        Finished,
+        ExceptionOccured,
+        Skipped
     }
 }
