@@ -49,74 +49,31 @@ namespace PipelineLauncher.Demo.Tests.Modules
 
             CancellationTokenSource source = new CancellationTokenSource();
             //Configure stages
+
             var pipelineSetup = PipelineCreator
                     .WithToken(source.Token)
+                    .WithDiagnostic(e => 
+                    {
+                        Output.WriteLine($"WD: {e.StageType.Name}: {e.FinishReason}");
+                    })
                     .Stage((Item item) =>
                     {
-                        
+                        item.Value += "1->";
                         return item;
                     })
-                    //.Stage(new Stage1())
-                    .Branch(
-                        (item => item.Value == "Item#1->AsyncStage1->",
-                            branch => branch
-                                .Stage<Stage2>()
-                            //.Stage(x =>
-                            //{
-                            //    var y = x.ToList();
+                    .Stage((Item item) =>
+                    {
+                        item.Value += "2->";
+                        if (item.Value == ("Item#0->1->2->"))
+                        {
+                            throw new Exception("Test exception");
+                        }
 
-                            //    y.Add(new Item("Item#NEW->"));
-                            //    return y;
-                            //})
-                        ),
-                        (item => true,
-                            branch => branch
-                                .Stage<Stage2>()
-                                .Stage<Stage2>()
-                                .Broadcast(
-                                    (item => true, //=> "Item#NEW->AsyncStage3->AsyncStage4->Stage4->AsyncStage1->",
-                                        branch1 => branch1
-                                            .Stage(x =>
-                                            {
-                                                x.Value += "111111111111111111111111->";
-                                                return x;
-                                            })),
-                                    (item => true,
-                                        branch1 => branch1
-                                            .Stage(x =>
-                                            {
-                                                x.Value += "222222222222222222222222->";
-                                                return x;
-                                            })))
-                        ))
-                    //.Delay(12000)
-                    //.BulkStage(new BulkStage3())
-                    .BulkStage((items) =>
-                        {
-                            var count = items.Count();
-                            return items;
-                        },
-                        new BulkJobConfiguration()
-                        {
-                            BatchItemsCount = 5,
-                            BatchItemsTimeOut = 4000
-                        })
-                    .Stage<Stage4>()
-                    //s.Stage(Task.FromResult)
-                    //.BulkDelay(5000)
-                    .BulkStage((items) =>
-                        {
-                            var count = items.Count();
-                            return items;
-                        },
-                        new BulkJobConfiguration()
-                        {
-                            BatchItemsCount = 5,
-                            BatchItemsTimeOut = 4000
-                        })
+                        return item;
+                    })
                     .Stage((Item item, StageOption<Item, Item> stageOption) =>
                     {
-
+                        item.Value += "3->";
                         if (item.Value.StartsWith("Item#0"))
                         {
                             //throw new Exception("Test exception");
@@ -130,51 +87,10 @@ namespace PipelineLauncher.Demo.Tests.Modules
                 ;
 
 
-            var pipelineSetup1 = PipelineCreator
-                //.WithToken(source.Token)
-                .Stage((Item item) =>
-                {
-                    item.Value += "nextConfig->";
-                    return item;
-                })
-                .Stage((Item item) =>
-                {
-                    item.Value += "nextConfig222->";
-                    return item;
-                })
-                .Stage((Item item) =>
-                {
-                    item.Value += "nextConfig333->";
-                    return item;
-                });
-
-            var pipelineSetup2 = PipelineCreator
-                //.WithToken(source.Token)
-                .Stage((Item item) =>
-                {
-                    item.Value += "2nextConfig->";
-                    return item;
-                })
-                .Stage((Item item) =>
-                {
-                    item.Value += "2nextConfig222->";
-                    return item;
-                })
-                .Stage((Item item) =>
-                {
-                    item.Value += "2nextConfig333->";
-                    return item;
-                });
-            //.Stage(e=>e.Value);
-
             Stopwatch stopWatch = new Stopwatch();
             //var skippedItems = new List<Item>();
             //Make pipeline from stageSetup
-            //pipeline.SkippedItemReceivedEvent += delegate(SkippedItemEventArgs item) { skippedItems.Add(item.Item); };
 
-            pipelineSetup = pipelineSetup.MergeWith(pipelineSetup1);
-
-            pipelineSetup = pipelineSetup.MergeWith(pipelineSetup2);
 
             var pipeline = pipelineSetup.CreateAwaitable();
 
@@ -186,7 +102,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
 
             pipeline.ExceptionItemsReceivedEvent += delegate(ExceptionItemsEventArgs args)
             {
-                
+                //Output.WriteLine($"{args.StageName}: {args.Exception}");
             };
 
             //run

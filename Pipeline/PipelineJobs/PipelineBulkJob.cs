@@ -16,7 +16,7 @@ namespace PipelineLauncher.PipelineJobs
 
         public abstract Task<IEnumerable<TOutput>> ExecuteAsync(IEnumerable<TInput> input, CancellationToken cancellationToken);
 
-        public async Task<IEnumerable<PipelineItem<TOutput>>> InternalExecute(IEnumerable<PipelineItem<TInput>> input, Action reExecute, CancellationToken cancellationToken)
+        public async Task<IEnumerable<PipelineItem<TOutput>>> InternalExecute(IEnumerable<PipelineItem<TInput>> input, CancellationToken cancellationToken, ActionsSet actionsSet)
         {
             var inputArray = input.ToArray();
             var result = new List<PipelineItem<TOutput>>();
@@ -64,7 +64,7 @@ namespace PipelineLauncher.PipelineJobs
             }
             catch (Exception ex)
             {
-                return new[] { new ExceptionItem<TOutput>(ex, reExecute, GetType(), inputArray.Select(e => e.Item)) };
+                return new[] { new ExceptionItem<TOutput>(ex, actionsSet.ReExecute, GetType(), inputArray.Select(e => e.Item)) };
             }
         }
     }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using PipelineLauncher.Abstractions.Configurations;
+using PipelineLauncher.Abstractions.PipelineEvents;
 using PipelineLauncher.Dto;
 using PipelineLauncher.Jobs;
 using PipelineLauncher.PipelineSetup;
@@ -12,6 +13,8 @@ namespace PipelineLauncher.Pipelines
     public interface IPipelineCreator
     {
         IPipelineCreator WithToken(CancellationToken cancellationToken);
+
+        IPipelineCreator WithDiagnostic(Action<DiagnosticEventArgs> diagnosticHandler);
 
         IPipelineSetup<TInput, TInput> Prepare<TInput>();
 

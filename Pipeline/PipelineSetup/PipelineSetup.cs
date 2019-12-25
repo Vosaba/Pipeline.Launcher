@@ -13,19 +13,23 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using PipelineLauncher.Extensions;
 using PipelineLauncher.Abstractions.Configurations;
+using PipelineLauncher.Abstractions.PipelineEvents;
 
 namespace PipelineLauncher.PipelineSetup
 {
     internal abstract class PipelineSetup<TFirstInput> : IPipelineSetup
     {
+        protected Action<DiagnosticEventArgs> DiagnosticAction;
+
         protected IJobService JobService { get; }
 
         public IStage Current { get; }
 
-        internal PipelineSetup(IStage stage, IJobService jobService)
+        internal PipelineSetup(IStage stage, IJobService jobService, Action<DiagnosticEventArgs> diagnosticAction)
         {
             Current = stage;
             JobService = jobService;
+            DiagnosticAction = diagnosticAction;
         }
     }
 
@@ -33,8 +37,8 @@ namespace PipelineLauncher.PipelineSetup
     {
         public new IStageOut<TOutput> Current => (IStageOut<TOutput>)base.Current;
 
-        internal PipelineSetup(IStageOut<TOutput> stage, IJobService jobService)
-            : base(stage, jobService)
+        internal PipelineSetup(IStageOut<TOutput> stage, IJobService jobService, Action<DiagnosticEventArgs> diagnosticAction)
+            : base(stage, jobService, diagnosticAction)
         { }
 
         #region Generic
@@ -153,7 +157,8 @@ namespace PipelineLauncher.PipelineSetup
 
                     Current.Next.Add(newtBranchStageHead);
 
-                    var nextBlockAfterCurrent = new PipelineSetup<TInput, TOutput>(newtBranchStageHead, JobService);
+                    var nextBlockAfterCurrent = new PipelineSetup<TInput, TOutput>(newtBranchStageHead, JobService, DiagnosticAction);
+
                     var newBranch = branch.branch(nextBlockAfterCurrent);
 
                     Current.ExecutionBlock.LinkTo(newBranchHead,
@@ -211,8 +216,7 @@ namespace PipelineLauncher.PipelineSetup
             };
 
             Current.Next.Add(t); // Hack with cross linking to destroy
-
-            return new PipelineSetup<TInput, TNextOutput>(t, JobService);
+            return new PipelineSetup<TInput, TNextOutput>(t, JobService, DiagnosticAction);
         }
 
         #endregion
@@ -247,7 +251,7 @@ namespace PipelineLauncher.PipelineSetup
 
             Current.Next.Add(t); // Hack with cross linking to destroy
 
-            return new PipelineSetup<TInput, TNextOutput>(t, JobService);
+            return new PipelineSetup<TInput, TNextOutput>(t, JobService, DiagnosticAction);
         }
 
         public static PipelineSetup<TInput, TOutput> operator +(PipelineSetup<TInput, TOutput> pipelineSetup, PipelineSetup<TOutput, TOutput> pipelineSetup2)
@@ -281,7 +285,7 @@ namespace PipelineLauncher.PipelineSetup
                 }
 
                 var nextBlock = new TransformBlock<PipelineItem<TOutput>, PipelineItem<TNextOutput>>(
-                    async x => await job.InternalExecute(x, () => RePostMessage(x), Current.CancellationToken),
+                    async x => await job.InternalExecute(x, Current.CancellationToken, new ActionsSet(() => RePostMessage(x), DiagnosticAction)),
                     new ExecutionDataflowBlockOptions
                     {
                         MaxDegreeOfParallelism = job.Configuration.MaxDegreeOfParallelism,
@@ -317,7 +321,7 @@ namespace PipelineLauncher.PipelineSetup
                 }
 
                 var nextBlock = new TransformManyBlock<IEnumerable<PipelineItem<TOutput>>, PipelineItem<TNextOutput>>(
-                    async x => await job.InternalExecute(x, () => RePostMessages(x), Current.CancellationToken),
+                    async x => await job.InternalExecute(x, Current.CancellationToken, new ActionsSet(() => RePostMessages(x), DiagnosticAction)),
                     new ExecutionDataflowBlockOptions
                     {
                         MaxDegreeOfParallelism = job.Configuration.MaxDegreeOfParallelism,
@@ -358,7 +362,7 @@ namespace PipelineLauncher.PipelineSetup
 
             Current.Next.Add(nextStage);
 
-            return new PipelineSetup<TInput, TNextOutput>(nextStage, JobService);
+            return new PipelineSetup<TInput, TNextOutput>(nextStage, JobService, DiagnosticAction);
         }
     }
 }

@@ -9,7 +9,7 @@ namespace PipelineLauncher.Abstractions.Pipeline
 {
     public interface IPipelineBulkJob<TInput, TOutput> : IPipeline<TInput, TOutput>
     {
-        Task<IEnumerable<PipelineItem<TOutput>>> InternalExecute(IEnumerable<PipelineItem<TInput>> input, Action reExecute, CancellationToken cancellationToken);
+        Task<IEnumerable<PipelineItem<TOutput>>> InternalExecute(IEnumerable<PipelineItem<TInput>> input, CancellationToken cancellationToken, ActionsSet actionsSet);
         BulkJobConfiguration Configuration { get; }
     }
 }

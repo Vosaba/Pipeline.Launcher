@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
+using PipelineLauncher.Abstractions.PipelineEvents;
 
 namespace PipelineLauncher.Pipelines
 {
@@ -20,8 +21,10 @@ namespace PipelineLauncher.Pipelines
     {
         private IJobService _jobService;
         private CancellationToken _cancellationToken = default;
+        private event DiagnosticEventHandler DiagnosticEvent;
 
         public bool TryUseDefaultServiceResolver { get; set; } = true;
+        public bool UseDiagnosticEvents { get; set; } = false;
 
         private IJobService JobService
         {
@@ -51,6 +54,13 @@ namespace PipelineLauncher.Pipelines
         public IPipelineCreator WithToken(CancellationToken cancellationToken)
         {
             _cancellationToken = cancellationToken;
+            return this;
+        }
+
+        public IPipelineCreator WithDiagnostic(Action<DiagnosticEventArgs> diagnosticHandler)
+        {
+            UseDiagnosticEvents = true;
+            DiagnosticEvent += diagnosticHandler.Invoke;
             return this;
         }
 
@@ -139,7 +149,7 @@ namespace PipelineLauncher.Pipelines
                 }
 
                 var nextBlock = new TransformManyBlock<IEnumerable<PipelineItem<TInput>>, PipelineItem<TOutput>>(
-                    async e => await bulkJob.InternalExecute(e, () => RePostMessages(e), _cancellationToken),
+                    async e => await bulkJob.InternalExecute(e, _cancellationToken, new ActionsSet(() => RePostMessages(e), CallDiagnostic)),
                     new ExecutionDataflowBlockOptions
                     {
                         MaxDegreeOfParallelism = bulkJob.Configuration.MaxDegreeOfParallelism,
@@ -169,7 +179,7 @@ namespace PipelineLauncher.Pipelines
                 }
 
                 var nextBlock = new TransformBlock<PipelineItem<TInput>, PipelineItem<TOutput>>(
-                    async e => await job.InternalExecute(e, () => RePostMessage(e), _cancellationToken),
+                    async e => await job.InternalExecute(e, _cancellationToken, new ActionsSet(() => RePostMessage(e), CallDiagnostic)),
                     new ExecutionDataflowBlockOptions
                     {
                         MaxDegreeOfParallelism = job.Configuration.MaxDegreeOfParallelism,
@@ -197,7 +207,18 @@ namespace PipelineLauncher.Pipelines
 
         private PipelineSetup<TInput, TOutput> AppendStage<TInput, TOutput>(IStage<TInput, TOutput> stage)
         {
-            return new PipelineSetup<TInput, TOutput>(stage, JobService);
+            Action<DiagnosticEventArgs> diagnosticAction = null;
+            if (UseDiagnosticEvents)
+            {
+                diagnosticAction = CallDiagnostic;
+            }
+
+            return new PipelineSetup<TInput, TOutput>(stage, JobService, diagnosticAction);
+        }
+
+        private void CallDiagnostic(DiagnosticEventArgs args)
+        {
+            DiagnosticEvent?.Invoke(args);
         }
     }
 }
