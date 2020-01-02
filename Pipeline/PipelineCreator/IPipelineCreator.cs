@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using PipelineLauncher.Abstractions.PipelineEvents;
 using PipelineLauncher.Abstractions.PipelineStage;
-using PipelineLauncher.Abstractions.PipelineStage.Configuration;
+using PipelineLauncher.Abstractions.PipelineStage.Configurations;
 using PipelineLauncher.Abstractions.PipelineStage.Dto;
 using PipelineLauncher.Abstractions.Services;
 using PipelineLauncher.Abstractions.Stages;

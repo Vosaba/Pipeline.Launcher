@@ -4,11 +4,12 @@
     {
         public PipelineType PipelineType { get; }
 
-        public bool UseTimeOuts => PipelineType == PipelineType.Normal;
+        public bool UseTimeOuts { get; }
 
-        public StageCreationOptions(PipelineType pipelineType)
+        public StageCreationOptions(PipelineType pipelineType, bool useTimeOuts)
         {
             PipelineType = pipelineType;
+            UseTimeOuts = useTimeOuts;
         }
     }
 }

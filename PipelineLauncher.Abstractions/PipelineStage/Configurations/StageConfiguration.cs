@@ -1,4 +1,4 @@
-﻿namespace PipelineLauncher.Abstractions.PipelineStage.Configuration
+﻿namespace PipelineLauncher.Abstractions.PipelineStage.Configurations
 {
     public class StageConfiguration : PipelineBaseConfiguration
     {

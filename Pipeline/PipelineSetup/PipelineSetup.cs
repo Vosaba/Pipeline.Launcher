@@ -6,11 +6,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
-using PipelineLauncher.Abstractions.Configurations;
 using PipelineLauncher.Extensions;
 using PipelineLauncher.Abstractions.PipelineEvents;
+using PipelineLauncher.Abstractions.PipelineRunner;
+using PipelineLauncher.Abstractions.PipelineRunner.Configurations;
 using PipelineLauncher.Abstractions.PipelineStage;
-using PipelineLauncher.Abstractions.PipelineStage.Configuration;
+using PipelineLauncher.Abstractions.PipelineStage.Configurations;
 using PipelineLauncher.Abstractions.PipelineStage.Dto;
 using PipelineLauncher.PipelineRunner;
 using PipelineLauncher.PipelineStage;
@@ -277,10 +278,10 @@ namespace PipelineLauncher.PipelineSetup
             return new AwaitablePipelineRunner<TInput, TOutput>(firstStageSetup.RetrieveExecutionBlock, Current.RetrieveExecutionBlock, Context.CancellationToken, () => firstStageSetup.DestroyStageBlocks(), pipelineConfig);
         }
 
-        public IPipelineRunner<TInput, TOutput> Create()
+        public IPipelineRunner<TInput, TOutput> Create(PipelineConfig pipelineConfig = null)
         {
             IStageSetupIn<TInput> firstStageSetup = this.GetFirstStage<TInput>();
-            return new PipelineRunner<TInput, TOutput>(firstStageSetup.RetrieveExecutionBlock, Current.RetrieveExecutionBlock, Context.CancellationToken);
+            return new PipelineRunner<TInput, TOutput>(firstStageSetup.RetrieveExecutionBlock, Current.RetrieveExecutionBlock, Context.CancellationToken, pipelineConfig);
         }
 
         private PipelineSetup<TInput, TNextOutput> CreateNextStage<TNextOutput>(IPipelineStage<TOutput, TNextOutput> stage)
@@ -301,7 +302,8 @@ namespace PipelineLauncher.PipelineSetup
                     {
                         MaxDegreeOfParallelism = stage.Configuration.MaxDegreeOfParallelism,
                         MaxMessagesPerTask = stage.Configuration.MaxMessagesPerTask,
-                        CancellationToken = Context.CancellationToken
+                        CancellationToken = Context.CancellationToken,
+                        SingleProducerConstrained = stage.Configuration.SingleProducerConstrained
                     });
 
                 rePostBlock = nextBlock;
@@ -347,7 +349,8 @@ namespace PipelineLauncher.PipelineSetup
                     {
                         MaxDegreeOfParallelism = stage.Configuration.MaxDegreeOfParallelism,
                         MaxMessagesPerTask = stage.Configuration.MaxMessagesPerTask,
-                        CancellationToken = Context.CancellationToken
+                        CancellationToken = Context.CancellationToken,
+                        SingleProducerConstrained = stage.Configuration.SingleProducerConstrained
                     });
 
                 buffer.LinkTo(nextBlock, new DataflowLinkOptions() { PropagateCompletion = true });

@@ -6,7 +6,7 @@ using System.Threading.Tasks.Dataflow;
 using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.PipelineEvents;
 using PipelineLauncher.Abstractions.PipelineStage;
-using PipelineLauncher.Abstractions.PipelineStage.Configuration;
+using PipelineLauncher.Abstractions.PipelineStage.Configurations;
 using PipelineLauncher.Abstractions.PipelineStage.Dto;
 using PipelineLauncher.Abstractions.Services;
 using PipelineLauncher.Abstractions.Stages;
@@ -149,7 +149,8 @@ namespace PipelineLauncher
                     {
                         MaxDegreeOfParallelism = bulkStage.Configuration.MaxDegreeOfParallelism,
                         MaxMessagesPerTask = bulkStage.Configuration.MaxMessagesPerTask,
-                        CancellationToken = _pipelineSetupContext.CancellationToken
+                        CancellationToken = _pipelineSetupContext.CancellationToken,
+                        SingleProducerConstrained = bulkStage.Configuration.SingleProducerConstrained
                     });
 
                 buffer.LinkTo(nextBlock, new DataflowLinkOptions() { PropagateCompletion = true });
@@ -181,7 +182,8 @@ namespace PipelineLauncher
                     {
                         MaxDegreeOfParallelism = stage.Configuration.MaxDegreeOfParallelism,
                         MaxMessagesPerTask = stage.Configuration.MaxMessagesPerTask,
-                        CancellationToken = _pipelineSetupContext.CancellationToken
+                        CancellationToken = _pipelineSetupContext.CancellationToken,
+                        SingleProducerConstrained = stage.Configuration.SingleProducerConstrained
                     });
 
                 rePostBlock = nextBlock;

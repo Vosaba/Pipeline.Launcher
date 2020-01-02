@@ -3,21 +3,23 @@ using PipelineLauncher.Abstractions.PipelineEvents;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks.Dataflow;
-using PipelineLauncher.Abstractions.Configurations;
+using PipelineLauncher.Abstractions.PipelineRunner;
+using PipelineLauncher.Abstractions.PipelineRunner.Configurations;
 using PipelineLauncher.Abstractions.PipelineStage;
 
 namespace PipelineLauncher.PipelineRunner
 {
-    internal class AwaitablePipelineRunner<TInput, TOutput> : PipelineRunner<TInput, TOutput>, IAwaitablePipelineRunner<TInput, TOutput>
+    internal class AwaitablePipelineRunner<TInput, TOutput> : PipelineRunnerBase<TInput, TOutput>, IAwaitablePipelineRunner<TInput, TOutput>
     {
-        protected override StageCreationOptions CreationOptions => new StageCreationOptions(PipelineType.Awaitable);
-
-        private readonly AwaitablePipelineConfig _pipelineConfig;
+        private readonly Action _destroyTaskStages;
         private readonly ConcurrentBag<TOutput> _processedItems = new ConcurrentBag<TOutput>();
 
-        private readonly Action _destroyTaskStages;
+        protected sealed override StageCreationOptions CreationOptions => new StageCreationOptions(PipelineType.Awaitable, !PipelineConfig.IgnoreTimeOuts);
+        protected readonly AwaitablePipelineConfig PipelineConfig;
+
 
         internal AwaitablePipelineRunner(
             Func<StageCreationOptions, bool, ITargetBlock<PipelineStageItem<TInput>>> retrieveFirstBlock,
@@ -25,13 +27,17 @@ namespace PipelineLauncher.PipelineRunner
             CancellationToken cancellationToken,
             Action destroyTaskStages,
             AwaitablePipelineConfig pipelineConfig)
-            : base(retrieveFirstBlock, retrieveLastBlock, cancellationToken, false)
+            : base(retrieveFirstBlock, retrieveLastBlock, cancellationToken)
         {
-            _pipelineConfig = pipelineConfig;
             _destroyTaskStages = destroyTaskStages;
+            PipelineConfig = pipelineConfig ?? new AwaitablePipelineConfig();
 
             ItemReceivedEvent += AwaitablePipeline_ItemReceivedEvent;
-            ExceptionItemsReceivedEvent += AwaitablePipelineRunner_ExceptionItemsReceivedEvent;
+
+            if (PipelineConfig.ThrowExceptionOccured)
+            {
+                ExceptionItemsReceivedEvent += AwaitablePipelineRunner_ExceptionItemsReceivedEvent;
+            }
         }
 
         public IEnumerable<TOutput> Process(TInput input)
@@ -41,47 +47,26 @@ namespace PipelineLauncher.PipelineRunner
 
         public IEnumerable<TOutput> Process(IEnumerable<TInput> input)
         {
-            InitBlocks();
             _processedItems.Clear();
+            _destroyTaskStages();
 
-            Post(input);
+            var lastBlock = RetrieveLastBlock(CreationOptions, false);
+            var sortingBlock = GenerateSortingBlock(lastBlock);
 
-            RetrieveFirstBlock(CreationOptions, true).Complete();
-            SortingBlock.Completion.Wait();
+            var firstBlock = RetrieveFirstBlock(CreationOptions, false);
+            var posted = input.Select(x => new PipelineStageItem<TInput>(x)).All(x => firstBlock.Post(x));
+            firstBlock.Complete();
+
+            lastBlock.Completion.ContinueWith(x =>
+            {
+                sortingBlock.Complete();
+            });
+
+            sortingBlock.Completion.Wait();
 
             return _processedItems;
         }
 
-        public IObservable<TOutput> ProcessAsObservable(TInput input)
-        {
-            return ProcessAsObservable(new [] {input});
-        }
-
-        public IObservable<TOutput> ProcessAsObservable(IEnumerable<TInput> input)
-        {
-            InitBlocks();
-            _processedItems.Clear();
-
-            Post(input);
-            //RetrieveFirstBlock.Complete();
-            throw new Exception();
-            //return ResultConsumerBlock.AsObservable();
-        }
-
-        //public async IAsyncEnumerable<TOutput> Process(IEnumerable<TInput> input, bool f)
-        //{
-        //    InitBlocks();
-        //    _processedItems.Clear();
-
-        //    Post(input);
-        //    RetrieveFirstBlock.Complete();
-
-        //    await ResultConsumerBlock.Completion;
-        //    foreach (var item in _processedItems)
-        //    {
-        //        yield return item;
-        //    }
-        //}
 
         private void AwaitablePipeline_ItemReceivedEvent(TOutput item)
         {
@@ -90,24 +75,7 @@ namespace PipelineLauncher.PipelineRunner
 
         private void AwaitablePipelineRunner_ExceptionItemsReceivedEvent(ExceptionItemsEventArgs items)
         {
-            if (_pipelineConfig != null && _pipelineConfig.ThrowExceptionOccured)
-            {
-                throw items.Exception;
-            }
-        }
-
-        private void InitBlocks()
-        {
-            _destroyTaskStages();
-
-            InitSortingBlock();
-
-            RetrieveLastBlock(CreationOptions, true).Completion.ContinueWith(x =>
-            {
-                SortingBlock.Complete();
-                //ExceptionConsumerBlock.Complete();
-                //SkippedConsumerBlock.Complete();
-            });
+            throw items.Exception;
         }
     }
 }

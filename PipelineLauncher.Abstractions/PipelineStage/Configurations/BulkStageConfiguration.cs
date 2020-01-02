@@ -1,6 +1,4 @@
-﻿using PipelineLauncher.Abstractions.PipelineStage.Dto;
-
-namespace PipelineLauncher.Abstractions.PipelineStage.Configuration
+﻿namespace PipelineLauncher.Abstractions.PipelineStage.Configurations
 {
     public class BulkStageConfiguration : PipelineBaseConfiguration
     {

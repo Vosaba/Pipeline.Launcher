@@ -1,6 +1,6 @@
 ﻿using PipelineLauncher.Abstractions.PipelineEvents;
 
-namespace PipelineLauncher.PipelineRunner
+namespace PipelineLauncher.Abstractions.PipelineRunner
 {
     public interface IPipelineRunnerBase<in TInput, out TOutput>
     {

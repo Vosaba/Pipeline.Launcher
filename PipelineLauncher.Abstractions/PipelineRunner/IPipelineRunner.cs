@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace PipelineLauncher.PipelineRunner
+namespace PipelineLauncher.Abstractions.PipelineRunner
 {
     public interface IPipelineRunner<in TInput, out TOutput> : IPipelineRunnerBase<TInput, TOutput>
     {

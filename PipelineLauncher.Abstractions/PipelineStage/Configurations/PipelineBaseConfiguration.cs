@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace PipelineLauncher.Abstractions.PipelineStage.Configuration
+namespace PipelineLauncher.Abstractions.PipelineStage.Configurations
 {
     public class PipelineBaseConfiguration
     {

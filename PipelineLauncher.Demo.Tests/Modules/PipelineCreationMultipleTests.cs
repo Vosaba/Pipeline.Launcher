@@ -9,9 +9,8 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using PipelineLauncher.Abstractions.Configurations;
 using PipelineLauncher.Abstractions.PipelineEvents;
-using PipelineLauncher.Abstractions.PipelineStage.Configuration;
+using PipelineLauncher.Abstractions.PipelineStage.Configurations;
 using PipelineLauncher.Abstractions.PipelineStage.Dto;
 using PipelineLauncher.Extensions;
 using Xunit;
@@ -42,10 +41,10 @@ namespace PipelineLauncher.Demo.Tests.Modules
             : base(output) { }
 
         [Fact]
-        public void Pipeline_Creation_Multiple_AsyncStages()
+        public async void Pipeline_Creation_Multiple_AsyncStages()
         {
             //Test input 6 items
-            List<Item> input = MakeInput(2);
+            List<int> input = MakeInputInt(2147483647/1000);
 
             CancellationTokenSource source = new CancellationTokenSource();
             //Configure stages
@@ -56,38 +55,40 @@ namespace PipelineLauncher.Demo.Tests.Modules
                     //{
                     //    Output.WriteLine($"WD: {e.StageType.Name}: {e.State}: {e.RunningTime.TotalMilliseconds}: {e.Message}");
                     //})
-                    .Stage((Item item) =>
+                    .Stage(async (int item) =>
                     {
-                        item.Value += "1->";
-                        if (item.Value == ("Item#0->1->"))
-                        {
-                            //await Task.Delay(1000);
-                        }      
+                        await Task.Delay(10, source.Token);
+                        item++;
+                        //item.Value += "1->";
+                        //if (item.Value == ("Item#0->1->"))
+                        //{
+                        //    //await Task.Delay(1000);
+                        //}      
                         return item;
                     })
-                    .Stage((Item item) =>
-                    {
-                        item.Value += "2->";
-                        if (item.Value == ("Item#0->1->2->"))
-                        {
-                            //throw new Exception("Test exception");
-                        }
+                    //.Stage((item) =>
+                    //{
+                    //    //item.Value += "2->";
+                    //    //if (item.Value == ("Item#0->1->2->"))
+                    //    //{
+                    //    //    //throw new Exception("Test exception");
+                    //    //}
 
-                        return item;
-                    })
-                    .Stage((Item item, StageOption<Item, Item> stageOption) =>
-                    {
-                        item.Value += "3->";
-                        if (item.Value.StartsWith("Item#0"))
-                        {
-                            //throw new Exception("Test exception");
-                        }
+                    //    return item;
+                    //})
+                    //.Stage((item) =>
+                    //{
+                    //    //item.Value += "3->";
+                    //    //if (item.Value.StartsWith("Item#0"))
+                    //    //{
+                    //    //    //throw new Exception("Test exception");
+                    //    //}
 
-                        var t = DateTime.Now;
-                        //item.Value += $"[{t.Second + "." + t.Millisecond}]->";
+                    //    //var t = DateTime.Now;
+                    //    //item.Value += $"[{t.Second + "." + t.Millisecond}]->";
 
-                        return item;
-                    })
+                    //    return item;
+                    //})
                 ;
 
 
@@ -96,7 +97,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
             //Make pipeline from stageSetup
 
 
-            var pipeline = pipelineSetup.CreateAwaitable(new AwaitablePipelineConfig { ThrowExceptionOccured=true});
+            var pipeline = pipelineSetup.CreateAwaitable();
 
             //Task.Run(() =>
             //{
@@ -104,10 +105,10 @@ namespace PipelineLauncher.Demo.Tests.Modules
             //    source.Cancel();
             //});
 
-            pipeline.ExceptionItemsReceivedEvent += delegate(ExceptionItemsEventArgs args)
-            {
-                //Output.WriteLine($"{args.StageName}: {args.Exception}");
-            };
+            //pipeline.ExceptionItemsReceivedEvent += delegate(ExceptionItemsEventArgs args)
+            //{
+            //    //Output.WriteLine($"{args.StageName}: {args.Exception}");
+            //};
 
             //source.CancelAfter(30);
 
@@ -117,15 +118,22 @@ namespace PipelineLauncher.Demo.Tests.Modules
 
             stopWatch.Stop();
 
-            PrintOutputAndTime(stopWatch.ElapsedMilliseconds,result);
+            PrintOutputAndTime(stopWatch.ElapsedMilliseconds, new [] {result.Length});
             stopWatch.Reset();
 
             stopWatch.Start();
-            var resul2t = pipeline.Process(result).ToArray();
+
+            List<int> result2 = new List<int>();
+
+            for (var index = 0; index < input.Count; index++)
+            {
+                await Task.Delay(10, source.Token);
+                result2.Add(input[index]++);
+            }
 
             stopWatch.Stop();
 
-            PrintOutputAndTime(stopWatch.ElapsedMilliseconds, resul2t);
+            PrintOutputAndTime(stopWatch.ElapsedMilliseconds, new[] { result2.Count });
             stopWatch.Reset();
 
             //var pipeline2 = pipelineSetup.CreateAwaitable();
@@ -197,7 +205,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
             //Configure stages
             var pipelineSetup = PipelineCreator
                 .WithToken(source.Token)
-                .Prepare<Item>()
+                //.Prepare<Item>()
                 .Stage(new Stage1())
                 .Stage<Stage1>()
                 .Branch(

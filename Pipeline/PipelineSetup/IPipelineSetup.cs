@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using PipelineLauncher.Abstractions.Configurations;
 using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.PipelineEvents;
-using PipelineLauncher.Abstractions.PipelineStage.Configuration;
+using PipelineLauncher.Abstractions.PipelineRunner;
+using PipelineLauncher.Abstractions.PipelineRunner.Configurations;
+using PipelineLauncher.Abstractions.PipelineStage.Configurations;
 using PipelineLauncher.Abstractions.PipelineStage.Dto;
 using PipelineLauncher.PipelineRunner;
 using PipelineLauncher.Stages;
@@ -96,6 +97,6 @@ namespace PipelineLauncher.PipelineSetup
 
         IAwaitablePipelineRunner<TInput, TOutput> CreateAwaitable(AwaitablePipelineConfig pipelineConfig = null);
 
-        IPipelineRunner<TInput, TOutput> Create();
+        IPipelineRunner<TInput, TOutput> Create(PipelineConfig pipelineConfig = null);
     }
 }

@@ -4,26 +4,19 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks.Dataflow;
 using PipelineLauncher.Abstractions.Dto;
-using PipelineLauncher.Abstractions.PipelineEvents;
+using PipelineLauncher.Abstractions.PipelineRunner;
+using PipelineLauncher.Abstractions.PipelineRunner.Configurations;
 using PipelineLauncher.Abstractions.PipelineStage;
-using PipelineLauncher.PipelineStage;
 
 namespace PipelineLauncher.PipelineRunner
 {
-    internal class PipelineRunner<TInput, TOutput> : IPipelineRunner<TInput, TOutput>
+    internal class PipelineRunner<TInput, TOutput> : PipelineRunnerBase<TInput, TOutput>, IPipelineRunner<TInput, TOutput>
     {
-        protected virtual StageCreationOptions CreationOptions => new StageCreationOptions(PipelineType.Normal);
+        private readonly ITargetBlock<PipelineStageItem<TInput>> _firstBlock;
+        private readonly ISourceBlock<PipelineStageItem<TOutput>> _lastBlock;
 
-        protected readonly CancellationToken CancellationToken;
-
-        protected Func<StageCreationOptions, bool, ITargetBlock<PipelineStageItem<TInput>>> RetrieveFirstBlock;
-        protected Func<StageCreationOptions, bool, ISourceBlock<PipelineStageItem<TOutput>>> RetrieveLastBlock;
-        protected ActionBlock<PipelineStageItem<TOutput>> SortingBlock;
-
-        public event ItemReceivedEventHandler<TOutput> ItemReceivedEvent;
-        public event ExceptionItemsReceivedEventHandler ExceptionItemsReceivedEvent;
-        public event SkippedItemReceivedEventHandler SkippedItemReceivedEvent;
-
+        protected sealed override StageCreationOptions CreationOptions => new StageCreationOptions(PipelineType.Normal, true);
+        protected readonly PipelineConfig PipelineConfig;
 
         public bool Post(TInput input)
         {
@@ -32,46 +25,22 @@ namespace PipelineLauncher.PipelineRunner
 
         public bool Post(IEnumerable<TInput> input)
         {
-            var firstBlock = RetrieveFirstBlock(CreationOptions, false);
-            return input.Select(x => new PipelineStageItem<TInput>(x)).All(x => firstBlock.Post(x));
+            return input.Select(x => new PipelineStageItem<TInput>(x)).All(x => _firstBlock.Post(x));
         }
 
         internal PipelineRunner(
             Func<StageCreationOptions, bool, ITargetBlock<PipelineStageItem<TInput>>> retrieveFirstBlock,
             Func<StageCreationOptions, bool, ISourceBlock<PipelineStageItem<TOutput>>> retrieveLastBlock,
             CancellationToken cancellationToken,
-            bool initSortingBlock = true)
+            PipelineConfig pipelineConfig):
+            base(retrieveFirstBlock, retrieveLastBlock, cancellationToken)
         {
-            CancellationToken = cancellationToken;
+            PipelineConfig = pipelineConfig ?? new PipelineConfig();
 
-            RetrieveFirstBlock = retrieveFirstBlock;
-            RetrieveLastBlock = retrieveLastBlock;
+            _firstBlock = RetrieveFirstBlock(CreationOptions, false);
+            _lastBlock = retrieveLastBlock(CreationOptions, false);
 
-            if (initSortingBlock)
-            {
-                InitSortingBlock();
-            }
-        }
-
-        protected void InitSortingBlock()
-        {
-            SortingBlock = new ActionBlock<PipelineStageItem<TOutput>>(input =>
-            {
-                switch (input)
-                {
-                    case ExceptionStageItem<TOutput> exceptionItem:
-                        ExceptionItemsReceivedEvent?.Invoke(new ExceptionItemsEventArgs(exceptionItem.FailedItems, exceptionItem.StageType, exceptionItem.Exception, exceptionItem.ReProcessItems));
-                        return;
-                    case NoneResultStageItem<TOutput> nonResultItem:
-                        SkippedItemReceivedEvent?.Invoke(new SkippedItemEventArgs(nonResultItem.OriginalItem, nonResultItem.StageType));
-                        return;
-                    default:
-                        ItemReceivedEvent?.Invoke(input.Item);
-                        return;
-                }
-            });
-
-            RetrieveLastBlock(CreationOptions, false).LinkTo(SortingBlock, new DataflowLinkOptions { PropagateCompletion = false });
+            GenerateSortingBlock(_lastBlock);
         }
     }
 }

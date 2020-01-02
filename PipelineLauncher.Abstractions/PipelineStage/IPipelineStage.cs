@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 using PipelineLauncher.Abstractions.Dto;
-using PipelineLauncher.Abstractions.PipelineStage.Configuration;
+using PipelineLauncher.Abstractions.PipelineStage.Configurations;
 using PipelineLauncher.Abstractions.PipelineStage.Dto;
 using PipelineLauncher.Abstractions.Stages;
 
