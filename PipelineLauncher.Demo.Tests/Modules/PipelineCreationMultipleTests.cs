@@ -2,9 +2,7 @@ using PipelineLauncher.Abstractions.Configurations;
 using PipelineLauncher.Demo.Tests.Fakes;
 using PipelineLauncher.Demo.Tests.Stages;
 using PipelineLauncher.Dto;
-using PipelineLauncher.Extensions;
 using PipelineLauncher.Jobs;
-using PipelineLauncher.Pipelines;
 using PipelineLauncher.PipelineSetup;
 using System;
 using System.Collections.Generic;
@@ -14,6 +12,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using PipelineLauncher.Abstractions.PipelineEvents;
+using PipelineLauncher.Extensions;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -197,6 +196,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
             //Configure stages
             var pipelineSetup = PipelineCreator
                 .WithToken(source.Token)
+                .Prepare<Item>()
                 .Stage(new Stage1())
                 .Stage<Stage1>()
                 .Branch(

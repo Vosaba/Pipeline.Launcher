@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using PipelineLauncher.Abstractions.Configurations;
 using PipelineLauncher.Dto;
-using PipelineLauncher.Jobs;
+using PipelineLauncher.Stages;
 
 namespace PipelineLauncher.PipelineSetup
 {
@@ -13,21 +13,21 @@ namespace PipelineLauncher.PipelineSetup
 
         #region BulkStages
 
-        IPipelineSetupOut<TNextOutput> IPipelineSetupOut<TOutput>.BulkStage<TBulkJob, TNextOutput>()
-            => BulkStage<TBulkJob, TNextOutput>();
+        IPipelineSetupOut<TNextOutput> IPipelineSetupOut<TOutput>.BulkStage<TBulkStage, TNextOutput>()
+            => BulkStage<TBulkStage, TNextOutput>();
 
-        IPipelineSetupOut<TOutput> IPipelineSetupOut<TOutput>.BulkStage<TBulkJob>() 
-            => BulkStage<TBulkJob>();
+        IPipelineSetupOut<TOutput> IPipelineSetupOut<TOutput>.BulkStage<TBulkStage>() 
+            => BulkStage<TBulkStage>();
 
         #endregion
 
         #region Stages
 
-        IPipelineSetupOut<TOutput> IPipelineSetupOut<TOutput>.Stage<TJob>()
-            => Stage<TJob>();
+        IPipelineSetupOut<TOutput> IPipelineSetupOut<TOutput>.Stage<TStage>()
+            => Stage<TStage>();
 
-        IPipelineSetupOut<TNextOutput> IPipelineSetupOut<TOutput>.Stage<TJob, TNextOutput>()
-            => Stage<TJob, TNextOutput>();
+        IPipelineSetupOut<TNextOutput> IPipelineSetupOut<TOutput>.Stage<TStage, TNextOutput>()
+            => Stage<TStage, TNextOutput>();
 
         #endregion
 
@@ -37,21 +37,21 @@ namespace PipelineLauncher.PipelineSetup
 
         #region BulkStages
 
-        IPipelineSetupOut<TNextOutput> IPipelineSetupOut<TOutput>.BulkStage<TNextOutput>(BulkJob<TOutput, TNextOutput> bulkJob)
-            => BulkStage<TNextOutput>(bulkJob);
+        IPipelineSetupOut<TNextOutput> IPipelineSetupOut<TOutput>.BulkStage<TNextOutput>(BulkStage<TOutput, TNextOutput> baseStageBulkStage)
+            => BulkStage<TNextOutput>(baseStageBulkStage);
 
-        IPipelineSetupOut<TNextOutput> IPipelineSetupOut<TOutput>.BulkStage<TNextOutput>(Func<IEnumerable<TOutput>, IEnumerable<TNextOutput>> bulkFunc, BulkJobConfiguration bulkJobConfiguration)
-            => BulkStage(bulkFunc, bulkJobConfiguration);
+        IPipelineSetupOut<TNextOutput> IPipelineSetupOut<TOutput>.BulkStage<TNextOutput>(Func<IEnumerable<TOutput>, IEnumerable<TNextOutput>> bulkFunc, BulkStageConfiguration bulkStageConfiguration)
+            => BulkStage(bulkFunc, bulkStageConfiguration);
 
-        IPipelineSetupOut<TNextOutput> IPipelineSetupOut<TOutput>.BulkStage<TNextOutput>(Func<IEnumerable<TOutput>, Task<IEnumerable<TNextOutput>>> bulkFunc, BulkJobConfiguration bulkJobConfiguration)
-            => BulkStage(bulkFunc, bulkJobConfiguration);
+        IPipelineSetupOut<TNextOutput> IPipelineSetupOut<TOutput>.BulkStage<TNextOutput>(Func<IEnumerable<TOutput>, Task<IEnumerable<TNextOutput>>> bulkFunc, BulkStageConfiguration bulkStageConfiguration)
+            => BulkStage(bulkFunc, bulkStageConfiguration);
 
         #endregion
 
         #region Stages
 
-        IPipelineSetupOut<TNextOutput> IPipelineSetupOut<TOutput>.Stage<TNextOutput>(Job<TOutput, TNextOutput> job)
-            => Stage<TNextOutput>(job);
+        IPipelineSetupOut<TNextOutput> IPipelineSetupOut<TOutput>.Stage<TNextOutput>(Stages.Stage<TOutput, TNextOutput> stage)
+            => Stage<TNextOutput>(stage);
 
         IPipelineSetupOut<TNextOutput> IPipelineSetupOut<TOutput>.Stage<TNextOutput>(Func<TOutput, TNextOutput> func)
             => Stage<TNextOutput>(func);

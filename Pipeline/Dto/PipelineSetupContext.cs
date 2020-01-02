@@ -4,60 +4,59 @@ using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.Pipeline;
 using PipelineLauncher.Abstractions.PipelineEvents;
 using PipelineLauncher.Abstractions.Services;
-using PipelineLauncher.DI;
+using PipelineLauncher.Services;
 
 namespace PipelineLauncher.Dto
 {
-    public class PipelineSetupContext
+    internal class PipelineSetupContext
     {
-        private IJobService _jobService;
-        private PipelineJobContext _pipelineJobContext;
+        private IStageService _stageService;
+        private Action<DiagnosticItem> _diagnosticAction;
 
         public bool TryUseDefaultServiceResolver { get; set; } = true;
 
-        public ActionsSet ActionsSet { get; private set; } = new ActionsSet();
         public CancellationToken CancellationToken { get; private set; }
 
-        public IJobService JobService
+        public IStageService StageService
         {
             get
             {
-                if (_jobService == null)
+                if (_stageService == null)
                 {
                     if (TryUseDefaultServiceResolver)
                     {
-                        _jobService = new DefaultJobService();
+                        _stageService = new DefaultStageService();
                     }
                     else
                     {
-                        throw new Exception($"'{nameof(IJobService)}' isn't provided, if you need to use Generic stage setups, provide service.");
+                        throw new Exception($"'{nameof(IStageService)}' isn't provided, if you need to use Generic stage setups, provide service.");
                     }
                 }
 
-                return _jobService;
+                return _stageService;
             }
         }
 
-        public  PipelineSetupContext(IJobService jobService)
+        public  PipelineSetupContext(IStageService stageService)
         {
-            _jobService = jobService;
+            _stageService = stageService;
         }
 
-        public PipelineSetupContext SetupJobService(IJobService jobService)
+        public PipelineSetupContext SetupStageService(IStageService stageService)
         {
-            _jobService = jobService;
+            _stageService = stageService;
             return this;
         }
 
-        public PipelineSetupContext SetupJobService(Func<Type, IPipelineJob> jobService)
+        public PipelineSetupContext SetupStageService(Func<Type, IPipeline> stageService)
         {
-            _jobService = new DefaultLambdaJobService(jobService);
+            _stageService = new DefaultLambdaStageService(stageService);
             return this;
         }
 
         public PipelineSetupContext SetupDiagnosticAction(Action<DiagnosticItem> diagnosticAction)
         {
-            ActionsSet.SetDiagnosticAction(diagnosticAction);
+            _diagnosticAction = diagnosticAction;
             return this;
         }
 
@@ -67,19 +66,13 @@ namespace PipelineLauncher.Dto
             return this;
         }
 
-        public PipelineJobContext GetPipelineJobContext(Action reExecute)
+        public PipelineStageContext GetPipelineStageContext(Action reExecute)
         {
-            ActionsSet.SetReExecuteAction(reExecute);
-
-            if (_pipelineJobContext == null)
-            {
-                _pipelineJobContext = new PipelineJobContext(CancellationToken, ActionsSet);
-            }
-
-
-            return _pipelineJobContext;
+            return new PipelineStageContext(
+                CancellationToken, 
+                reExecute != null || _diagnosticAction != null ? 
+                    new ActionsSet(reExecute, _diagnosticAction) 
+                    : null);
         }
-
-        
     }
 }

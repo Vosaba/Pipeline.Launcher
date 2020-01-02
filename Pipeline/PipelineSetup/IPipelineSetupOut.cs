@@ -3,34 +3,34 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using PipelineLauncher.Abstractions.Configurations;
 using PipelineLauncher.Dto;
-using PipelineLauncher.Jobs;
-using PipelineLauncher.Stage;
+using PipelineLauncher.Stages;
+using PipelineLauncher.StageSetup;
 
 namespace PipelineLauncher.PipelineSetup
 {
     public interface IPipelineSetupOut<TOutput> : IPipelineSetup
     {
-        new IStageOut<TOutput> Current { get; }
+        new IStageSetupOut<TOutput> Current { get; }
 
         #region Generic
 
         #region BulkStages
 
-       IPipelineSetupOut<TNextOutput> BulkStage<TBulkJob, TNextOutput>()
-            where TBulkJob : BulkJob<TOutput, TNextOutput>;
+       IPipelineSetupOut<TNextOutput> BulkStage<TBulkStage, TNextOutput>()
+            where TBulkStage : BulkStage<TOutput, TNextOutput>;
 
-       IPipelineSetupOut<TOutput> BulkStage<TBulkJob>()
-            where TBulkJob : BulkJob<TOutput, TOutput>;
+       IPipelineSetupOut<TOutput> BulkStage<TBulkStage>()
+            where TBulkStage : BulkStage<TOutput, TOutput>;
 
         #endregion
 
         #region Stages
 
-       IPipelineSetupOut<TOutput> Stage<TJob>()
-           where TJob : Job<TOutput, TOutput>;
+       IPipelineSetupOut<TOutput> Stage<TStage>()
+           where TStage : Stages.Stage<TOutput, TOutput>;
 
-       IPipelineSetupOut<TNextOutput> Stage<TJob, TNextOutput>()
-           where TJob : Job<TOutput, TNextOutput>;
+       IPipelineSetupOut<TNextOutput> Stage<TStage, TNextOutput>()
+           where TStage : Stages.Stage<TOutput, TNextOutput>;
 
         #endregion
 
@@ -40,17 +40,17 @@ namespace PipelineLauncher.PipelineSetup
 
         #region BulkStages
 
-       IPipelineSetupOut<TNextOutput> BulkStage<TNextOutput>(BulkJob<TOutput, TNextOutput> bulkJob);
+       IPipelineSetupOut<TNextOutput> BulkStage<TNextOutput>(BulkStage<TOutput, TNextOutput> baseStageBulkStage);
 
-       IPipelineSetupOut<TNextOutput> BulkStage<TNextOutput>(Func<IEnumerable<TOutput>, IEnumerable<TNextOutput>> bulkFunc, BulkJobConfiguration bulkJobConfiguration = null);
+       IPipelineSetupOut<TNextOutput> BulkStage<TNextOutput>(Func<IEnumerable<TOutput>, IEnumerable<TNextOutput>> bulkFunc, BulkStageConfiguration bulkStageConfiguration = null);
 
-       IPipelineSetupOut<TNextOutput> BulkStage<TNextOutput>(Func<IEnumerable<TOutput>, Task<IEnumerable<TNextOutput>>> bulkFunc, BulkJobConfiguration bulkJobConfiguration = null);
+       IPipelineSetupOut<TNextOutput> BulkStage<TNextOutput>(Func<IEnumerable<TOutput>, Task<IEnumerable<TNextOutput>>> bulkFunc, BulkStageConfiguration bulkStageConfiguration = null);
 
         #endregion
 
         #region Stages
 
-       IPipelineSetupOut<TNextOutput> Stage<TNextOutput>(Job<TOutput, TNextOutput> job);
+       IPipelineSetupOut<TNextOutput> Stage<TNextOutput>(Stage<TOutput, TNextOutput> stage);
 
        IPipelineSetupOut<TNextOutput> Stage<TNextOutput>(Func<TOutput, TNextOutput> func);
 

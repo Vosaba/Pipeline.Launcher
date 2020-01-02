@@ -15,14 +15,9 @@ namespace PipelineLauncher.Dto
             throw new NoneParamException<TOutput>(new SkipItem<TOutput>(input, GetType()));
         }
 
-        public TOutput SkipTo<TSkipToJob>(TInput input) where TSkipToJob : IPipelineIn<TInput>
+        public TOutput SkipTo<TSkipToStage>(TInput input) where TSkipToStage : IPipelineIn<TInput>
         {
-            throw new NoneParamException<TOutput>(new SkipItemTill<TOutput>(typeof(TSkipToJob), input, GetType()));
+            throw new NoneParamException<TOutput>(new SkipItemTill<TOutput>(typeof(TSkipToStage), input, GetType()));
         }
-    }
-
-    public class AwaitablePipelineConfig
-    {
-        public bool ThrowExceptionOccured { get; set; }
     }
 }

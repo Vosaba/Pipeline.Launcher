@@ -15,11 +15,11 @@ namespace PipelineLauncher.Extensions
         {
             var processedHash = new ConcurrentDictionary<int, byte>();
 
-            return pipelineSetup.Stage((TOutput input, StageOption<TOutput, TOutput> asyncJobOption) =>
+            return pipelineSetup.Stage((TOutput input, StageOption<TOutput, TOutput> stageOption) =>
             {
                 var hash = hashFunc?.Invoke(input) ?? input.GetHashCode();
 
-                return !processedHash.TryAdd(hash, byte.MinValue) ? asyncJobOption.Remove(input) : input;
+                return !processedHash.TryAdd(hash, byte.MinValue) ? stageOption.Remove(input) : input;
             });
         }
 
@@ -45,13 +45,13 @@ namespace PipelineLauncher.Extensions
             });
         }
 
-        public static IJobService AccessJobService<TInput, TOutput>(this IPipelineSetup<TInput, TOutput> pipelineSetup)
+        public static IStageService AccessStageService<TInput, TOutput>(this IPipelineSetup<TInput, TOutput> pipelineSetup)
         {
             var ty = pipelineSetup.GetType();
-            var pi = ty.GetProperty("JobService", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.GetProperty);
+            var pi = ty.GetProperty("StageService", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.GetProperty);
             object o = pi.GetValue(pipelineSetup, null);
 
-            return (IJobService)o;
+            return (IStageService)o;
         }
 
         public static IPipelineSetup<TInput, TOutput> DelayWithLock<TInput, TOutput>(this IPipelineSetup<TInput, TOutput> pipelineSetup, long millisecondsDelay)

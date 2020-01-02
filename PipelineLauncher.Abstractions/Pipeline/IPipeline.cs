@@ -1,14 +1,14 @@
 ﻿namespace PipelineLauncher.Abstractions.Pipeline
 {
-    public interface IPipelineJob
+    public interface IPipeline
     {
     }
 
-    public interface IPipelineIn<TInput>: IPipelineJob
+    public interface IPipelineIn<TInput>: IPipeline
     {
     }
 
-    public interface IPipelineOut<TOutput>: IPipelineJob
+    public interface IPipelineOut<TOutput>: IPipeline
     {
     }
 

@@ -10,7 +10,5 @@
         {
             PipelineType = pipelineType;
         }
-
-
     }
 }

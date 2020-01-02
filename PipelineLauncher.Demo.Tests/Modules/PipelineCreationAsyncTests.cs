@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using PipelineLauncher.Demo.Tests.Fakes;
 using PipelineLauncher.Demo.Tests.Stages;
-using PipelineLauncher.Pipelines;
 using Xunit;
 using Xunit.Abstractions;
 

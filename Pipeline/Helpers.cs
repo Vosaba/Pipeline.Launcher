@@ -1,34 +1,34 @@
 ﻿using PipelineLauncher.PipelineSetup;
-using PipelineLauncher.Stage;
 using System.Linq;
+using PipelineLauncher.StageSetup;
 
 namespace PipelineLauncher
 {
     internal static class Helpers
     {
-        public static IStageIn<TInput> GetFirstStage<TInput>(this IPipelineSetup stageSetup)
+        public static IStageSetupIn<TInput> GetFirstStage<TInput>(this IPipelineSetup pipelineSetup)
         {
-            IStage stage = stageSetup.Current;
+            IStageSetup stageSetup = pipelineSetup.Current;
 
-            while (stage.Previous != null)
+            while (stageSetup.Previous != null)
             {
-                stage = stage.Previous;
+                stageSetup = stageSetup.Previous;
             }
 
-            return (IStageIn<TInput>)stage;
+            return (IStageSetupIn<TInput>)stageSetup;
         }
 
-        public static void DestroyStageBlocks(this IStage stage)
+        public static void DestroyStageBlocks(this IStageSetup stageSetup)
         {
-            if (stage == null)
+            if (stageSetup == null)
             {
                 return;
             }
 
-            stage.DestroyBlock();
+            stageSetup.DestroyBlock();
 
-            if (stage.Next == null || !stage.Next.Any()) return;
-            foreach (var nextStage in stage.Next)
+            if (stageSetup.Next == null || !stageSetup.Next.Any()) return;
+            foreach (var nextStage in stageSetup.Next)
             {
                 DestroyStageBlocks(nextStage);
             }

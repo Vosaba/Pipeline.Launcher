@@ -17,13 +17,13 @@ namespace PipelineLauncher.Extensions
             return pipelineSetup.Stage(output => output as TCast);
         }
 
-        public static IJobService AccessJobService<TOutput>(this IPipelineSetupOut<TOutput> pipelineSetup)
+        public static IStageService AccessStageService<TInput, TOutput>(this IPipelineCreator pipelineCreator)
         {
-            var ty = pipelineSetup.GetType();
-            var pi = ty.GetProperty("JobService", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.GetProperty);
-            object o = pi.GetValue(pipelineSetup, null);
+            var ty = pipelineCreator.GetType();
+            var pi = ty.GetProperty("StageService", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.GetProperty);
+            object o = pi.GetValue(pipelineCreator, null);
 
-            return (IJobService)o;
+            return (IStageService)o;
         }
     }
 }

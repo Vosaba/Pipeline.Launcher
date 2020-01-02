@@ -1,19 +1,20 @@
 ﻿using PipelineLauncher.Abstractions.Configurations;
 using PipelineLauncher.Dto;
-using PipelineLauncher.Jobs;
-using PipelineLauncher.Pipelines;
-using PipelineLauncher.Stage;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.PipelineEvents;
+using PipelineLauncher.PipelineRunner;
+using PipelineLauncher.Stages;
+using PipelineLauncher.StageSetup;
 
 namespace PipelineLauncher.PipelineSetup
 {
     public interface IPipelineSetup
     {
         //Action<DiagnosticItem> DiagnosticAction { get; }
-        IStage Current { get; }
+        IStageSetup Current { get; }
     }
 
     public interface IPipelineSetup<TInput, TOutput> : IPipelineSetupOut<TOutput>
@@ -22,21 +23,21 @@ namespace PipelineLauncher.PipelineSetup
 
         #region BulkStages
 
-        new IPipelineSetup<TInput, TNextOutput> BulkStage<TBulkJob, TNextOutput>()
-            where TBulkJob : BulkJob<TOutput, TNextOutput>;
+        new IPipelineSetup<TInput, TNextOutput> BulkStage<TBulkStage, TNextOutput>()
+            where TBulkStage : BulkStage<TOutput, TNextOutput>;
 
-        new IPipelineSetup<TInput, TOutput> BulkStage<TBulkJob>()
-            where TBulkJob : BulkJob<TOutput, TOutput>;
+        new IPipelineSetup<TInput, TOutput> BulkStage<TBulkStage>()
+            where TBulkStage : BulkStage<TOutput, TOutput>;
 
         #endregion
 
         #region Stages
 
-        new IPipelineSetup<TInput, TOutput> Stage<TJob>()
-           where TJob : Job<TOutput, TOutput>;
+        new IPipelineSetup<TInput, TOutput> Stage<TStage>()
+           where TStage : Stages.Stage<TOutput, TOutput>;
 
-        new IPipelineSetup<TInput, TNextOutput> Stage<TJob, TNextOutput>()
-           where TJob : Job<TOutput, TNextOutput>;
+        new IPipelineSetup<TInput, TNextOutput> Stage<TStage, TNextOutput>()
+           where TStage : Stages.Stage<TOutput, TNextOutput>;
 
         #endregion
 
@@ -46,17 +47,17 @@ namespace PipelineLauncher.PipelineSetup
 
         #region BulkStages
 
-        new IPipelineSetup<TInput, TNextOutput> BulkStage<TNextOutput>(BulkJob<TOutput, TNextOutput> bulkJob);
+        new IPipelineSetup<TInput, TNextOutput> BulkStage<TNextOutput>(BulkStage<TOutput, TNextOutput> bulkStage);
 
-        new IPipelineSetup<TInput, TNextOutput> BulkStage<TNextOutput>(Func<IEnumerable<TOutput>, IEnumerable<TNextOutput>> bulkFunc, BulkJobConfiguration bulkJobConfiguration = null);
+        new IPipelineSetup<TInput, TNextOutput> BulkStage<TNextOutput>(Func<IEnumerable<TOutput>, IEnumerable<TNextOutput>> bulkFunc, BulkStageConfiguration bulkStageConfiguration = null);
 
-        new IPipelineSetup<TInput, TNextOutput> BulkStage<TNextOutput>(Func<IEnumerable<TOutput>, Task<IEnumerable<TNextOutput>>> bulkFunc, BulkJobConfiguration bulkJobConfiguration = null);
+        new IPipelineSetup<TInput, TNextOutput> BulkStage<TNextOutput>(Func<IEnumerable<TOutput>, Task<IEnumerable<TNextOutput>>> bulkFunc, BulkStageConfiguration bulkStageConfiguration = null);
 
         #endregion
 
         #region Stages
 
-        new IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(Job<TOutput, TNextOutput> job);
+        new IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(Stages.Stage<TOutput, TNextOutput> stage);
 
         new IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(Func<TOutput, TNextOutput> func);
 
@@ -81,6 +82,12 @@ namespace PipelineLauncher.PipelineSetup
         IPipelineSetup<TInput, TNextOutput> Branch<TNextOutput>(ConditionExceptionScenario conditionExceptionScenario,
             params (Predicate<TOutput> predicate,
             Func<IPipelineSetup<TInput, TOutput>, IPipelineSetup<TInput, TNextOutput>> branch)[] branches);
+
+        #endregion
+
+        #region Native
+
+        
 
         #endregion
 

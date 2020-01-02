@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Threading;
 using PipelineLauncher.Demo.Tests.Fakes;
 using PipelineLauncher.Demo.Tests.Stages;
-using PipelineLauncher.Pipelines;
 using Xunit;
 using Xunit.Abstractions;
 
