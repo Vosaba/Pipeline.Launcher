@@ -1,6 +1,6 @@
-﻿using System;
-using PipelineLauncher.Abstractions.Services;
+﻿using PipelineLauncher.Abstractions.Services;
 using PipelineLauncher.PipelineSetup;
+using System;
 
 namespace PipelineLauncher.Extensions
 {

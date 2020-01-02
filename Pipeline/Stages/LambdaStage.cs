@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using PipelineLauncher.Dto;
 
 namespace PipelineLauncher.Stages
 {

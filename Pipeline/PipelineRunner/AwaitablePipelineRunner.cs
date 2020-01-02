@@ -1,12 +1,12 @@
-﻿using System;
+﻿using PipelineLauncher.Abstractions.Dto;
+using PipelineLauncher.Abstractions.PipelineEvents;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks.Dataflow;
 using PipelineLauncher.Abstractions.Configurations;
-using PipelineLauncher.Abstractions.Dto;
-using PipelineLauncher.Abstractions.PipelineEvents;
-using PipelineLauncher.Dto;
+using PipelineLauncher.Abstractions.PipelineStage;
 
 namespace PipelineLauncher.PipelineRunner
 {
@@ -20,8 +20,8 @@ namespace PipelineLauncher.PipelineRunner
         private readonly Action _destroyTaskStages;
 
         internal AwaitablePipelineRunner(
-            Func<StageCreationOptions, bool, ITargetBlock<PipelineItem<TInput>>> retrieveFirstBlock,
-            Func<StageCreationOptions, bool, ISourceBlock<PipelineItem<TOutput>>> retrieveLastBlock,
+            Func<StageCreationOptions, bool, ITargetBlock<PipelineStageItem<TInput>>> retrieveFirstBlock,
+            Func<StageCreationOptions, bool, ISourceBlock<PipelineStageItem<TOutput>>> retrieveLastBlock,
             CancellationToken cancellationToken,
             Action destroyTaskStages,
             AwaitablePipelineConfig pipelineConfig)

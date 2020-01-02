@@ -1,10 +1,11 @@
-﻿using System;
+﻿using PipelineLauncher.PipelineStage;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
-using PipelineLauncher.Abstractions.Configurations;
-using PipelineLauncher.Abstractions.Pipeline;
-using PipelineLauncher.Dto;
-using PipelineLauncher.PipelineStage;
+using PipelineLauncher.Abstractions.PipelineStage;
+using PipelineLauncher.Abstractions.PipelineStage.Configuration;
+using PipelineLauncher.Abstractions.PipelineStage.Dto;
+using PipelineLauncher.Abstractions.Stages;
 
 namespace PipelineLauncher.Stages
 {
@@ -18,7 +19,6 @@ namespace PipelineLauncher.Stages
     public abstract class Stage<TInput, TOutput> : PipelineStage<TInput, TOutput>
     {
         public override StageConfiguration Configuration => new StageConfiguration();
-
 
         /// <summary>
         /// Performs the Stage using the specified param.
@@ -51,7 +51,7 @@ namespace PipelineLauncher.Stages
             return new StageOption<TInput, TOutput>().Skip(input);
         }
 
-        public TOutput SkipTo<TSkipToStage>(TInput input) where TSkipToStage : IPipelineIn<TInput>
+        public TOutput SkipTo<TSkipToStage>(TInput input) where TSkipToStage : IStageIn<TInput>
         {
             return new StageOption<TInput, TOutput>().SkipTo<TSkipToStage>(input);
         }

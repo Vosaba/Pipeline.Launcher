@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks.Dataflow;
-using PipelineLauncher.Abstractions.Configurations;
 using PipelineLauncher.Abstractions.Dto;
+using PipelineLauncher.Abstractions.PipelineStage;
+using PipelineLauncher.Abstractions.PipelineStage.Configuration;
+using PipelineLauncher.Abstractions.PipelineStage.Dto;
 
 namespace PipelineLauncher.StageSetup
 {
@@ -38,14 +40,14 @@ namespace PipelineLauncher.StageSetup
 
     internal class StageSetup<TIn, TOut> : StageSetupOut<TOut>, IStageSetup<TIn, TOut>
     {
-        public StageSetup(Func<StageCreationOptions, IPropagatorBlock<PipelineItem<TIn>, PipelineItem<TOut>>> createTerra)
+        public StageSetup(Func<StageCreationOptions, IPropagatorBlock<PipelineStageItem<TIn>, PipelineStageItem<TOut>>> createTerra)
             : base(createTerra)
         { }
 
-        public new IPropagatorBlock<PipelineItem<TIn>, PipelineItem<TOut>> RetrieveExecutionBlock(StageCreationOptions options, bool forceCreation = false)
-            => (IPropagatorBlock<PipelineItem<TIn>, PipelineItem<TOut>>)base.RetrieveExecutionBlock(options, forceCreation);
+        public new IPropagatorBlock<PipelineStageItem<TIn>, PipelineStageItem<TOut>> RetrieveExecutionBlock(StageCreationOptions options, bool forceCreation = false)
+            => (IPropagatorBlock<PipelineStageItem<TIn>, PipelineStageItem<TOut>>)base.RetrieveExecutionBlock(options, forceCreation);
 
-        ITargetBlock<PipelineItem<TIn>> IStageSetupIn<TIn>.RetrieveExecutionBlock(StageCreationOptions options, bool forceCreation = false) => RetrieveExecutionBlock(options, forceCreation);
+        ITargetBlock<PipelineStageItem<TIn>> IStageSetupIn<TIn>.RetrieveExecutionBlock(StageCreationOptions options, bool forceCreation = false) => RetrieveExecutionBlock(options, forceCreation);
 
         //Func<StageCreationOptions, IPropagatorBlock<PipelineItem<TIn>, PipelineItem<TOut>>> IStage<TIn, TOut>.CreateExecutionBlock => (Func<StageCreationOptions, IPropagatorBlock<PipelineItem<TIn>, PipelineItem<TOut>>>)CreateExecutionBlock;
 

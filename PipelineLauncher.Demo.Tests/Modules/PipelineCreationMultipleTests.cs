@@ -1,8 +1,6 @@
-using PipelineLauncher.Abstractions.Configurations;
 using PipelineLauncher.Demo.Tests.Fakes;
 using PipelineLauncher.Demo.Tests.Stages;
-using PipelineLauncher.Dto;
-using PipelineLauncher.Jobs;
+using PipelineLauncher.Stages;
 using PipelineLauncher.PipelineSetup;
 using System;
 using System.Collections.Generic;
@@ -11,7 +9,10 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using PipelineLauncher.Abstractions.Configurations;
 using PipelineLauncher.Abstractions.PipelineEvents;
+using PipelineLauncher.Abstractions.PipelineStage.Configuration;
+using PipelineLauncher.Abstractions.PipelineStage.Dto;
 using PipelineLauncher.Extensions;
 using Xunit;
 using Xunit.Abstractions;
@@ -24,13 +25,13 @@ namespace PipelineLauncher.Demo.Tests.Modules
         {
             return pipelineSetup.Stage(e => e.GetHashCode());
         }
-
-        public static IPipelineSetupOut<TOutput> TestStage<TJob, TInput, TOutput>(this IPipelineSetupOut<TInput> pipelineSetup) 
-            where TJob : Job<TInput, TOutput>
+        
+        public static IPipelineSetupOut<TOutput> TestStage<TStage, TInput, TOutput>(this IPipelineSetupOut<TInput> pipelineSetup) 
+            where TStage : Stage<TInput, TOutput>
         {
-            var t = pipelineSetup.AccessJobService();
+            var t = pipelineSetup.AccessStageService();
 
-            return pipelineSetup.Stage(t.GetJobInstance<TJob>());
+            return pipelineSetup.Stage(t.GetStageInstance<TStage>());
         }
     }
     public class PipelineCreationMultipleTests : PipelineTestsBase
@@ -41,7 +42,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
             : base(output) { }
 
         [Fact]
-        public void Pipeline_Creation_Multiple_AsyncJobs()
+        public void Pipeline_Creation_Multiple_AsyncStages()
         {
             //Test input 6 items
             List<Item> input = MakeInput(2);
@@ -182,7 +183,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
         }
 
         [Fact]
-        public void Pipeline_Creation_Multiple_Jobs()
+        public void Pipeline_Creation_Multiple_Stages()
         {
             var t = Assembly.GetExecutingAssembly();
 
@@ -233,13 +234,13 @@ namespace PipelineLauncher.Demo.Tests.Modules
                                         })))
                     ))
                 //.Delay(12000)
-                //.BulkStage(new BulkJobStage3())
+                //.BulkStage(new BulkStageStage3())
                 .BulkStage((items) =>
                 {
                     var count = items.Count();
                     return items;
                 },
-                    new BulkJobConfiguration()
+                    new BulkStageConfiguration()
                     {
                         BatchItemsCount = 2,
                         BatchItemsTimeOut = 4000
@@ -252,7 +253,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
                     var count = items.Count();
                     return items;
                 },
-                    new BulkJobConfiguration()
+                    new BulkStageConfiguration()
                     {
                         BatchItemsCount = 5,
                         BatchItemsTimeOut = 4000
@@ -312,7 +313,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
         }
 
         [Fact]
-        public void Pipeline_Creation_Multiple_AsyncJobs_Simple()
+        public void Pipeline_Creation_Multiple_AsyncStages_Simple()
         {
             //Test input 6 items
             List<Item> input = MakeInput(8);
@@ -356,17 +357,17 @@ namespace PipelineLauncher.Demo.Tests.Modules
             stopWatch.Reset();
         }
         [Fact]
-        public void Pipeline_Creation_Multiple_SyncJobs()
+        public void Pipeline_Creation_Multiple_SyncStages()
         {
             //Test input 6 items
             List<Item> input = MakeInput(6);
 
             //Configure stages
-            var stageSetup = new PipelineCreator(new FakeServicesRegistry.JobService())
-                .BulkStage(new BulkJobStage1())
-                .BulkStage(new BulkJobStage2())//, new Stage2Alternative())
-                .BulkStage(new BulkJobStage4())
-                .BulkStage(new BulkJobStage4());
+            var stageSetup = new PipelineCreator(new FakeServicesRegistry.StageService())
+                .BulkStage(new BulkStageStage1())
+                .BulkStage(new BulkStageStage2())//, new Stage2Alternative())
+                .BulkStage(new BulkStageStage4())
+                .BulkStage(new BulkStageStage4());
 
             Stopwatch stopWatch = new Stopwatch();
 
@@ -383,13 +384,13 @@ namespace PipelineLauncher.Demo.Tests.Modules
         }
 
         //[Fact]
-        //public void Pipeline_Creation_Multiple_Async_and_SyncJobs_generic()
+        //public void Pipeline_Creation_Multiple_Async_and_SyncStages_generic()
         //{
         //    //Test input 6 items
         //    List<Item> input = MakeInput(6);
 
         //    //Configure stages
-        //    var stageSetup = new PipelineFrom<Item>(new FakeServicesRegistry.JobService())
+        //    var stageSetup = new PipelineFrom<Item>(new FakeServicesRegistry.StageService())
         //        .Stage<Stage1>()
         //        .Stage<Stage2>() //, Stage2Alternative, Item>()
         //        .AsyncStage(item => item)

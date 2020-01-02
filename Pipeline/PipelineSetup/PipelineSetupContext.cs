@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Threading;
 using PipelineLauncher.Abstractions.Dto;
-using PipelineLauncher.Abstractions.Pipeline;
 using PipelineLauncher.Abstractions.PipelineEvents;
+using PipelineLauncher.Abstractions.PipelineStage;
+using PipelineLauncher.Abstractions.PipelineStage.Dto;
 using PipelineLauncher.Abstractions.Services;
+using PipelineLauncher.Abstractions.Stages;
 using PipelineLauncher.Services;
 
-namespace PipelineLauncher.Dto
+namespace PipelineLauncher.PipelineSetup
 {
     internal class PipelineSetupContext
     {
@@ -48,7 +50,7 @@ namespace PipelineLauncher.Dto
             return this;
         }
 
-        public PipelineSetupContext SetupStageService(Func<Type, IPipeline> stageService)
+        public PipelineSetupContext SetupStageService(Func<Type, IStage> stageService)
         {
             _stageService = new DefaultLambdaStageService(stageService);
             return this;

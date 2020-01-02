@@ -22,7 +22,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
         //    List<Item> input = MakeInput(6);
 
         //    //Configure stages
-        //    var stageSetup = new PipelineFrom<Item>(new FakeServicesRegistry.JobService())
+        //    var stageSetup = new PipelineFrom<Item>(new FakeServicesRegistry.StageService())
         //        .AsyncStage<AsyncStage1_Filter>()
         //        .AsyncStage<AsyncStage2>()//.Branch((item => true, v =>v.AsyncStage()))
         //        .Stage<Stage3>()
@@ -49,7 +49,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
         //    List<Item> input = MakeInput(6);
 
         //    //Configure stages
-        //    var stageSetup = new PipelineFrom<Item>(new FakeServicesRegistry.JobService())
+        //    var stageSetup = new PipelineFrom<Item>(new FakeServicesRegistry.StageService())
         //        .AsyncStage<AsyncStage1_Filter>()
         //        .AsyncStage<AsyncStage2>()
         //        .AsyncStage(item =>

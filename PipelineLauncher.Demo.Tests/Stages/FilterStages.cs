@@ -25,7 +25,7 @@
     //}
 
     //[PipelineFilter(typeof(RemoveFilter))]
-    //public class AsyncStage1_Filter : AsyncJob<Item>
+    //public class AsyncStage1_Filter : AsyncStage<Item>
     //{
     //    public override Item Execute(Item item)
     //    {

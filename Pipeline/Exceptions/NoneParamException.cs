@@ -1,14 +1,15 @@
 ﻿using PipelineLauncher.Abstractions.Dto;
 using System;
+using PipelineLauncher.Abstractions.PipelineStage;
 
 namespace PipelineLauncher.Exceptions
 {
     internal class NoneParamException<TItem> : Exception
     {
-        public PipelineItem<TItem> Item { get; }
-        public NoneParamException(PipelineItem<TItem> item)
+        public PipelineStageItem<TItem> StageItem { get; }
+        public NoneParamException(PipelineStageItem<TItem> stageItem)
         {
-            Item = item;
+            StageItem = stageItem;
         }
     }
 }

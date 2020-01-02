@@ -4,12 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using PipelineLauncher.Abstractions.Configurations;
-using PipelineLauncher.Jobs;
+using PipelineLauncher.Abstractions.PipelineStage.Configuration;
+using PipelineLauncher.Abstractions.PipelineStage.Dto;
+using PipelineLauncher.Stages;
 
 namespace PipelineLauncher.Demo.Tests.Stages
 {
-    public class Stage1 : Job<Item>
+    public class Stage1 : Stage<Item>
     {
         public override Item Execute(Item item)
         {
@@ -40,7 +41,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
     {
 
     }
-    public class Stage2 : Job<Item>
+    public class Stage2 : Stage<Item>
     {
         public Stage2(F s )
         {
@@ -62,7 +63,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
         }
 
 
-        public override bool Condition(Item input)
+        public bool Condition(Item input)
         {
             return input.Value.StartsWith("Item#0") || input.Value.StartsWith("Item#1");
         }
@@ -73,7 +74,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
         }
     }
 
-    public class Stage2Alternative : Job<Item>
+    public class Stage2Alternative : Stage<Item>
     {
         public override Item Execute(Item item)
         {
@@ -90,9 +91,9 @@ namespace PipelineLauncher.Demo.Tests.Stages
             return item;
         }
 
-        public override JobConfiguration Configuration => new JobConfiguration { MaxDegreeOfParallelism = 2 };
+        public override StageConfiguration Configuration => new StageConfiguration { MaxDegreeOfParallelism = 2 };
 
-        public override bool Condition(Item input)
+        public bool Condition(Item input)
         {
             return !input.Value.StartsWith("Item#0") && !input.Value.StartsWith("Item#1");
         }
@@ -103,7 +104,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
         }
     }
 
-    public class Stage3 : Job<Item>
+    public class Stage3 : Stage<Item>
     {
         public override Item Execute(Item item)
         {
@@ -121,7 +122,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
         }
     }
 
-    public class Stage4 : Job<Item>
+    public class Stage4 : Stage<Item>
     {
 
         public override async Task<Item> ExecuteAsync(Item item)
@@ -140,7 +141,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
         }
     }
 
-    public class BulkcStage_Item_To_String : BulkJob<Item, string>
+    public class BulkcStage_Item_To_String : BulkStage<Item, string>
     {
         public override IEnumerable<string> Execute(IEnumerable<Item> items)
         {
@@ -161,7 +162,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
         }
     }
 
-    public class AsyncStage_String_To_Object : BulkJob<string, object>
+    public class AsyncStage_String_To_Object : BulkStage<string, object>
     {
         public override IEnumerable<object> Execute(IEnumerable<string> items)
         {

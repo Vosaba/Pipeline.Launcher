@@ -1,6 +1,6 @@
 using System.Threading;
 
-namespace PipelineLauncher.Abstractions.Dto
+namespace PipelineLauncher.Abstractions.PipelineStage.Dto
 {
     public class PipelineStageContext
     {

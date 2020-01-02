@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
-using PipelineLauncher.Abstractions.Pipeline;
+using PipelineLauncher.Abstractions.PipelineStage;
 using PipelineLauncher.Abstractions.Services;
+using PipelineLauncher.Abstractions.Stages;
 using PipelineLauncher.LightInject;
 
 namespace PipelineLauncher.Services
@@ -10,7 +11,7 @@ namespace PipelineLauncher.Services
         private readonly ServiceContainer _container = new ServiceContainer();
         private bool _isAssemblyRegistered;
 
-        public TPipelineStage GetStageInstance<TPipelineStage>() where TPipelineStage : class, IPipeline
+        public TPipelineStage GetStageInstance<TPipelineStage>() where TPipelineStage : class, IStage
         {
             if (!_isAssemblyRegistered)
             {

@@ -1,13 +1,15 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks.Dataflow;
-using PipelineLauncher.Abstractions.Configurations;
 using PipelineLauncher.Abstractions.Dto;
+using PipelineLauncher.Abstractions.PipelineStage;
+using PipelineLauncher.Abstractions.PipelineStage.Configuration;
+using PipelineLauncher.Abstractions.PipelineStage.Dto;
 
 namespace PipelineLauncher.StageSetup
 {
     public interface IStageSetup<TIn, TOut> : IStageSetupIn<TIn>, IStageSetupOut<TOut>
     {
-        new IPropagatorBlock<PipelineItem<TIn>, PipelineItem<TOut>> RetrieveExecutionBlock(StageCreationOptions options, bool forceCreation = false);
+        new IPropagatorBlock<PipelineStageItem<TIn>, PipelineStageItem<TOut>> RetrieveExecutionBlock(StageCreationOptions options, bool forceCreation = false);
     }
 
     public interface IStageSetup

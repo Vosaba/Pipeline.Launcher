@@ -5,7 +5,8 @@ using System.Threading;
 using System.Threading.Tasks.Dataflow;
 using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.PipelineEvents;
-using PipelineLauncher.Dto;
+using PipelineLauncher.Abstractions.PipelineStage;
+using PipelineLauncher.PipelineStage;
 
 namespace PipelineLauncher.PipelineRunner
 {
@@ -15,9 +16,9 @@ namespace PipelineLauncher.PipelineRunner
 
         protected readonly CancellationToken CancellationToken;
 
-        protected Func<StageCreationOptions, bool, ITargetBlock<PipelineItem<TInput>>> RetrieveFirstBlock;
-        protected Func<StageCreationOptions, bool, ISourceBlock<PipelineItem<TOutput>>> RetrieveLastBlock;
-        protected ActionBlock<PipelineItem<TOutput>> SortingBlock;
+        protected Func<StageCreationOptions, bool, ITargetBlock<PipelineStageItem<TInput>>> RetrieveFirstBlock;
+        protected Func<StageCreationOptions, bool, ISourceBlock<PipelineStageItem<TOutput>>> RetrieveLastBlock;
+        protected ActionBlock<PipelineStageItem<TOutput>> SortingBlock;
 
         public event ItemReceivedEventHandler<TOutput> ItemReceivedEvent;
         public event ExceptionItemsReceivedEventHandler ExceptionItemsReceivedEvent;
@@ -32,12 +33,12 @@ namespace PipelineLauncher.PipelineRunner
         public bool Post(IEnumerable<TInput> input)
         {
             var firstBlock = RetrieveFirstBlock(CreationOptions, false);
-            return input.Select(x => new PipelineItem<TInput>(x)).All(x => firstBlock.Post(x));
+            return input.Select(x => new PipelineStageItem<TInput>(x)).All(x => firstBlock.Post(x));
         }
 
         internal PipelineRunner(
-            Func<StageCreationOptions, bool, ITargetBlock<PipelineItem<TInput>>> retrieveFirstBlock,
-            Func<StageCreationOptions, bool, ISourceBlock<PipelineItem<TOutput>>> retrieveLastBlock,
+            Func<StageCreationOptions, bool, ITargetBlock<PipelineStageItem<TInput>>> retrieveFirstBlock,
+            Func<StageCreationOptions, bool, ISourceBlock<PipelineStageItem<TOutput>>> retrieveLastBlock,
             CancellationToken cancellationToken,
             bool initSortingBlock = true)
         {
@@ -54,14 +55,14 @@ namespace PipelineLauncher.PipelineRunner
 
         protected void InitSortingBlock()
         {
-            SortingBlock = new ActionBlock<PipelineItem<TOutput>>(input =>
+            SortingBlock = new ActionBlock<PipelineStageItem<TOutput>>(input =>
             {
                 switch (input)
                 {
-                    case ExceptionItem<TOutput> exceptionItem:
+                    case ExceptionStageItem<TOutput> exceptionItem:
                         ExceptionItemsReceivedEvent?.Invoke(new ExceptionItemsEventArgs(exceptionItem.FailedItems, exceptionItem.StageType, exceptionItem.Exception, exceptionItem.ReProcessItems));
                         return;
-                    case NoneResultItem<TOutput> nonResultItem:
+                    case NoneResultStageItem<TOutput> nonResultItem:
                         SkippedItemReceivedEvent?.Invoke(new SkippedItemEventArgs(nonResultItem.OriginalItem, nonResultItem.StageType));
                         return;
                     default:

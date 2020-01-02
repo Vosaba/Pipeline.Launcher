@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
-using PipelineLauncher.Abstractions.Configurations;
 using PipelineLauncher.Abstractions.Dto;
-using PipelineLauncher.Abstractions.Pipeline;
 using PipelineLauncher.Abstractions.PipelineEvents;
+using PipelineLauncher.Abstractions.PipelineStage;
+using PipelineLauncher.Abstractions.PipelineStage.Configuration;
+using PipelineLauncher.Abstractions.PipelineStage.Dto;
 using PipelineLauncher.Abstractions.Services;
+using PipelineLauncher.Abstractions.Stages;
 using PipelineLauncher.Blocks;
-using PipelineLauncher.Dto;
 using PipelineLauncher.PipelineSetup;
 using PipelineLauncher.PipelineStage;
 using PipelineLauncher.Stages;
@@ -38,7 +39,7 @@ namespace PipelineLauncher
             return this;
         }
 
-        public IPipelineCreator WithStageService(Func<Type, IPipeline> stageService)
+        public IPipelineCreator WithStageService(Func<Type, IStage> stageService)
         {
             _pipelineSetupContext.SetupStageService(stageService);
             return this;
@@ -122,26 +123,26 @@ namespace PipelineLauncher
 
         private PipelineSetup<TInput, TOutput> CreateNextBulkStage<TInput, TOutput>(PipelineBulkStage<TInput, TOutput> bulkStage)
         {
-            IPropagatorBlock<PipelineItem<TInput>, PipelineItem<TOutput>> MakeNextBlock(StageCreationOptions options)
+            IPropagatorBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>> MakeNextBlock(StageCreationOptions options)
             {
-                IPropagatorBlock<PipelineItem<TInput>, PipelineItem<TInput>[]> buffer;
+                IPropagatorBlock<PipelineStageItem<TInput>, PipelineStageItem<TInput>[]> buffer;
                 if (options.UseTimeOuts)
                 {
-                    buffer = new BatchBlockEx<PipelineItem<TInput>>(bulkStage.Configuration.BatchItemsCount, bulkStage.Configuration.BatchItemsTimeOut); //TODO
+                    buffer = new BatchBlockEx<PipelineStageItem<TInput>>(bulkStage.Configuration.BatchItemsCount, bulkStage.Configuration.BatchItemsTimeOut); //TODO
                 }
                 else
                 {
-                    buffer = new BatchBlock<PipelineItem<TInput>>(bulkStage.Configuration.BatchItemsCount); //TODO
+                    buffer = new BatchBlock<PipelineStageItem<TInput>>(bulkStage.Configuration.BatchItemsCount); //TODO
                 }
 
-                TransformManyBlock<IEnumerable<PipelineItem<TInput>>, PipelineItem<TOutput>> rePostBlock = null;
+                TransformManyBlock<IEnumerable<PipelineStageItem<TInput>>, PipelineStageItem<TOutput>> rePostBlock = null;
 
-                void RePostMessages(IEnumerable<PipelineItem<TInput>> messages)
+                void RePostMessages(IEnumerable<PipelineStageItem<TInput>> messages)
                 {
                     rePostBlock?.Post(messages);
                 }
 
-                var nextBlock = new TransformManyBlock<IEnumerable<PipelineItem<TInput>>, PipelineItem<TOutput>>(
+                var nextBlock = new TransformManyBlock<IEnumerable<PipelineStageItem<TInput>>, PipelineStageItem<TOutput>>(
                     async e => await bulkStage
                         .InternalExecute(e, _pipelineSetupContext.GetPipelineStageContext(() => RePostMessages(e))),
                     new ExecutionDataflowBlockOptions
@@ -164,17 +165,17 @@ namespace PipelineLauncher
 
         private PipelineSetup<TInput, TOutput> CreateNextStage<TInput, TOutput>(PipelineStage<TInput, TOutput> stage)
         {
-            IPropagatorBlock<PipelineItem<TInput>, PipelineItem<TOutput>> MakeNextBlock(StageCreationOptions options)
+            IPropagatorBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>> MakeNextBlock(StageCreationOptions options)
             {
 
 
-                TransformBlock<PipelineItem<TInput>, PipelineItem<TOutput>> rePostBlock = null;
-                void RePostMessage(PipelineItem<TInput> message)
+                TransformBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>> rePostBlock = null;
+                void RePostMessage(PipelineStageItem<TInput> message)
                 {
                     rePostBlock?.Post(message);
                 }
 
-                var nextBlock = new TransformBlock<PipelineItem<TInput>, PipelineItem<TOutput>>(
+                var nextBlock = new TransformBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>>(
                     async e => await stage.InternalExecute(e, _pipelineSetupContext.GetPipelineStageContext(() => RePostMessage(e))),
                     new ExecutionDataflowBlockOptions
                     {
@@ -191,7 +192,7 @@ namespace PipelineLauncher
             return CreateNextBlock(MakeNextBlock, stage.Configuration);
         }
 
-        private PipelineSetup<TInput, TOutput> CreateNextBlock<TInput, TOutput>(Func<StageCreationOptions, IPropagatorBlock<PipelineItem<TInput>, PipelineItem<TOutput>>> executionBlock, PipelineBaseConfiguration pipelineBaseConfiguration)
+        private PipelineSetup<TInput, TOutput> CreateNextBlock<TInput, TOutput>(Func<StageCreationOptions, IPropagatorBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>>> executionBlock, PipelineBaseConfiguration pipelineBaseConfiguration)
         {
             return AppendStage(
                 new StageSetup<TInput, TOutput>(executionBlock)

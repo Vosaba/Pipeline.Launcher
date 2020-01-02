@@ -1,7 +1,7 @@
 using System;
 using PipelineLauncher.Abstractions.PipelineEvents;
 
-namespace PipelineLauncher.Abstractions.Dto
+namespace PipelineLauncher.Abstractions.PipelineStage.Dto
 {
     public class ActionsSet
     {
@@ -13,19 +13,5 @@ namespace PipelineLauncher.Abstractions.Dto
 
         public Action ReExecute { get; }
         public Action<DiagnosticItem> DiagnosticAction { get; }
-
-
-
-        //public ActionsSet SetDiagnosticAction(Action<DiagnosticItem> diagnosticAction)
-        //{
-        //    DiagnosticAction = diagnosticAction;
-        //    return this;
-        //}
-
-        //public ActionsSet SetReExecuteAction(Action reExecute)
-        //{
-        //    ReExecute = reExecute;
-        //    return this;
-        //}
     }
 }

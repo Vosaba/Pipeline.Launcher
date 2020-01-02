@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using PipelineLauncher.Abstractions.Configurations;
-using PipelineLauncher.Abstractions.Pipeline;
 using PipelineLauncher.Abstractions.PipelineEvents;
+using PipelineLauncher.Abstractions.PipelineStage;
+using PipelineLauncher.Abstractions.PipelineStage.Configuration;
+using PipelineLauncher.Abstractions.PipelineStage.Dto;
 using PipelineLauncher.Abstractions.Services;
-using PipelineLauncher.Dto;
+using PipelineLauncher.Abstractions.Stages;
 using PipelineLauncher.PipelineSetup;
 using PipelineLauncher.Stages;
 
@@ -18,7 +19,7 @@ namespace PipelineLauncher
 
         IPipelineCreator WithStageService(IStageService stageService);
 
-        IPipelineCreator WithStageService(Func<Type, IPipeline> stageService);
+        IPipelineCreator WithStageService(Func<Type, IStage> stageService);
         
         IPipelineCreator WithDiagnostic(Action<DiagnosticItem> diagnosticHandler);
 

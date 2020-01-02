@@ -1,16 +1,17 @@
-﻿using PipelineLauncher.Abstractions.Pipeline;
-using PipelineLauncher.Abstractions.Services;
+﻿using PipelineLauncher.Abstractions.Services;
 using System;
+using PipelineLauncher.Abstractions.PipelineStage;
+using PipelineLauncher.Abstractions.Stages;
 
 namespace PipelineLauncher.Demo.Tests.Fakes
 {
     class FakeServicesRegistry
     {
-        public class JobService : IJobService
+        public class StageService : IStageService
         {
-            public TPipelineJob GetJobInstance<TPipelineJob>() where TPipelineJob : class, IPipelineJob
+            public TPipelineStage GetStageInstance<TPipelineStage>() where TPipelineStage : class, IStage
             {
-                return (TPipelineJob)Activator.CreateInstance(typeof(TPipelineJob));
+                return (TPipelineStage)Activator.CreateInstance(typeof(TPipelineStage));
             }
         }
     }

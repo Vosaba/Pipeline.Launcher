@@ -4,12 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using PipelineLauncher.Abstractions.Configurations;
-using PipelineLauncher.Jobs;
+using PipelineLauncher.Abstractions.PipelineStage.Configuration;
+using PipelineLauncher.Abstractions.PipelineStage.Dto;
+using PipelineLauncher.Stages;
 
 namespace PipelineLauncher.Demo.Tests.Stages
 {
-    public class BulkJobStage1 : BulkJob<Item>
+    public class BulkStageStage1 : BulkStage<Item>
     {
         public override IEnumerable<Item> Execute(IEnumerable<Item> items)
         {
@@ -30,7 +31,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
         }
     }
 
-    public class BulkJobStage2 : BulkJob<Item>
+    public class BulkStageStage2 : BulkStage<Item>
     {
         public override IEnumerable<Item> Execute(IEnumerable<Item> items)
         {
@@ -45,7 +46,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
             return items;
         }
 
-        public override bool Condition(Item input)
+        public  bool Condition(Item input)
         {
             return input.Value.StartsWith("Item#0") || input.Value.StartsWith("Item#1");
         }
@@ -56,7 +57,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
         }
     }
 
-    public class BulkJobStage2Alternative : BulkJob<Item>
+    public class BulkStageStage2Alternative : BulkStage<Item>
     {
         public override IEnumerable<Item> Execute(IEnumerable<Item> items)
         {
@@ -71,7 +72,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
             return items;
         }
 
-        public override bool Condition(Item input)
+        public  bool Condition(Item input)
         {
             return !input.Value.StartsWith("Item#0") && !input.Value.StartsWith("Item#1");
         }
@@ -82,7 +83,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
         }
     }
 
-    public class BulkJobStage3 : BulkJob<Item>
+    public class BulkStageStage3 : BulkStage<Item>
     {
         public override async Task<IEnumerable<Item>> ExecuteAsync(IEnumerable<Item> items, CancellationToken token)
         {
@@ -105,7 +106,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
         }
     }
 
-    public class BulkJobStage4 : BulkJob<Item>
+    public class BulkStageStage4 : BulkStage<Item>
     {
         public override IEnumerable<Item> Execute(IEnumerable<Item> items)
         {
@@ -125,7 +126,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
             return "Stage4";
         }
 
-        public override BulkJobConfiguration Configuration => new BulkJobConfiguration {
+        public override BulkStageConfiguration Configuration => new BulkStageConfiguration {
             BatchItemsCount = 10,
             BatchItemsTimeOut = 3000
         };
@@ -133,7 +134,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
 
     
 
-    public class BulkJobIntStage : BulkJob<int>
+    public class BulkStageIntStage : BulkStage<int>
     {
         public override IEnumerable<int> Execute(IEnumerable<int> items)
         {
@@ -146,7 +147,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
         }
     }
 
-    public class BulkJobStageItemToString : BulkJob<Item, string>
+    public class BulkStageStageItemToString : BulkStage<Item, string>
     {
         public override IEnumerable<string> Execute(IEnumerable<Item> items)
         {
@@ -167,7 +168,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
         }
     }
 
-    public class BulkJobStageStringToObject : BulkJob<string, object>
+    public class BulkStageStageStringToObject : BulkStage<string, object>
     {
         public override IEnumerable<object> Execute(IEnumerable<string> items)
         {

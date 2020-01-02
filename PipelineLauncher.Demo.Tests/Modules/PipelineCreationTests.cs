@@ -20,11 +20,11 @@ namespace PipelineLauncher.Demo.Tests.Modules
             List<Item> input = MakeInput(6);
 
             //Configure stages
-            var stageSetup = new PipelineCreator(new FakeServicesRegistry.JobService())
-                .BulkStage(new BulkJobStage1())
-                .BulkStage(new BulkJobStage2())
-                .BulkStage(new BulkJobStage3())
-                .BulkStage(new BulkJobStage4());
+            var stageSetup = new PipelineCreator(new FakeServicesRegistry.StageService())
+                .BulkStage(new BulkStageStage1())
+                .BulkStage(new BulkStageStage2())
+                .BulkStage(new BulkStageStage3())
+                .BulkStage(new BulkStageStage4());
                 
 
             Stopwatch stopWatch = new Stopwatch();
@@ -48,11 +48,11 @@ namespace PipelineLauncher.Demo.Tests.Modules
             List<Item> input = MakeInput(6);
 
             //Configure stages
-            var stageSetup = new PipelineCreator(new FakeServicesRegistry.JobService())
-                .BulkStage(new BulkJobStage1())
-                .BulkStage(new BulkJobStage2())
-                .BulkStage(new BulkJobStage3())
-                .BulkStage(new BulkJobStageItemToString());
+            var stageSetup = new PipelineCreator(new FakeServicesRegistry.StageService())
+                .BulkStage(new BulkStageStage1())
+                .BulkStage(new BulkStageStage2())
+                .BulkStage(new BulkStageStage3())
+                .BulkStage(new BulkStageStageItemToString());
 
             Stopwatch stopWatch = new Stopwatch();
 
@@ -76,12 +76,12 @@ namespace PipelineLauncher.Demo.Tests.Modules
             List<Item> input = MakeInput(6);
 
             //Configure stages
-            var stageSetup = new PipelineCreator(new FakeServicesRegistry.JobService())
-                .BulkStage<BulkJobStage1, Item>()
-                .BulkStage<BulkJobStage2>()
-                .BulkStage<BulkJobStage3>()
-                .BulkStage<BulkJobStageItemToString, string>()
-                .BulkStage<BulkJobStageStringToObject, object>();
+            var stageSetup = new PipelineCreator(new FakeServicesRegistry.StageService())
+                .BulkStage<BulkStageStage1, Item>()
+                .BulkStage<BulkStageStage2>()
+                .BulkStage<BulkStageStage3>()
+                .BulkStage<BulkStageStageItemToString, string>()
+                .BulkStage<BulkStageStageStringToObject, object>();
 
             Stopwatch stopWatch = new Stopwatch();
 
