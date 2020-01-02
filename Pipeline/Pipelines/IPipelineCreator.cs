@@ -14,7 +14,7 @@ namespace PipelineLauncher.Pipelines
     {
         IPipelineCreator WithToken(CancellationToken cancellationToken);
 
-        IPipelineCreator WithDiagnostic(Action<DiagnosticEventArgs> diagnosticHandler);
+        IPipelineCreator WithDiagnostic(Action<DiagnosticItem> diagnosticHandler);
 
         IPipelineSetup<TInput, TInput> Prepare<TInput>();
 
@@ -25,10 +25,10 @@ namespace PipelineLauncher.Pipelines
         #region BulkStages
 
         IPipelineSetup<TInput, TOutput> BulkStage<TBulkJob, TInput, TOutput>()
-            where TBulkJob : Bulk<TInput, TOutput>;
+            where TBulkJob : BulkJob<TInput, TOutput>;
 
         IPipelineSetup<TInput, TInput> BulkStage<TBulkJob, TInput>()
-            where TBulkJob : Bulk<TInput, TInput>;
+            where TBulkJob : BulkJob<TInput, TInput>;
 
         #endregion
 
@@ -48,7 +48,7 @@ namespace PipelineLauncher.Pipelines
 
         #region BulkStages
 
-        IPipelineSetup<TInput, TOutput> BulkStage<TInput, TOutput>(Bulk<TInput, TOutput> bulk);
+        IPipelineSetup<TInput, TOutput> BulkStage<TInput, TOutput>(BulkJob<TInput, TOutput> bulkJob);
 
         IPipelineSetup<TInput, TOutput> BulkStage<TInput, TOutput>(Func<IEnumerable<TInput>, IEnumerable<TOutput>> bulkFunc, BulkJobConfiguration bulkJobConfiguration = null);
 

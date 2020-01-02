@@ -1,14 +1,10 @@
-﻿using PipelineLauncher.Abstractions.PipelineEvents;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace PipelineLauncher.Pipelines
 {
-    public interface IPipelineRunner<in TInput, out TOutput> 
-    {
-        event ItemReceivedEventHandler<TOutput> ItemReceivedEvent;
-        event ExceptionItemsReceivedEventHandler ExceptionItemsReceivedEvent;
-        event SkippedItemReceivedEventHandler SkippedItemReceivedEvent;
 
+    public interface IPipelineRunner<in TInput, out TOutput> : IPipelineRunnerBase<TInput, TOutput>
+    {
         bool Post(TInput input);
         bool Post(IEnumerable<TInput> input);
     }

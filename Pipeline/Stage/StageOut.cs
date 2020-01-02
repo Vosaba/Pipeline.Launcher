@@ -7,11 +7,13 @@ namespace PipelineLauncher.Stage
 {
     internal class StageOut<TOut> : Stage, IStageOut<TOut>
     {
-        public StageOut(Func<ISourceBlock<PipelineItem<TOut>>> createTerra, CancellationToken cancellationToken)
-            : base(createTerra, cancellationToken)
+        public StageOut(Func<StageCreationOptions, ISourceBlock<PipelineItem<TOut>>> createTerra)
+            : base(createTerra)
         { }
 
-        IDataflowBlock IStage.ExecutionBlock => ExecutionBlock;
-        ISourceBlock<PipelineItem<TOut>> IStageOut<TOut>.ExecutionBlock => (ISourceBlock<PipelineItem<TOut>>)ExecutionBlock;
+        public new ISourceBlock<PipelineItem<TOut>> RetrieveExecutionBlock(StageCreationOptions options, bool forceCreation = false)
+            => (ISourceBlock<PipelineItem<TOut>>) base.RetrieveExecutionBlock(options, forceCreation);
+
+        //public new Func<StageCreationOptions, ISourceBlock<PipelineItem<TOut>>> CreateExecutionBlock => (Func<StageCreationOptions, ISourceBlock<PipelineItem<TOut>>>)base.CreateExecutionBlock;
     }
 }

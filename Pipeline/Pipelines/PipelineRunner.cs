@@ -1,4 +1,5 @@
-﻿using PipelineLauncher.Abstractions.Dto;
+﻿using System;
+using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Dto;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,15 +11,18 @@ namespace PipelineLauncher.Pipelines
 {
     internal class PipelineRunner<TInput, TOutput> : IPipelineRunner<TInput, TOutput>
     {
+        protected virtual StageCreationOptions CreationOptions => new StageCreationOptions(PipelineType.Normal);
+
         protected readonly CancellationToken CancellationToken;
 
-        protected ITargetBlock<PipelineItem<TInput>> FirstBlock;
-        protected ISourceBlock<PipelineItem<TOutput>> LastBlock;
+        protected Func<StageCreationOptions, bool, ITargetBlock<PipelineItem<TInput>>> RetrieveFirstBlock;
+        protected Func<StageCreationOptions, bool, ISourceBlock<PipelineItem<TOutput>>> RetrieveLastBlock;
         protected ActionBlock<PipelineItem<TOutput>> SortingBlock;
 
         public event ItemReceivedEventHandler<TOutput> ItemReceivedEvent;
         public event ExceptionItemsReceivedEventHandler ExceptionItemsReceivedEvent;
         public event SkippedItemReceivedEventHandler SkippedItemReceivedEvent;
+
 
         public bool Post(TInput input)
         {
@@ -27,19 +31,20 @@ namespace PipelineLauncher.Pipelines
 
         public bool Post(IEnumerable<TInput> input)
         {
-            return input.Select(x => new PipelineItem<TInput>(x)).All(x => FirstBlock.Post(x));
+            var firstBlock = RetrieveFirstBlock(CreationOptions, false);
+            return input.Select(x => new PipelineItem<TInput>(x)).All(x => firstBlock.Post(x));
         }
 
         internal PipelineRunner(
-            ITargetBlock<PipelineItem<TInput>> firstBlock,
-            ISourceBlock<PipelineItem<TOutput>> lastBlock,
+            Func<StageCreationOptions, bool, ITargetBlock<PipelineItem<TInput>>> retrieveFirstBlock,
+            Func<StageCreationOptions, bool, ISourceBlock<PipelineItem<TOutput>>> retrieveLastBlock,
             CancellationToken cancellationToken,
             bool initSortingBlock = true)
         {
             CancellationToken = cancellationToken;
 
-            FirstBlock = firstBlock;
-            LastBlock = lastBlock;
+            RetrieveFirstBlock = retrieveFirstBlock;
+            RetrieveLastBlock = retrieveLastBlock;
 
             if (initSortingBlock)
             {
@@ -65,7 +70,7 @@ namespace PipelineLauncher.Pipelines
                 }
             });
 
-            LastBlock.LinkTo(SortingBlock, new DataflowLinkOptions { PropagateCompletion = false });
+            RetrieveLastBlock(CreationOptions, false).LinkTo(SortingBlock, new DataflowLinkOptions { PropagateCompletion = false });
         }
     }
 }

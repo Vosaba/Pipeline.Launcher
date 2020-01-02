@@ -45,20 +45,24 @@ namespace PipelineLauncher.Demo.Tests.Modules
         public void Pipeline_Creation_Multiple_AsyncJobs()
         {
             //Test input 6 items
-            List<Item> input = MakeInput(5);
+            List<Item> input = MakeInput(2);
 
             CancellationTokenSource source = new CancellationTokenSource();
             //Configure stages
 
             var pipelineSetup = PipelineCreator
                     .WithToken(source.Token)
-                    .WithDiagnostic(e => 
-                    {
-                        Output.WriteLine($"WD: {e.StageType.Name}: {e.State}");
-                    })
+                    //.WithDiagnostic(e =>
+                    //{
+                    //    Output.WriteLine($"WD: {e.StageType.Name}: {e.State}: {e.RunningTime.TotalMilliseconds}: {e.Message}");
+                    //})
                     .Stage((Item item) =>
                     {
                         item.Value += "1->";
+                        if (item.Value == ("Item#0->1->"))
+                        {
+                            //await Task.Delay(1000);
+                        }      
                         return item;
                     })
                     .Stage((Item item) =>
@@ -66,7 +70,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
                         item.Value += "2->";
                         if (item.Value == ("Item#0->1->2->"))
                         {
-                            throw new Exception("Test exception");
+                            //throw new Exception("Test exception");
                         }
 
                         return item;
@@ -92,12 +96,12 @@ namespace PipelineLauncher.Demo.Tests.Modules
             //Make pipeline from stageSetup
 
 
-            var pipeline = pipelineSetup.CreateAwaitable();
+            var pipeline = pipelineSetup.CreateAwaitable(new AwaitablePipelineConfig { ThrowExceptionOccured=true});
 
             //Task.Run(() =>
             //{
-            //    Thread.Sleep(7000);
-            //    //source.Cancel();
+            //    Thread.Sleep(1000);
+            //    source.Cancel();
             //});
 
             pipeline.ExceptionItemsReceivedEvent += delegate(ExceptionItemsEventArgs args)
@@ -105,25 +109,35 @@ namespace PipelineLauncher.Demo.Tests.Modules
                 //Output.WriteLine($"{args.StageName}: {args.Exception}");
             };
 
+            //source.CancelAfter(30);
+
             //run
             stopWatch.Start();
             var result = pipeline.Process(input).ToArray();
 
             stopWatch.Stop();
 
-            PrintOutputAndTime(stopWatch.ElapsedMilliseconds, result);
+            PrintOutputAndTime(stopWatch.ElapsedMilliseconds,result);
+            stopWatch.Reset();
+
+            stopWatch.Start();
+            var resul2t = pipeline.Process(result).ToArray();
+
+            stopWatch.Stop();
+
+            PrintOutputAndTime(stopWatch.ElapsedMilliseconds, resul2t);
             stopWatch.Reset();
 
             //var pipeline2 = pipelineSetup.CreateAwaitable();
 
             //run
-            stopWatch.Start();
-            var result2 = pipeline.Process(result).ToArray();
-            stopWatch.Stop();
+            //stopWatch.Start();
+            //var result2 = pipeline.Process(result).ToArray();
+            //stopWatch.Stop();
 
-            //Total time 24032
-            PrintOutputAndTime(stopWatch.ElapsedMilliseconds, result2);
-            stopWatch.Reset();
+            ////Total time 24032
+            //PrintOutputAndTime(stopWatch.ElapsedMilliseconds, result2);
+            ////stopWatch.Reset();
 
             //stopWatch.Start();
             //var result3 = pipeline.Process(result2).ToArray();
@@ -219,7 +233,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
                                         })))
                     ))
                 //.Delay(12000)
-                //.BulkStage(new BulkStage3())
+                //.BulkStage(new BulkJobStage3())
                 .BulkStage((items) =>
                 {
                     var count = items.Count();
@@ -227,7 +241,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
                 },
                     new BulkJobConfiguration()
                     {
-                        BatchItemsCount = 5,
+                        BatchItemsCount = 2,
                         BatchItemsTimeOut = 4000
                     })
                 .Stage<Stage4>()
@@ -289,7 +303,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
 
             //run
             stopWatch.Start();
-            var result2 = result;//pipeline.Process(result).ToArray();
+            var result2 = pipeline.Process(result).ToArray();
             stopWatch.Stop();
 
             //Total time 24032
@@ -349,10 +363,10 @@ namespace PipelineLauncher.Demo.Tests.Modules
 
             //Configure stages
             var stageSetup = new PipelineCreator(new FakeServicesRegistry.JobService())
-                .BulkStage(new BulkStage1())
-                .BulkStage(new BulkStage2())//, new Stage2Alternative())
-                .BulkStage(new BulkStage4())
-                .BulkStage(new BulkStage4());
+                .BulkStage(new BulkJobStage1())
+                .BulkStage(new BulkJobStage2())//, new Stage2Alternative())
+                .BulkStage(new BulkJobStage4())
+                .BulkStage(new BulkJobStage4());
 
             Stopwatch stopWatch = new Stopwatch();
 
@@ -361,11 +375,11 @@ namespace PipelineLauncher.Demo.Tests.Modules
 
             //run
             stopWatch.Start();
-            var result = pipeline.Post(input);
+            var result = pipeline.Process(input);
             stopWatch.Stop();
 
             //Total time 24032
-            PrintOutputAndTime(stopWatch.ElapsedMilliseconds, input);
+            PrintOutputAndTime(stopWatch.ElapsedMilliseconds, result);
         }
 
         //[Fact]

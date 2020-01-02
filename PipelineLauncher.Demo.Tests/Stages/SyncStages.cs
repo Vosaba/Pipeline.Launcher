@@ -9,7 +9,7 @@ using PipelineLauncher.Jobs;
 
 namespace PipelineLauncher.Demo.Tests.Stages
 {
-    public class BulkStage1 : Bulk<Item>
+    public class BulkJobStage1 : BulkJob<Item>
     {
         public override IEnumerable<Item> Execute(IEnumerable<Item> items)
         {
@@ -30,7 +30,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
         }
     }
 
-    public class BulkStage2 : Bulk<Item>
+    public class BulkJobStage2 : BulkJob<Item>
     {
         public override IEnumerable<Item> Execute(IEnumerable<Item> items)
         {
@@ -56,7 +56,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
         }
     }
 
-    public class BulkStage2Alternative : Bulk<Item>
+    public class BulkJobStage2Alternative : BulkJob<Item>
     {
         public override IEnumerable<Item> Execute(IEnumerable<Item> items)
         {
@@ -82,7 +82,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
         }
     }
 
-    public class BulkStage3 : Bulk<Item>
+    public class BulkJobStage3 : BulkJob<Item>
     {
         public override async Task<IEnumerable<Item>> ExecuteAsync(IEnumerable<Item> items, CancellationToken token)
         {
@@ -105,7 +105,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
         }
     }
 
-    public class BulkStage4 : Bulk<Item>
+    public class BulkJobStage4 : BulkJob<Item>
     {
         public override IEnumerable<Item> Execute(IEnumerable<Item> items)
         {
@@ -133,7 +133,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
 
     
 
-    public class BulkIntStage : Bulk<int>
+    public class BulkJobIntStage : BulkJob<int>
     {
         public override IEnumerable<int> Execute(IEnumerable<int> items)
         {
@@ -146,7 +146,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
         }
     }
 
-    public class BulkStage_Item_To_String : Bulk<Item, string>
+    public class BulkJobStageItemToString : BulkJob<Item, string>
     {
         public override IEnumerable<string> Execute(IEnumerable<Item> items)
         {
@@ -167,7 +167,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
         }
     }
 
-    public class BulkStage_String_To_Object : Bulk<string, object>
+    public class BulkJobStageStringToObject : BulkJob<string, object>
     {
         public override IEnumerable<object> Execute(IEnumerable<string> items)
         {

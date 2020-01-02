@@ -26,6 +26,18 @@ namespace PipelineLauncher.Demo.Tests.Modules
             return input;
         }
 
+        public List<int> MakeInputInt(int count)
+        {
+            var input = new List<int>();
+
+            for (int i = 0; i < count; i++)
+            {
+                input.Add(i);
+            }
+
+            return input;
+        }
+
         public void PrintOutputAndTime<T>(long time, IEnumerable<T> items)
         {
             Output.WriteLine("--------------------");

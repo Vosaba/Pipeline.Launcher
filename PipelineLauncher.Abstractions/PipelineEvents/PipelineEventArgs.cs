@@ -40,7 +40,7 @@ namespace PipelineLauncher.Abstractions.PipelineEvents
         }
     }
 
-    public struct DiagnosticEventArgs
+    public struct DiagnosticItem
     {
         public Type StageType { get; }
         public TimeSpan StartTime { get; } 
@@ -49,9 +49,9 @@ namespace PipelineLauncher.Abstractions.PipelineEvents
         public DiagnosticState State { get; private set; }
         public string Message { get; private set; }
 
-        public TimeSpan RunningTime => StartTime - FinishTime;
+        public TimeSpan RunningTime => FinishTime - StartTime;
 
-        public DiagnosticEventArgs(Type stageType)
+        public DiagnosticItem(Type stageType)
         {
             StageType = stageType;
             StartTime = DateTime.Now.TimeOfDay;
@@ -60,7 +60,7 @@ namespace PipelineLauncher.Abstractions.PipelineEvents
             Message = null;
         }
 
-        public DiagnosticEventArgs Finish(DiagnosticState diagnosticState = DiagnosticState.Finished, string message = null)
+        public DiagnosticItem Finish(DiagnosticState diagnosticState = DiagnosticState.Finished, string message = null)
         {
             FinishTime = DateTime.Now.TimeOfDay;
             State = diagnosticState;

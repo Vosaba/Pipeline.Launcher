@@ -13,54 +13,41 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
+using PipelineLauncher.Abstractions.Pipeline;
 using PipelineLauncher.Abstractions.PipelineEvents;
 
 namespace PipelineLauncher.Pipelines
 {
     public class PipelineCreator : IPipelineCreator
     {
-        private IJobService _jobService;
-        private CancellationToken _cancellationToken = default;
-        private event DiagnosticEventHandler DiagnosticEvent;
-
-        public bool TryUseDefaultServiceResolver { get; set; } = true;
-        public bool UseDiagnosticEvents { get; set; } = false;
-
-        private IJobService JobService
-        {
-            get
-            {
-                if (_jobService == null)
-                {
-                    if (TryUseDefaultServiceResolver)
-                    {
-                        _jobService = new DefaultJobService();
-                    }
-                    else
-                    {
-                        throw new Exception($"'{nameof(IJobService)}' isn't provided, if you need to use Generic stage setups, provide service.");
-                    }
-                }
-
-                return _jobService;
-            }
-        }
+        private readonly PipelineSetupContext _pipelineSetupContext;
 
         public PipelineCreator(IJobService jobService = null)
         {
-            _jobService = jobService;
+            _pipelineSetupContext = new PipelineSetupContext(jobService);
         }
 
         public IPipelineCreator WithToken(CancellationToken cancellationToken)
         {
-            _cancellationToken = cancellationToken;
+            _pipelineSetupContext.SetupCancellationToken(cancellationToken);
             return this;
         }
 
-        public IPipelineCreator WithDiagnostic(Action<DiagnosticEventArgs> diagnosticHandler)
+        public IPipelineCreator WithJobService(IJobService jobService)
         {
-            UseDiagnosticEvents = true;
-            DiagnosticEvent += diagnosticHandler.Invoke;
+            _pipelineSetupContext.SetupJobService(jobService);
+            return this;
+        }
+
+        public IPipelineCreator WithJobService(Func<Type, IPipelineJob> jobService)
+        {
+            _pipelineSetupContext.SetupJobService(jobService);
+            return this;
+        }
+
+        public IPipelineCreator WithDiagnostic(Action<DiagnosticItem> diagnosticHandler)
+        {
+            _pipelineSetupContext.SetupDiagnosticAction(diagnosticHandler);
             return this;
         }
 
@@ -75,12 +62,12 @@ namespace PipelineLauncher.Pipelines
         #region BulkStages
 
         public IPipelineSetup<TInput, TOutput> BulkStage<TBulkJob, TInput, TOutput>()
-            where TBulkJob : Bulk<TInput, TOutput>
-            => CreateNextBulkStage<TInput, TOutput>(JobService.GetJobInstance<TBulkJob>());
+            where TBulkJob : BulkJob<TInput, TOutput>
+            => CreateNextBulkStage<TInput, TOutput>(_pipelineSetupContext.JobService.GetJobInstance<TBulkJob>());
 
         public IPipelineSetup<TInput, TInput> BulkStage<TBulkJob, TInput>()
-            where TBulkJob : Bulk<TInput, TInput>
-            => CreateNextBulkStage<TInput, TInput>(JobService.GetJobInstance<TBulkJob>());
+            where TBulkJob : BulkJob<TInput, TInput>
+            => CreateNextBulkStage<TInput, TInput>(_pipelineSetupContext.JobService.GetJobInstance<TBulkJob>());
 
         #endregion
 
@@ -88,11 +75,11 @@ namespace PipelineLauncher.Pipelines
 
         public IPipelineSetup<TInput, TOutput> Stage<TJob, TInput, TOutput>()
             where TJob : Job<TInput, TOutput>
-            => CreateNextStage<TInput, TOutput>(JobService.GetJobInstance<TJob>());
+            => CreateNextStage<TInput, TOutput>(_pipelineSetupContext.JobService.GetJobInstance<TJob>());
 
         public IPipelineSetup<TInput, TInput> Stage<TJob, TInput>()
             where TJob : Job<TInput, TInput>
-            => CreateNextStage<TInput, TInput>(JobService.GetJobInstance<TJob>());
+            => CreateNextStage<TInput, TInput>(_pipelineSetupContext.JobService.GetJobInstance<TJob>());
 
         #endregion
 
@@ -102,14 +89,14 @@ namespace PipelineLauncher.Pipelines
 
         #region BulkStages
 
-        public IPipelineSetup<TInput, TOutput> BulkStage<TInput, TOutput>(Bulk<TInput, TOutput> bulk)
-            => CreateNextBulkStage<TInput, TOutput>(bulk);
+        public IPipelineSetup<TInput, TOutput> BulkStage<TInput, TOutput>(BulkJob<TInput, TOutput> bulkJob)
+            => CreateNextBulkStage<TInput, TOutput>(bulkJob);
 
         public IPipelineSetup<TInput, TOutput> BulkStage<TInput, TOutput>(Func<IEnumerable<TInput>, IEnumerable<TOutput>> bulkFunc, BulkJobConfiguration bulkJobConfiguration)
-            => BulkStage(new LambdaBulk<TInput, TOutput>(bulkFunc, bulkJobConfiguration));
+            => BulkStage(new LambdaBulkJob<TInput, TOutput>(bulkFunc, bulkJobConfiguration));
 
         public IPipelineSetup<TInput, TOutput> BulkStage<TInput, TOutput>(Func<IEnumerable<TInput>, Task<IEnumerable<TOutput>>> bulkFunc, BulkJobConfiguration bulkJobConfiguration)
-            => BulkStage(new LambdaBulk<TInput, TOutput>(bulkFunc, bulkJobConfiguration));
+            => BulkStage(new LambdaBulkJob<TInput, TOutput>(bulkFunc, bulkJobConfiguration));
 
         #endregion
 
@@ -136,10 +123,17 @@ namespace PipelineLauncher.Pipelines
 
         private PipelineSetup<TInput, TOutput> CreateNextBulkStage<TInput, TOutput>(PipelineBulk<TInput, TOutput> bulkJob)
         {
-            IPropagatorBlock<PipelineItem<TInput>, PipelineItem<TOutput>> MakeNextBlock()
+            IPropagatorBlock<PipelineItem<TInput>, PipelineItem<TOutput>> MakeNextBlock(StageCreationOptions options)
             {
-
-                var buffer = new BatchBlockEx<PipelineItem<TInput>>(bulkJob.Configuration.BatchItemsCount, bulkJob.Configuration.BatchItemsTimeOut); //TODO
+                IPropagatorBlock<PipelineItem<TInput>, PipelineItem<TInput>[]> buffer;
+                if (options.UseTimeOuts)
+                {
+                    buffer = new BatchBlockEx<PipelineItem<TInput>>(bulkJob.Configuration.BatchItemsCount, bulkJob.Configuration.BatchItemsTimeOut); //TODO
+                }
+                else
+                {
+                    buffer = new BatchBlock<PipelineItem<TInput>>(bulkJob.Configuration.BatchItemsCount); //TODO
+                }
 
                 TransformManyBlock<IEnumerable<PipelineItem<TInput>>, PipelineItem<TOutput>> rePostBlock = null;
 
@@ -149,18 +143,19 @@ namespace PipelineLauncher.Pipelines
                 }
 
                 var nextBlock = new TransformManyBlock<IEnumerable<PipelineItem<TInput>>, PipelineItem<TOutput>>(
-                    async e => await bulkJob.InternalExecute(e, _cancellationToken, new ActionsSet(() => RePostMessages(e), CallDiagnostic)),
+                    async e => await bulkJob
+                        .InternalExecute(e, _pipelineSetupContext.GetPipelineJobContext(() => RePostMessages(e))),
                     new ExecutionDataflowBlockOptions
                     {
                         MaxDegreeOfParallelism = bulkJob.Configuration.MaxDegreeOfParallelism,
                         MaxMessagesPerTask = bulkJob.Configuration.MaxMessagesPerTask,
-                        CancellationToken = _cancellationToken
+                        CancellationToken = _pipelineSetupContext.CancellationToken
                     });
 
                 buffer.LinkTo(nextBlock, new DataflowLinkOptions() { PropagateCompletion = true });
                 rePostBlock = nextBlock;
 
-                buffer.Completion.ContinueWith(x => { nextBlock.Complete(); }, _cancellationToken);
+                buffer.Completion.ContinueWith(x => { nextBlock.Complete(); }, _pipelineSetupContext.CancellationToken);
 
                 return DataflowBlock.Encapsulate(buffer, nextBlock);
             }
@@ -170,8 +165,10 @@ namespace PipelineLauncher.Pipelines
 
         private PipelineSetup<TInput, TOutput> CreateNextStage<TInput, TOutput>(Pipeline<TInput, TOutput> job)
         {
-            IPropagatorBlock<PipelineItem<TInput>, PipelineItem<TOutput>> MakeNextBlock()
+            IPropagatorBlock<PipelineItem<TInput>, PipelineItem<TOutput>> MakeNextBlock(StageCreationOptions options)
             {
+
+
                 TransformBlock<PipelineItem<TInput>, PipelineItem<TOutput>> rePostBlock = null;
                 void RePostMessage(PipelineItem<TInput> message)
                 {
@@ -179,12 +176,12 @@ namespace PipelineLauncher.Pipelines
                 }
 
                 var nextBlock = new TransformBlock<PipelineItem<TInput>, PipelineItem<TOutput>>(
-                    async e => await job.InternalExecute(e, _cancellationToken, new ActionsSet(() => RePostMessage(e), CallDiagnostic)),
+                    async e => await job.InternalExecute(e, _pipelineSetupContext.GetPipelineJobContext(() => RePostMessage(e))),
                     new ExecutionDataflowBlockOptions
                     {
                         MaxDegreeOfParallelism = job.Configuration.MaxDegreeOfParallelism,
                         MaxMessagesPerTask = job.Configuration.MaxMessagesPerTask,
-                        CancellationToken = _cancellationToken
+                        CancellationToken = _pipelineSetupContext.CancellationToken
                     });
 
                 rePostBlock = nextBlock;
@@ -195,10 +192,10 @@ namespace PipelineLauncher.Pipelines
             return CreateNextBlock(MakeNextBlock, job.Configuration);
         }
 
-        private PipelineSetup<TInput, TOutput> CreateNextBlock<TInput, TOutput>(Func<IPropagatorBlock<PipelineItem<TInput>, PipelineItem<TOutput>>> executionBlock, PipelineBaseConfiguration pipelineBaseConfiguration)
+        private PipelineSetup<TInput, TOutput> CreateNextBlock<TInput, TOutput>(Func<StageCreationOptions, IPropagatorBlock<PipelineItem<TInput>, PipelineItem<TOutput>>> executionBlock, PipelineBaseConfiguration pipelineBaseConfiguration)
         {
             return AppendStage(
-                new Stage<TInput, TOutput>(executionBlock, _cancellationToken)
+                new Stage<TInput, TOutput>(executionBlock)
                 {
                     Previous = null,
                     PipelineBaseConfiguration = pipelineBaseConfiguration
@@ -207,18 +204,8 @@ namespace PipelineLauncher.Pipelines
 
         private PipelineSetup<TInput, TOutput> AppendStage<TInput, TOutput>(IStage<TInput, TOutput> stage)
         {
-            Action<DiagnosticEventArgs> diagnosticAction = null;
-            if (UseDiagnosticEvents)
-            {
-                diagnosticAction = CallDiagnostic;
-            }
-
-            return new PipelineSetup<TInput, TOutput>(stage, JobService, diagnosticAction);
-        }
-
-        private void CallDiagnostic(DiagnosticEventArgs args)
-        {
-            DiagnosticEvent?.Invoke(args);
+            return new PipelineSetup<TInput, TOutput>(
+                stage, _pipelineSetupContext);
         }
     }
 }

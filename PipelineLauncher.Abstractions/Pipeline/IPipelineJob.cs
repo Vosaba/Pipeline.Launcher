@@ -9,7 +9,7 @@ namespace PipelineLauncher.Abstractions.Pipeline
 {
     public interface IPipelineJob<TInput, TOutput> : IPipeline<TInput, TOutput>
     {
-        Task<PipelineItem<TOutput>> InternalExecute(PipelineItem<TInput> input, CancellationToken cancellationToken, ActionsSet actionsSet);
+        Task<PipelineItem<TOutput>> InternalExecute(PipelineItem<TInput> input, PipelineJobContext context);
         JobConfiguration Configuration { get; }
     }
 }

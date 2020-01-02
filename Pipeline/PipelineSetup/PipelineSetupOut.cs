@@ -37,8 +37,8 @@ namespace PipelineLauncher.PipelineSetup
 
         #region BulkStages
 
-        IPipelineSetupOut<TNextOutput> IPipelineSetupOut<TOutput>.BulkStage<TNextOutput>(Bulk<TOutput, TNextOutput> bulk)
-            => BulkStage<TNextOutput>(bulk);
+        IPipelineSetupOut<TNextOutput> IPipelineSetupOut<TOutput>.BulkStage<TNextOutput>(BulkJob<TOutput, TNextOutput> bulkJob)
+            => BulkStage<TNextOutput>(bulkJob);
 
         IPipelineSetupOut<TNextOutput> IPipelineSetupOut<TOutput>.BulkStage<TNextOutput>(Func<IEnumerable<TOutput>, IEnumerable<TNextOutput>> bulkFunc, BulkJobConfiguration bulkJobConfiguration)
             => BulkStage(bulkFunc, bulkJobConfiguration);

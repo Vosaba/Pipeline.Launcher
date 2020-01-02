@@ -17,10 +17,10 @@ namespace PipelineLauncher.PipelineJobs
 
         public abstract Task<IEnumerable<TOutput>> ExecuteAsync(IEnumerable<TInput> input, CancellationToken cancellationToken);
 
-        public async Task<IEnumerable<PipelineItem<TOutput>>> InternalExecute(IEnumerable<PipelineItem<TInput>> input, CancellationToken cancellationToken, ActionsSet actionsSet)
+        public async Task<IEnumerable<PipelineItem<TOutput>>> InternalExecute(IEnumerable<PipelineItem<TInput>> input, PipelineJobContext context)
         {
-            DiagnosticEventArgs diagnosticEventArgs = new DiagnosticEventArgs(GetType());
-            actionsSet.DiagnosticAction?.Invoke(diagnosticEventArgs);
+            DiagnosticItem diagnosticItem = new DiagnosticItem(GetType());
+            context.ActionsSet.DiagnosticAction?.Invoke(diagnosticItem);
 
             var inputArray = input.ToArray();
             var result = new List<PipelineItem<TOutput>>();
@@ -42,7 +42,7 @@ namespace PipelineLauncher.PipelineJobs
                 }).Cast<SkipItem<TInput>>().ToArray();
 
                 var executedSkipItems = skipItems.Any() ? await ExecuteAsync(skipItems
-                    .Where(x => typeof(TInput) == x.OriginalItem.GetType()).Select(x => (TInput)x.OriginalItem), cancellationToken) : Array.Empty<TOutput>();
+                    .Where(x => typeof(TInput) == x.OriginalItem.GetType()).Select(x => (TInput)x.OriginalItem), context.CancellationToken) : Array.Empty<TOutput>();
 
                 result.AddRange(executedSkipItems.Select(x => new PipelineItem<TOutput>(x)));
 
@@ -55,22 +55,23 @@ namespace PipelineLauncher.PipelineJobs
                 }).Cast<SkipItemTill<TInput>>().ToArray();
 
                 var executedSkipTillItems = skipTillItems.Any() ? await ExecuteAsync(skipTillItems
-                    .Where(x => GetType() == x.SkipTillType).Select(x => (TInput)x.OriginalItem), cancellationToken) : Array.Empty<TOutput>();
+                    .Where(x => GetType() == x.SkipTillType).Select(x => (TInput)x.OriginalItem), context.CancellationToken) : Array.Empty<TOutput>();
 
                 result.AddRange(executedSkipTillItems.Select(x => new PipelineItem<TOutput>(x)));
 
                 result.AddRange(skipTillItems.Where(x => GetType() != x.SkipTillType).Select(x => x.Return<TOutput>()));
 
-                var executedItems = await ExecuteAsync(inputArray.Where(x => x.GetType() == typeof(PipelineItem<TInput>)).Select(x => x.Item), cancellationToken);
+                var executedItems = await ExecuteAsync(inputArray.Where(x => x.GetType() == typeof(PipelineItem<TInput>))
+                    .Select(x => x.Item), context.CancellationToken);
                 result.AddRange(executedItems.Select(x => new PipelineItem<TOutput>(x)));
 
-                actionsSet.DiagnosticAction?.Invoke(diagnosticEventArgs.Finish());
+                context.ActionsSet.DiagnosticAction?.Invoke(diagnosticItem.Finish());
                 return result;
             }
             catch (Exception ex)
             {
-                actionsSet.DiagnosticAction?.Invoke(diagnosticEventArgs.Finish());
-                return new[] { new ExceptionItem<TOutput>(ex, actionsSet.ReExecute, GetType(), inputArray.Select(e => e.Item)) };
+                context.ActionsSet.DiagnosticAction?.Invoke(diagnosticItem.Finish(DiagnosticState.ExceptionOccured, ex.Message));
+                return new[] { new ExceptionItem<TOutput>(ex, context.ActionsSet.ReExecute, GetType(), inputArray.Select(e => e.Item)) };
             }
         }
     }

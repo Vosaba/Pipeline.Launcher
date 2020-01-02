@@ -22,10 +22,10 @@ namespace PipelineLauncher.Demo.Tests.Modules
 
             //Configure stages
             var stageSetup = new PipelineCreator(new FakeServicesRegistry.JobService())
-                .BulkStage(new BulkStage1())
-                .BulkStage(new BulkStage2())
-                .BulkStage(new BulkStage3())
-                .BulkStage(new BulkStage4());
+                .BulkStage(new BulkJobStage1())
+                .BulkStage(new BulkJobStage2())
+                .BulkStage(new BulkJobStage3())
+                .BulkStage(new BulkJobStage4());
                 
 
             Stopwatch stopWatch = new Stopwatch();
@@ -35,7 +35,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
 
             //run
             stopWatch.Start();
-            var result = pipeline.Post(input);
+            var result = pipeline.Process(input);
             stopWatch.Stop();
 
             //Total time 24032
@@ -50,10 +50,10 @@ namespace PipelineLauncher.Demo.Tests.Modules
 
             //Configure stages
             var stageSetup = new PipelineCreator(new FakeServicesRegistry.JobService())
-                .BulkStage(new BulkStage1())
-                .BulkStage(new BulkStage2())
-                .BulkStage(new BulkStage3())
-                .BulkStage(new BulkStage_Item_To_String());
+                .BulkStage(new BulkJobStage1())
+                .BulkStage(new BulkJobStage2())
+                .BulkStage(new BulkJobStage3())
+                .BulkStage(new BulkJobStageItemToString());
 
             Stopwatch stopWatch = new Stopwatch();
 
@@ -62,7 +62,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
 
             //run
             stopWatch.Start();
-            var result = pipeline.Post(input);
+            var result = pipeline.Process(input);
             stopWatch.Stop();
 
             //Total time 24032
@@ -78,11 +78,11 @@ namespace PipelineLauncher.Demo.Tests.Modules
 
             //Configure stages
             var stageSetup = new PipelineCreator(new FakeServicesRegistry.JobService())
-                .BulkStage<BulkStage1, Item>()
-                .BulkStage<BulkStage2>()
-                .BulkStage<BulkStage3>()
-                .BulkStage<BulkStage_Item_To_String, string>()
-                .BulkStage<BulkStage_String_To_Object, object>();
+                .BulkStage<BulkJobStage1, Item>()
+                .BulkStage<BulkJobStage2>()
+                .BulkStage<BulkJobStage3>()
+                .BulkStage<BulkJobStageItemToString, string>()
+                .BulkStage<BulkJobStageStringToObject, object>();
 
             Stopwatch stopWatch = new Stopwatch();
 
@@ -91,7 +91,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
 
             //run
             stopWatch.Start();
-            var result = pipeline.Post(input);
+            var result = pipeline.Process(input);
             stopWatch.Stop();
 
             //Total time 24032

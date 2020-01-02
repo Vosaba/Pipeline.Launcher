@@ -11,24 +11,22 @@ namespace PipelineLauncher.Pipelines
 {
     internal class AwaitablePipelineRunner<TInput, TOutput> : PipelineRunner<TInput, TOutput>, IAwaitablePipelineRunner<TInput, TOutput>
     {
+        protected override StageCreationOptions CreationOptions => new StageCreationOptions(PipelineType.Awaitable);
+
         private readonly AwaitablePipelineConfig _pipelineConfig;
         private readonly ConcurrentBag<TOutput> _processedItems = new ConcurrentBag<TOutput>();
 
-        private readonly Func<ITargetBlock<PipelineItem<TInput>>> _getFirstBlock;
-        private readonly Func<ISourceBlock<PipelineItem<TOutput>>> _getLastBlock;
         private readonly Action _destroyTaskStages;
 
         internal AwaitablePipelineRunner(
-            Func<ITargetBlock<PipelineItem<TInput>>> firstBlock,
-            Func<ISourceBlock<PipelineItem<TOutput>>> lastBlock,
+            Func<StageCreationOptions, bool, ITargetBlock<PipelineItem<TInput>>> retrieveFirstBlock,
+            Func<StageCreationOptions, bool, ISourceBlock<PipelineItem<TOutput>>> retrieveLastBlock,
             CancellationToken cancellationToken,
             Action destroyTaskStages,
             AwaitablePipelineConfig pipelineConfig)
-            : base(null, null, cancellationToken, false)
+            : base(retrieveFirstBlock, retrieveLastBlock, cancellationToken, false)
         {
             _pipelineConfig = pipelineConfig;
-            _getFirstBlock = firstBlock;
-            _getLastBlock = lastBlock;
             _destroyTaskStages = destroyTaskStages;
 
             ItemReceivedEvent += AwaitablePipeline_ItemReceivedEvent;
@@ -47,7 +45,7 @@ namespace PipelineLauncher.Pipelines
 
             Post(input);
 
-            FirstBlock.Complete();
+            RetrieveFirstBlock(CreationOptions, true).Complete();
             SortingBlock.Completion.Wait();
 
             return _processedItems;
@@ -64,7 +62,7 @@ namespace PipelineLauncher.Pipelines
             _processedItems.Clear();
 
             Post(input);
-            FirstBlock.Complete();
+            //RetrieveFirstBlock.Complete();
             throw new Exception();
             //return ResultConsumerBlock.AsObservable();
         }
@@ -75,7 +73,7 @@ namespace PipelineLauncher.Pipelines
         //    _processedItems.Clear();
 
         //    Post(input);
-        //    FirstBlock.Complete();
+        //    RetrieveFirstBlock.Complete();
 
         //    await ResultConsumerBlock.Completion;
         //    foreach (var item in _processedItems)
@@ -100,12 +98,10 @@ namespace PipelineLauncher.Pipelines
         private void InitBlocks()
         {
             _destroyTaskStages();
-            FirstBlock = _getFirstBlock();
-            LastBlock = _getLastBlock();
 
             InitSortingBlock();
 
-            LastBlock.Completion.ContinueWith(x =>
+            RetrieveLastBlock(CreationOptions, true).Completion.ContinueWith(x =>
             {
                 SortingBlock.Complete();
                 //ExceptionConsumerBlock.Complete();

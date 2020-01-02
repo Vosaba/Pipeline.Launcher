@@ -9,18 +9,14 @@ namespace PipelineLauncher.Stage
 {
     public interface IStage<TIn, TOut> : IStageIn<TIn>, IStageOut<TOut>
     {
-        new IPropagatorBlock<PipelineItem<TIn>, PipelineItem<TOut>> ExecutionBlock { get; }
+        new IPropagatorBlock<PipelineItem<TIn>, PipelineItem<TOut>> RetrieveExecutionBlock(StageCreationOptions options, bool forceCreation = false);
     }
 
     public interface IStage
     {
-        Func<IDataflowBlock> CreateBlock { get; }
-
-        IDataflowBlock ExecutionBlock { get; }
+        IDataflowBlock RetrieveExecutionBlock(StageCreationOptions options, bool forceCreation = false);
 
         PipelineBaseConfiguration PipelineBaseConfiguration { get; }
-
-        CancellationToken CancellationToken { get; }
 
         IList<IStage> Next { get; set; }
 

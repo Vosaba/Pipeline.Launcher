@@ -19,17 +19,16 @@ namespace PipelineLauncher.PipelineSetup
 {
     internal abstract class PipelineSetup<TFirstInput> : IPipelineSetup
     {
-        protected Action<DiagnosticEventArgs> DiagnosticAction;
+        protected PipelineSetupContext Context;
 
-        protected IJobService JobService { get; }
+        protected IJobService JobService => Context.JobService;
 
         public IStage Current { get; }
 
-        internal PipelineSetup(IStage stage, IJobService jobService, Action<DiagnosticEventArgs> diagnosticAction)
+        internal PipelineSetup(IStage stage, PipelineSetupContext context)
         {
             Current = stage;
-            JobService = jobService;
-            DiagnosticAction = diagnosticAction;
+            Context = context;
         }
     }
 
@@ -37,8 +36,8 @@ namespace PipelineLauncher.PipelineSetup
     {
         public new IStageOut<TOutput> Current => (IStageOut<TOutput>)base.Current;
 
-        internal PipelineSetup(IStageOut<TOutput> stage, IJobService jobService, Action<DiagnosticEventArgs> diagnosticAction)
-            : base(stage, jobService, diagnosticAction)
+        internal PipelineSetup(IStageOut<TOutput> stage, PipelineSetupContext context)
+            : base(stage, context)
         { }
 
         #region Generic
@@ -46,11 +45,11 @@ namespace PipelineLauncher.PipelineSetup
         #region BulkStages
 
         public IPipelineSetup<TInput, TNextOutput> BulkStage<TBulkJob, TNextOutput>()
-            where TBulkJob : Bulk<TOutput, TNextOutput>
+            where TBulkJob : BulkJob<TOutput, TNextOutput>
             => CreateNextBulkStage<TNextOutput>(JobService.GetJobInstance<TBulkJob>());
 
         public IPipelineSetup<TInput, TOutput> BulkStage<TBulkJob>()
-            where TBulkJob : Bulk<TOutput, TOutput>
+            where TBulkJob : BulkJob<TOutput, TOutput>
             => CreateNextBulkStage<TOutput>(JobService.GetJobInstance<TBulkJob>());
 
         #endregion
@@ -73,14 +72,14 @@ namespace PipelineLauncher.PipelineSetup
 
         #region BulkStages
 
-        public IPipelineSetup<TInput, TNextOutput> BulkStage<TNextOutput>(Bulk<TOutput, TNextOutput> bulk)
-            => CreateNextBulkStage(bulk);
+        public IPipelineSetup<TInput, TNextOutput> BulkStage<TNextOutput>(BulkJob<TOutput, TNextOutput> bulkJob)
+            => CreateNextBulkStage(bulkJob);
 
         public IPipelineSetup<TInput, TNextOutput> BulkStage<TNextOutput>(Func<IEnumerable<TOutput>, IEnumerable<TNextOutput>> bulkFunc, BulkJobConfiguration bulkJobConfiguration)
-            => BulkStage(new LambdaBulk<TOutput, TNextOutput>(bulkFunc, bulkJobConfiguration));
+            => BulkStage(new LambdaBulkJob<TOutput, TNextOutput>(bulkFunc, bulkJobConfiguration));
 
         public IPipelineSetup<TInput, TNextOutput> BulkStage<TNextOutput>(Func<IEnumerable<TOutput>, Task<IEnumerable<TNextOutput>>> bulkFunc, BulkJobConfiguration bulkJobConfiguration)
-            => BulkStage(new LambdaBulk<TOutput, TNextOutput>(bulkFunc, bulkJobConfiguration));
+            => BulkStage(new LambdaBulkJob<TOutput, TNextOutput>(bulkFunc, bulkJobConfiguration));
 
         #endregion
 
@@ -110,15 +109,17 @@ namespace PipelineLauncher.PipelineSetup
         public IPipelineSetup<TInput, TNextOutput> Broadcast<TNextOutput>(params (Predicate<TOutput> predicate,
             Func<IPipelineSetup<TInput, TOutput>, IPipelineSetup<TInput, TNextOutput>> branch)[] branches)
         {
-            BroadcastBlock<PipelineItem<TOutput>> MakeNextBlock()
+            BroadcastBlock<PipelineItem<TOutput>> MakeNextBlock(StageCreationOptions options)
             {
                 var broadcastBlock = new BroadcastBlock<PipelineItem<TOutput>>(x => x);
 
-                Current.ExecutionBlock.LinkTo(broadcastBlock);
-                Current.ExecutionBlock.Completion.ContinueWith(x =>
+                var currentBlock = Current.RetrieveExecutionBlock(options);
+
+                currentBlock.LinkTo(broadcastBlock);
+                currentBlock.Completion.ContinueWith(x =>
                 {
                     broadcastBlock.Complete();
-                }, Current.CancellationToken);
+                }, Context.CancellationToken);
 
 
                 return broadcastBlock;
@@ -136,7 +137,7 @@ namespace PipelineLauncher.PipelineSetup
 
         public IPipelineSetup<TInput, TNextOutput> Branch<TNextOutput>(ConditionExceptionScenario conditionExceptionScenario, (Predicate<TOutput> predicate, Func<IPipelineSetup<TInput, TOutput>, IPipelineSetup<TInput, TNextOutput>> branch)[] branches)
         {
-            IPropagatorBlock<PipelineItem<TNextOutput>, PipelineItem<TNextOutput>> MakeNextBlock()
+            IPropagatorBlock<PipelineItem<TNextOutput>, PipelineItem<TNextOutput>> MakeNextBlock(StageCreationOptions options)
             {
                 var mergeBlock = new TransformBlock<PipelineItem<TNextOutput>, PipelineItem<TNextOutput>>(x => x);
 
@@ -144,24 +145,28 @@ namespace PipelineLauncher.PipelineSetup
                 IDataflowBlock[] tailBranches = new IDataflowBlock[branches.Length];
 
                 var branchId = 0;
+
+                var currentBlock = Current.RetrieveExecutionBlock(options);
                 foreach (var branch in branches)
                 {
                     var newBranchHead = new TransformBlock<PipelineItem<TOutput>, PipelineItem<TOutput>>(x => x);
 
                     headBranches[branchId] = newBranchHead;
 
-                    var newtBranchStageHead = new StageOut<TOutput>(() => newBranchHead, Current.CancellationToken)
+                    var newtBranchStageHead = new StageOut<TOutput>((d) => newBranchHead)
                     {
                         Previous = Current
                     };
 
                     Current.Next.Add(newtBranchStageHead);
 
-                    var nextBlockAfterCurrent = new PipelineSetup<TInput, TOutput>(newtBranchStageHead, JobService, DiagnosticAction);
+                    var nextBlockAfterCurrent = new PipelineSetup<TInput, TOutput>(newtBranchStageHead, Context);
 
                     var newBranch = branch.branch(nextBlockAfterCurrent);
 
-                    Current.ExecutionBlock.LinkTo(newBranchHead,
+                    
+
+                    currentBlock.LinkTo(newBranchHead,
                         x =>
                         {
                             try
@@ -184,39 +189,41 @@ namespace PipelineLauncher.PipelineSetup
                             }
                         });
 
-                    tailBranches[branchId] = newBranch.Current.ExecutionBlock;
+                    var newBranchBlock = newBranch.Current.RetrieveExecutionBlock(options);
 
-                    newBranch.Current.ExecutionBlock.LinkTo(mergeBlock); //TODO broadcast TEST 
+                    tailBranches[branchId] = newBranchBlock;
 
-                    newBranch.Current.ExecutionBlock.Completion.ContinueWith(x =>
+                    newBranchBlock.LinkTo(mergeBlock); //TODO broadcast TEST 
+
+                    newBranchBlock.Completion.ContinueWith(x =>
                     {
                         if (tailBranches.All(tail => tail.Completion.IsCompleted))
                         {
                             mergeBlock.Complete();
                         }
-                    }, Current.CancellationToken);
+                    }, Context.CancellationToken);
 
                     branchId++;
                 }
 
-                Current.ExecutionBlock.Completion.ContinueWith(x =>
+                currentBlock.Completion.ContinueWith(x =>
                 {
                     foreach (var headBranch in headBranches)
                     {
                         headBranch.Complete();
                     }
-                }, Current.CancellationToken);
+                }, Context.CancellationToken);
 
                 return mergeBlock;
             };
 
-            var t = new StageOut<TNextOutput>(MakeNextBlock, Current.CancellationToken)
+            var nextStage = new StageOut<TNextOutput>(MakeNextBlock)//TODO
             {
                 Previous = Current
             };
 
-            Current.Next.Add(t); // Hack with cross linking to destroy
-            return new PipelineSetup<TInput, TNextOutput>(t, JobService, DiagnosticAction);
+            Current.Next.Add(nextStage); // Hack with cross linking to destroy
+            return new PipelineSetup<TInput, TNextOutput>(nextStage, Context);
         }
 
         #endregion
@@ -225,33 +232,34 @@ namespace PipelineLauncher.PipelineSetup
         {
             var nextBlock = pipelineSetup.GetFirstStage<TOutput>();
 
-            ISourceBlock<PipelineItem<TNextOutput>> MakeNextBlock()
+            ISourceBlock<PipelineItem<TNextOutput>> MakeNextBlock(StageCreationOptions options)
             {
                 Current.Next.Add(nextBlock);
                 nextBlock.Previous = Current;
+                var currentBlock = Current.RetrieveExecutionBlock(options);
 
-                Current.ExecutionBlock.LinkTo(nextBlock.ExecutionBlock, new DataflowLinkOptions() { PropagateCompletion = true });
-                Current.ExecutionBlock.Completion.ContinueWith(x =>
+                currentBlock.LinkTo(nextBlock.RetrieveExecutionBlock(options), new DataflowLinkOptions() { PropagateCompletion = true });
+                currentBlock.Completion.ContinueWith(x =>
                 {
-                    nextBlock.ExecutionBlock.Complete();
-                }, Current.CancellationToken);
+                    nextBlock.RetrieveExecutionBlock(options).Complete();
+                }, Context.CancellationToken);
 
-                Current.ExecutionBlock.Completion.ContinueWith(x =>
+                currentBlock.Completion.ContinueWith(x =>
                 {
-                    nextBlock.ExecutionBlock.Complete();
-                }, Current.CancellationToken);
+                    nextBlock.RetrieveExecutionBlock(options).Complete();
+                }, Context.CancellationToken);
 
-                return pipelineSetup.Current.ExecutionBlock;
+                return pipelineSetup.Current.RetrieveExecutionBlock(options);
             };
 
-            var t = new StageOut<TNextOutput>(MakeNextBlock, Current.CancellationToken)
+            var nextStage = new StageOut<TNextOutput>(MakeNextBlock)
             {
                 Previous = Current
             };
 
-            Current.Next.Add(t); // Hack with cross linking to destroy
+            Current.Next.Add(nextStage); // Hack with cross linking to destroy
 
-            return new PipelineSetup<TInput, TNextOutput>(t, JobService, DiagnosticAction);
+            return new PipelineSetup<TInput, TNextOutput>(nextStage, Context);
         }
 
         public static PipelineSetup<TInput, TOutput> operator +(PipelineSetup<TInput, TOutput> pipelineSetup, PipelineSetup<TOutput, TOutput> pipelineSetup2)
@@ -263,20 +271,21 @@ namespace PipelineLauncher.PipelineSetup
 
         public IAwaitablePipelineRunner<TInput, TOutput> CreateAwaitable(AwaitablePipelineConfig pipelineConfig = null)
         {
-            var firstStage = this.GetFirstStage<TInput>();
-            return new AwaitablePipelineRunner<TInput, TOutput>(() => firstStage.ExecutionBlock, () => Current.ExecutionBlock, Current.CancellationToken, () => firstStage.DestroyStageBlocks(), pipelineConfig);
+            IStageIn<TInput> firstStage = this.GetFirstStage<TInput>();
+            return new AwaitablePipelineRunner<TInput, TOutput>(firstStage.RetrieveExecutionBlock, Current.RetrieveExecutionBlock, Context.CancellationToken, () => firstStage.DestroyStageBlocks(), pipelineConfig);
         }
 
         public IPipelineRunner<TInput, TOutput> Create()
         {
-            var firstStage = this.GetFirstStage<TInput>();
-            return new PipelineRunner<TInput, TOutput>(firstStage.ExecutionBlock, Current.ExecutionBlock, Current.CancellationToken);
+            IStageIn<TInput> firstStage = this.GetFirstStage<TInput>();
+            return new PipelineRunner<TInput, TOutput>(firstStage.RetrieveExecutionBlock, Current.RetrieveExecutionBlock, Context.CancellationToken);
         }
 
         private PipelineSetup<TInput, TNextOutput> CreateNextStage<TNextOutput>(IPipelineJob<TOutput, TNextOutput> job)
         {
-            IPropagatorBlock<PipelineItem<TOutput>, PipelineItem<TNextOutput>> MakeNextBlock()
+            IPropagatorBlock<PipelineItem<TOutput>, PipelineItem<TNextOutput>> MakeNextBlock(StageCreationOptions options)
             {
+
                 TransformBlock<PipelineItem<TOutput>, PipelineItem<TNextOutput>> rePostBlock = null;
 
                 void RePostMessage(PipelineItem<TOutput> message)
@@ -285,21 +294,23 @@ namespace PipelineLauncher.PipelineSetup
                 }
 
                 var nextBlock = new TransformBlock<PipelineItem<TOutput>, PipelineItem<TNextOutput>>(
-                    async x => await job.InternalExecute(x, Current.CancellationToken, new ActionsSet(() => RePostMessage(x), DiagnosticAction)),
+                    async x => await job.InternalExecute(x, Context.GetPipelineJobContext(() => RePostMessage(x))),
                     new ExecutionDataflowBlockOptions
                     {
                         MaxDegreeOfParallelism = job.Configuration.MaxDegreeOfParallelism,
                         MaxMessagesPerTask = job.Configuration.MaxMessagesPerTask,
-                        CancellationToken = Current.CancellationToken
+                        CancellationToken = Context.CancellationToken
                     });
 
                 rePostBlock = nextBlock;
+                var currentBlock = Current.RetrieveExecutionBlock(options);
 
-                Current.ExecutionBlock.LinkTo(nextBlock, new DataflowLinkOptions() { PropagateCompletion = true });
-                Current.ExecutionBlock.Completion.ContinueWith(x =>
+                currentBlock.LinkTo(nextBlock, new DataflowLinkOptions() { PropagateCompletion = true });
+                currentBlock.Completion.ContinueWith(x =>
                 {
+                    //DiagnosticAction?.Invoke(new DiagnosticItem)
                     nextBlock.Complete();
-                }, Current.CancellationToken);
+                }, Context.CancellationToken);
 
                 return nextBlock;
             }
@@ -309,9 +320,17 @@ namespace PipelineLauncher.PipelineSetup
 
         private PipelineSetup<TInput, TNextOutput> CreateNextBulkStage<TNextOutput>(IPipelineBulkJob<TOutput, TNextOutput> job)
         {
-            IPropagatorBlock<PipelineItem<TOutput>, PipelineItem<TNextOutput>> MakeNextBlock()
+            IPropagatorBlock<PipelineItem<TOutput>, PipelineItem<TNextOutput>> MakeNextBlock(StageCreationOptions options)
             {
-                var buffer = new BatchBlockEx<PipelineItem<TOutput>>(job.Configuration.BatchItemsCount, job.Configuration.BatchItemsTimeOut); //TODO
+                IPropagatorBlock<PipelineItem<TOutput>, PipelineItem<TOutput>[]> buffer;
+                if (options.UseTimeOuts)
+                {
+                    buffer = new BatchBlockEx<PipelineItem<TOutput>>(job.Configuration.BatchItemsCount, job.Configuration.BatchItemsTimeOut); //TODO
+                }
+                else
+                {
+                    buffer = new BatchBlock<PipelineItem<TOutput>>(job.Configuration.BatchItemsCount); //TODO
+                }
 
                 TransformManyBlock<IEnumerable<PipelineItem<TOutput>>, PipelineItem<TNextOutput>> rePostBlock = null;
 
@@ -321,12 +340,12 @@ namespace PipelineLauncher.PipelineSetup
                 }
 
                 var nextBlock = new TransformManyBlock<IEnumerable<PipelineItem<TOutput>>, PipelineItem<TNextOutput>>(
-                    async x => await job.InternalExecute(x, Current.CancellationToken, new ActionsSet(() => RePostMessages(x), DiagnosticAction)),
+                    async x => await job.InternalExecute(x, Context.GetPipelineJobContext(() => RePostMessages(x))),
                     new ExecutionDataflowBlockOptions
                     {
                         MaxDegreeOfParallelism = job.Configuration.MaxDegreeOfParallelism,
                         MaxMessagesPerTask = job.Configuration.MaxMessagesPerTask,
-                        CancellationToken = Current.CancellationToken
+                        CancellationToken = Context.CancellationToken
                     });
 
                 buffer.LinkTo(nextBlock, new DataflowLinkOptions() { PropagateCompletion = true });
@@ -335,16 +354,17 @@ namespace PipelineLauncher.PipelineSetup
                 buffer.Completion.ContinueWith(x =>
                 {
                     nextBlock.Complete();
-                }, Current.CancellationToken);
+                }, Context.CancellationToken);
 
                 var next = DataflowBlock.Encapsulate(buffer, nextBlock);
+                var currentBlock = Current.RetrieveExecutionBlock(options);
 
-                Current.ExecutionBlock.LinkTo(next, new DataflowLinkOptions() { PropagateCompletion = true });
+                currentBlock.LinkTo(next, new DataflowLinkOptions() { PropagateCompletion = true });
 
-                Current.ExecutionBlock.Completion.ContinueWith(x =>
+                currentBlock.Completion.ContinueWith(x =>
                 {
                     next.Complete();
-                }, Current.CancellationToken);
+                }, Context.CancellationToken);
 
                 return next;
             }
@@ -352,9 +372,9 @@ namespace PipelineLauncher.PipelineSetup
             return CreateNextBlock(MakeNextBlock, job.Configuration);
         }
 
-        private PipelineSetup<TInput, TNextOutput> CreateNextBlock<TNextOutput>(Func<IPropagatorBlock<PipelineItem<TOutput>, PipelineItem<TNextOutput>>> nextBlock, PipelineBaseConfiguration pipelineBaseConfiguration)
+        private PipelineSetup<TInput, TNextOutput> CreateNextBlock<TNextOutput>(Func<StageCreationOptions, IPropagatorBlock<PipelineItem<TOutput>, PipelineItem<TNextOutput>>> nextBlock, PipelineBaseConfiguration pipelineBaseConfiguration)
         {
-            var nextStage = new StageOut<TNextOutput>(nextBlock, Current.CancellationToken)
+            var nextStage = new StageOut<TNextOutput>(nextBlock)
             {
                 Previous = Current,
                 PipelineBaseConfiguration = pipelineBaseConfiguration
@@ -362,7 +382,7 @@ namespace PipelineLauncher.PipelineSetup
 
             Current.Next.Add(nextStage);
 
-            return new PipelineSetup<TInput, TNextOutput>(nextStage, JobService, DiagnosticAction);
+            return new PipelineSetup<TInput, TNextOutput>(nextStage, Context);
         }
     }
 }

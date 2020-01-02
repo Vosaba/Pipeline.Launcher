@@ -5,13 +5,21 @@ namespace PipelineLauncher.Abstractions.Dto
 {
     public class ActionsSet
     {
-        public Action ReExecute { get; }
-        public Action<DiagnosticEventArgs> DiagnosticAction { get; }
+        public Action ReExecute { get; private set; }
+        public Action<DiagnosticItem> DiagnosticAction { get; private set; }
 
-        public ActionsSet(Action reExecute, Action<DiagnosticEventArgs> diagnosticAction)
+        public ActionsSet SetDiagnosticAction(Action<DiagnosticItem> diagnosticAction)
+        {
+            DiagnosticAction = diagnosticAction;
+            return this;
+        }
+
+        public ActionsSet SetReExecuteAction(Action reExecute)
         {
             ReExecute = reExecute;
-            DiagnosticAction = diagnosticAction;
+            return this;
         }
     }
+
+    //public enum DiagnosticActionsLog
 }

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace PipelineLauncher.Jobs
 {
-    public abstract class Bulk<TInput, TOutput> : PipelineBulk<TInput, TOutput>
+    public abstract class BulkJob<TInput, TOutput> : PipelineBulk<TInput, TOutput>
     {
         public override BulkJobConfiguration Configuration => new BulkJobConfiguration();
 
@@ -28,6 +28,6 @@ namespace PipelineLauncher.Jobs
         }
     }
 
-    public abstract class Bulk<TInput> : Bulk<TInput, TInput>
+    public abstract class BulkJob<TInput> : BulkJob<TInput, TInput>
     {}
 }
