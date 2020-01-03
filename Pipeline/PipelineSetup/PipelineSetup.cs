@@ -126,9 +126,11 @@ namespace PipelineLauncher.PipelineSetup
 
 
                 return broadcastBlock;
+
             }
 
             var newCurrent = CreateNextBlock(MakeNextBlock, Current.PipelineBaseConfiguration);
+
             return newCurrent.Branch(branches).RemoveDuplicatesPermanent();
         }
 

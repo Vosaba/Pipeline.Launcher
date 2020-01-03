@@ -112,7 +112,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
         {
             foreach (var item in items)
             {
-                item.Value = item.Value + "Stage4->";
+                item.Value = item.Value + "BulkStage4->";
                 Thread.Sleep(1000);
 
                 item.ProcessedBy.Add(Thread.CurrentThread.ManagedThreadId);
@@ -126,10 +126,10 @@ namespace PipelineLauncher.Demo.Tests.Stages
             return "Stage4";
         }
 
-        public override BulkStageConfiguration Configuration => new BulkStageConfiguration {
-            BatchItemsCount = 10,
-            BatchItemsTimeOut = 3000
-        };
+        //public override BulkStageConfiguration Configuration => new BulkStageConfiguration {
+        //    BatchItemsCount = 10,
+        //    BatchItemsTimeOut = 3000
+        //};
     }
 
     

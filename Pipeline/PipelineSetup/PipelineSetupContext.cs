@@ -14,6 +14,7 @@ namespace PipelineLauncher.PipelineSetup
     {
         private IStageService _stageService;
         private Action<DiagnosticItem> _diagnosticAction;
+        public Func<object[], int[]> _getItemsIdentify;
 
         public bool TryUseDefaultServiceResolver { get; set; } = true;
 
@@ -56,6 +57,12 @@ namespace PipelineLauncher.PipelineSetup
             return this;
         }
 
+        public PipelineSetupContext SetupItemIdentify(Func<object[], int[]> getItemsIdentify)
+        {
+            _getItemsIdentify = getItemsIdentify;
+            return this;
+        }
+
         public PipelineSetupContext SetupDiagnosticAction(Action<DiagnosticItem> diagnosticAction)
         {
             _diagnosticAction = diagnosticAction;
@@ -73,7 +80,7 @@ namespace PipelineLauncher.PipelineSetup
             return new PipelineStageContext(
                 CancellationToken, 
                 reExecute != null || _diagnosticAction != null ? 
-                    new ActionsSet(reExecute, _diagnosticAction) 
+                    new ActionsSet(reExecute, _diagnosticAction, _getItemsIdentify) 
                     : null);
         }
     }

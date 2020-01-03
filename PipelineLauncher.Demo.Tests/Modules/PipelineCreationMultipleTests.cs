@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.PipelineEvents;
 using PipelineLauncher.Abstractions.PipelineStage.Configurations;
 using PipelineLauncher.Abstractions.PipelineStage.Dto;
@@ -205,9 +206,25 @@ namespace PipelineLauncher.Demo.Tests.Modules
             //Configure stages
             var pipelineSetup = PipelineCreator
                 .WithToken(source.Token)
+                .WithDiagnostic(item =>
+                {
+                    if (item.State == DiagnosticState.Process)
+                    {
+                        Output.WriteLine($"{item.StageName}: '{string.Join("'; '", item.ItemsHashCode)}'");
+                    }
+                })
                 //.Prepare<Item>()
                 .Stage(new Stage1())
                 .Stage<Stage1>()
+                .Stage((Item item, StageOption<Item, Item> option) =>
+                {
+                    if (item.Value.StartsWith("Item#2->"))
+                    {
+                        return option.SkipTo<Stage4>(item);
+                    }
+
+                    return item;
+                })
                 .Branch(
                     (item => item.Value == "Item#1->AsyncStage1->",
                         branch => branch
@@ -230,55 +247,53 @@ namespace PipelineLauncher.Demo.Tests.Modules
                                     branch1 => branch1
                                         .Stage(x =>
                                         {
-                                            x.Value += "111111111111111111111111->";
+                                            x.Value += "111->";
                                             return x;
                                         })),
                                 (item => true,
                                     branch1 => branch1
-                                        .Stage(x =>
+                                        .Stage((Item x, StageOption<Item, Item> stageOption) =>
                                         {
-                                            x.Value += "222222222222222222222222->";
+                                            
+                                            x.Value += "222->";
                                             return x;
                                         })))
                     ))
-                //.Delay(12000)
-                //.BulkStage(new BulkStageStage3())
+                 //.Delay(12000)
+                 //.BulkStage(new BulkStageStage3
+                .Stage((item) =>
+                {
+                    item.Value += "333->";
+                    return item;
+                })
                 .BulkStage((items) =>
                 {
                     var count = items.Count();
                     return items;
-                },
-                    new BulkStageConfiguration()
-                    {
-                        BatchItemsCount = 2,
-                        BatchItemsTimeOut = 4000
-                    })
-                .Stage<Stage4>()
+                })
+                
                 //s.Stage(Task.FromResult)
                 //.BulkDelay(5000)
                 .BulkStage((items) =>
                 {
                     var count = items.Count();
                     return items;
-                },
-                    new BulkStageConfiguration()
-                    {
-                        BatchItemsCount = 5,
-                        BatchItemsTimeOut = 4000
-                    })
+                })
+                .Stage<Stage4>()
                 .Stage((Item item, StageOption<Item, Item> stageOption) =>
                 {
 
                     if (item.Value.StartsWith("Item#0"))
                     {
-                        throw new Exception("Test exception");
+                        //throw new Exception("Test exception");
                     }
 
                     var t = DateTime.Now;
                     item.Value += $"[{t.Second + "." + t.Millisecond}]->";
 
                     return item;
-                });//.ExtensionContext(extensionContext => extensionContext.MssCall(""));
+                }).BulkStage<BulkStageStage4>();
+                //.Stage<Stage4>();//.ExtensionContext(extensionContext => extensionContext.MssCall(""));
 
 
             Stopwatch stopWatch = new Stopwatch();
@@ -309,7 +324,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
             stopWatch.Reset();
 
             //var pipeline2 = pipelineSetup.CreateAwaitable();
-
+            return;
             //run
             stopWatch.Start();
             var result2 = pipeline.Process(result).ToArray();

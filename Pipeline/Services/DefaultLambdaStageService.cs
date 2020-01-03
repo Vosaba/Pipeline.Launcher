@@ -1,13 +1,12 @@
-﻿using System;
-using PipelineLauncher.Abstractions.PipelineStage;
-using PipelineLauncher.Abstractions.Services;
+﻿using PipelineLauncher.Abstractions.Services;
 using PipelineLauncher.Abstractions.Stages;
+using System;
 
 namespace PipelineLauncher.Services
 {
     public class DefaultLambdaStageService : IStageService
     {
-        private Func<Type, IStage> _stageResolver;
+        private readonly Func<Type, IStage> _stageResolver;
 
         public DefaultLambdaStageService(Func<Type, IStage> stageResolver)
         {

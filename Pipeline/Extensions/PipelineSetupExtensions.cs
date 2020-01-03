@@ -23,7 +23,7 @@ namespace PipelineLauncher.Extensions
             });
         }
 
-        public static IPipelineSetup<TInput, TOutput> RemoveDuplicatesPermanent<TInput, TOutput>(this IPipelineSetup<TInput, TOutput> pipelineSetup, Func<TOutput, int> hashFunc = null)
+        public static IPipelineSetup<TInput, TOutput>RemoveDuplicatesPermanent<TInput, TOutput>(this IPipelineSetup<TInput, TOutput> pipelineSetup, Func<TOutput, int> hashFunc = null)
         {
             var processedHash = new ConcurrentDictionary<int, byte>();
 

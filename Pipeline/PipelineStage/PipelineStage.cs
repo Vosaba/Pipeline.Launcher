@@ -18,8 +18,22 @@ namespace PipelineLauncher.PipelineStage
 
         public async Task<PipelineStageItem<TOutput>> InternalExecute(PipelineStageItem<TInput> input, PipelineStageContext context)
         {
-            DiagnosticItem diagnosticItem = new DiagnosticItem(GetType());
-            context.ActionsSet?.DiagnosticAction?.Invoke(diagnosticItem);
+            Func<int[]> getItemsHashCode = null;
+            if (context.ActionsSet?.DiagnosticAction != null)
+            {
+                int[] itemsHashCode = null;
+                getItemsHashCode = () =>
+                {
+                    if (itemsHashCode == null)
+                    {
+                        itemsHashCode = context.ActionsSet.GetItemsHashCode(new object[] { input.Item });
+                    }
+
+                    return itemsHashCode;
+                };
+
+                context.ActionsSet?.DiagnosticAction?.Invoke(new DiagnosticItem(getItemsHashCode, GetType(), DiagnosticState.Enter));
+            }
 
             try
             {
@@ -35,6 +49,10 @@ namespace PipelineLauncher.PipelineStage
                         break;
 
                     case SkipStageItem<TInput> skipItem when typeof(TInput) == skipItem.OriginalItem.GetType():
+                        context.ActionsSet?.DiagnosticAction?.Invoke(
+                            new DiagnosticItem(
+                                () => context.ActionsSet.GetItemsHashCode(new[] { skipItem.OriginalItem }),
+                                GetType(), DiagnosticState.Process));
                         result = new PipelineStageItem<TOutput>(await ExecuteAsync((TInput) skipItem.OriginalItem,
                             context.CancellationToken));
                         break;
@@ -44,6 +62,10 @@ namespace PipelineLauncher.PipelineStage
 
                     case SkipStageItemTill<TInput> skipItemTill
                         when GetType() == skipItemTill.SkipTillType:
+                        context.ActionsSet?.DiagnosticAction?.Invoke(
+                            new DiagnosticItem(
+                                () => context.ActionsSet.GetItemsHashCode(new [] { skipItemTill.OriginalItem }),
+                                GetType(), DiagnosticState.Process));
                         result = new PipelineStageItem<TOutput>(await ExecuteAsync((TInput) skipItemTill.OriginalItem,
                             context.CancellationToken));
                         break;
@@ -53,21 +75,22 @@ namespace PipelineLauncher.PipelineStage
                         break;
 
                     default:
+                        context.ActionsSet?.DiagnosticAction?.Invoke(
+                            new DiagnosticItem(getItemsHashCode, GetType(), DiagnosticState.Process));
                         result = new PipelineStageItem<TOutput>(await ExecuteAsync(input.Item, context.CancellationToken));
                         break;
                 }
 
-                context.ActionsSet?.DiagnosticAction?.Invoke(diagnosticItem.Finish());
                 return result;
             }
             catch (NoneParamException<TOutput> e)
             {
-                context.ActionsSet?.DiagnosticAction?.Invoke(diagnosticItem.Finish(DiagnosticState.Skipped));
+                context.ActionsSet?.DiagnosticAction?.Invoke(new DiagnosticItem(getItemsHashCode, GetType(), DiagnosticState.Skip));
                 return e.StageItem;
             }
             catch (Exception e)
             {
-                context.ActionsSet?.DiagnosticAction?.Invoke(diagnosticItem.Finish(DiagnosticState.ExceptionOccured, e.Message));
+                context.ActionsSet?.DiagnosticAction?.Invoke(new DiagnosticItem(getItemsHashCode, GetType(), DiagnosticState.ExceptionOccured, e.Message));
                 return new ExceptionStageItem<TOutput>(e, context.ActionsSet?.ReExecute, GetType(), input != null ? input.Item : default);
             }
         }

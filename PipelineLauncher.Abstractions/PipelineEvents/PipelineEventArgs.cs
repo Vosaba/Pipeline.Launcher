@@ -39,43 +39,4 @@ namespace PipelineLauncher.Abstractions.PipelineEvents
             Item = item;
         }
     }
-
-    public struct DiagnosticItem
-    {
-        public Type StageType { get; }
-        public TimeSpan StartTime { get; } 
-        public TimeSpan FinishTime { get; private set; }
-
-        public DiagnosticState State { get; private set; }
-        public string Message { get; private set; }
-
-        public TimeSpan RunningTime => FinishTime - StartTime;
-
-        public DiagnosticItem(Type stageType)
-        {
-            StageType = stageType;
-            StartTime = DateTime.Now.TimeOfDay;
-            FinishTime = StartTime;
-            State = DiagnosticState.Started;
-            Message = null;
-        }
-
-        public DiagnosticItem Finish(DiagnosticState diagnosticState = DiagnosticState.Finished, string message = null)
-        {
-            FinishTime = DateTime.Now.TimeOfDay;
-            State = diagnosticState;
-            Message = message;
-
-            return this;
-        }
-    }
-
-
-    public enum DiagnosticState
-    {
-        Started,
-        Finished,
-        ExceptionOccured,
-        Skipped
-    }
 }

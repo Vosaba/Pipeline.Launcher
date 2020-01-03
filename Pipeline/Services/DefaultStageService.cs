@@ -1,8 +1,7 @@
-﻿using System.Reflection;
-using PipelineLauncher.Abstractions.PipelineStage;
-using PipelineLauncher.Abstractions.Services;
+﻿using PipelineLauncher.Abstractions.Services;
 using PipelineLauncher.Abstractions.Stages;
 using PipelineLauncher.LightInject;
+using System.Reflection;
 
 namespace PipelineLauncher.Services
 {
