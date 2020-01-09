@@ -1,13 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Threading.Tasks.Dataflow;
-using PipelineLauncher.Abstractions.Dto;
-using PipelineLauncher.Abstractions.PipelineEvents;
+﻿using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.PipelineStage;
 using PipelineLauncher.Abstractions.PipelineStage.Configurations;
-using PipelineLauncher.Abstractions.PipelineStage.Dto;
 using PipelineLauncher.Abstractions.Services;
 using PipelineLauncher.Abstractions.Stages;
 using PipelineLauncher.Blocks;
@@ -15,6 +8,11 @@ using PipelineLauncher.PipelineSetup;
 using PipelineLauncher.PipelineStage;
 using PipelineLauncher.Stages;
 using PipelineLauncher.StageSetup;
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
 
 namespace PipelineLauncher
 {
@@ -22,9 +20,19 @@ namespace PipelineLauncher
     {
         private readonly PipelineSetupContext _pipelineSetupContext;
 
-        public PipelineCreator(IStageService stageService = null)
+        public PipelineCreator()
+        {
+            _pipelineSetupContext = new PipelineSetupContext();
+        }
+
+        public PipelineCreator(IStageService stageService)
         {
             _pipelineSetupContext = new PipelineSetupContext(stageService);
+        }
+
+        public PipelineCreator(Func<Type, IStage> stageResolveFunc)
+        {
+            _pipelineSetupContext = new PipelineSetupContext(stageResolveFunc);
         }
 
         public IPipelineCreator WithToken(CancellationToken cancellationToken)
@@ -153,10 +161,10 @@ namespace PipelineLauncher
                         SingleProducerConstrained = bulkStage.Configuration.SingleProducerConstrained
                     });
 
-                buffer.LinkTo(nextBlock, new DataflowLinkOptions() { PropagateCompletion = true });
+                buffer.LinkTo(nextBlock, new DataflowLinkOptions() { PropagateCompletion = false });
                 rePostBlock = nextBlock;
 
-                buffer.Completion.ContinueWith(x => { nextBlock.Complete(); }, _pipelineSetupContext.CancellationToken);
+                buffer.Completion.ContinueWith(x => { nextBlock.Complete(); });//, _pipelineSetupContext.CancellationToken);
 
                 return DataflowBlock.Encapsulate(buffer, nextBlock);
             }

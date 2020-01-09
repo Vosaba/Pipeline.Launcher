@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading;
 
 namespace PipelineLauncher.Abstractions.PipelineRunner
 {
@@ -6,5 +7,7 @@ namespace PipelineLauncher.Abstractions.PipelineRunner
     {
         bool Post(TInput input);
         bool Post(IEnumerable<TInput> input);
+
+        new IPipelineRunner<TInput, TOutput> SetupCancellationToken(CancellationToken cancellationToken);
     }
 }

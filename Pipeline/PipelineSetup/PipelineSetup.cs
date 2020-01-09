@@ -17,6 +17,7 @@ using PipelineLauncher.PipelineRunner;
 using PipelineLauncher.PipelineStage;
 using PipelineLauncher.Stages;
 using PipelineLauncher.StageSetup;
+using System.Collections.Concurrent;
 
 namespace PipelineLauncher.PipelineSetup
 {
@@ -118,11 +119,11 @@ namespace PipelineLauncher.PipelineSetup
 
                 var currentBlock = Current.RetrieveExecutionBlock(options);
 
-                currentBlock.LinkTo(broadcastBlock);
+                currentBlock.LinkTo(broadcastBlock, new DataflowLinkOptions { PropagateCompletion = false} );
                 currentBlock.Completion.ContinueWith(x =>
                 {
                     broadcastBlock.Complete();
-                }, Context.CancellationToken);
+                });//, Context.CancellationToken);
 
 
                 return broadcastBlock;
@@ -169,9 +170,9 @@ namespace PipelineLauncher.PipelineSetup
 
                     var newBranch = branch.branch(nextBlockAfterCurrent);
 
-                    
 
-                    currentBlock.LinkTo(newBranchHead,
+
+                    currentBlock.LinkTo(newBranchHead, new DataflowLinkOptions { PropagateCompletion = false },
                         x =>
                         {
                             try
@@ -192,13 +193,13 @@ namespace PipelineLauncher.PipelineSetup
                                         throw;
                                 }
                             }
-                        });
+                        }); ;
 
                     var newBranchBlock = newBranch.Current.RetrieveExecutionBlock(options);
 
                     tailBranches[branchId] = newBranchBlock;
 
-                    newBranchBlock.LinkTo(mergeBlock); //TODO broadcast TEST 
+                    newBranchBlock.LinkTo(mergeBlock, new DataflowLinkOptions { PropagateCompletion = false } ); //TODO broadcast TEST 
 
                     newBranchBlock.Completion.ContinueWith(x =>
                     {
@@ -206,7 +207,7 @@ namespace PipelineLauncher.PipelineSetup
                         {
                             mergeBlock.Complete();
                         }
-                    }, Context.CancellationToken);
+                    });//, Context.CancellationToken);
 
                     branchId++;
                 }
@@ -217,7 +218,7 @@ namespace PipelineLauncher.PipelineSetup
                     {
                         headBranch.Complete();
                     }
-                }, Context.CancellationToken);
+                });//, Context.CancellationToken);
 
                 return mergeBlock;
             };
@@ -233,6 +234,29 @@ namespace PipelineLauncher.PipelineSetup
 
         #endregion
 
+        public IPipelineSetup<TInput, TOutput> RemoveDublicates()
+        {
+            TransformBlock<PipelineStageItem<TOutput>, PipelineStageItem<TOutput>> MakeNextBlock(StageCreationOptions options)
+            {
+                var mergeBlock = new TransformBlock<PipelineStageItem<TOutput>, PipelineStageItem<TOutput>>(x =>
+                {
+                    return x;
+                });
+
+                var currentBlock = Current.RetrieveExecutionBlock(options);
+
+                var processedHash = new ConcurrentDictionary<int, byte>();
+
+                //currentBlock.LinkTo(mergeBlock);
+
+                currentBlock.Completion.ContinueWith(x => mergeBlock.Complete());//, Context.CancellationToken);
+
+                return mergeBlock;
+            }
+
+            return CreateNextBlock(MakeNextBlock, Current.PipelineBaseConfiguration);
+        }
+
         public IPipelineSetup<TInput, TNextOutput> MergeWith<TNextOutput>(IPipelineSetup<TOutput, TNextOutput> pipelineSetup)
         {
             var nextBlock = pipelineSetup.GetFirstStage<TOutput>();
@@ -243,16 +267,16 @@ namespace PipelineLauncher.PipelineSetup
                 nextBlock.Previous = Current;
                 var currentBlock = Current.RetrieveExecutionBlock(options);
 
-                currentBlock.LinkTo(nextBlock.RetrieveExecutionBlock(options), new DataflowLinkOptions() { PropagateCompletion = true });
+                currentBlock.LinkTo(nextBlock.RetrieveExecutionBlock(options), new DataflowLinkOptions() { PropagateCompletion = false });
                 currentBlock.Completion.ContinueWith(x =>
                 {
                     nextBlock.RetrieveExecutionBlock(options).Complete();
-                }, Context.CancellationToken);
+                });//, Context.CancellationToken);
 
                 currentBlock.Completion.ContinueWith(x =>
                 {
                     nextBlock.RetrieveExecutionBlock(options).Complete();
-                }, Context.CancellationToken);
+                });//, Context.CancellationToken);
 
                 return pipelineSetup.Current.RetrieveExecutionBlock(options);
             };
@@ -277,13 +301,13 @@ namespace PipelineLauncher.PipelineSetup
         public IAwaitablePipelineRunner<TInput, TOutput> CreateAwaitable(AwaitablePipelineConfig pipelineConfig = null)
         {
             IStageSetupIn<TInput> firstStageSetup = this.GetFirstStage<TInput>();
-            return new AwaitablePipelineRunner<TInput, TOutput>(firstStageSetup.RetrieveExecutionBlock, Current.RetrieveExecutionBlock, Context.CancellationToken, () => firstStageSetup.DestroyStageBlocks(), pipelineConfig);
+            return new AwaitablePipelineRunner<TInput, TOutput>(firstStageSetup.RetrieveExecutionBlock, Current.RetrieveExecutionBlock, Context, () => firstStageSetup.DestroyStageBlocks(), pipelineConfig);
         }
 
         public IPipelineRunner<TInput, TOutput> Create(PipelineConfig pipelineConfig = null)
         {
             IStageSetupIn<TInput> firstStageSetup = this.GetFirstStage<TInput>();
-            return new PipelineRunner<TInput, TOutput>(firstStageSetup.RetrieveExecutionBlock, Current.RetrieveExecutionBlock, Context.CancellationToken, pipelineConfig);
+            return new PipelineRunner<TInput, TOutput>(firstStageSetup.RetrieveExecutionBlock, Current.RetrieveExecutionBlock, Context, pipelineConfig);
         }
 
         private PipelineSetup<TInput, TNextOutput> CreateNextStage<TNextOutput>(IPipelineStage<TOutput, TNextOutput> stage)
@@ -311,12 +335,12 @@ namespace PipelineLauncher.PipelineSetup
                 rePostBlock = nextBlock;
                 var currentBlock = Current.RetrieveExecutionBlock(options);
 
-                currentBlock.LinkTo(nextBlock, new DataflowLinkOptions() { PropagateCompletion = true });
+                currentBlock.LinkTo(nextBlock, new DataflowLinkOptions() { PropagateCompletion = false });
                 currentBlock.Completion.ContinueWith(x =>
                 {
                     //DiagnosticAction?.Invoke(new DiagnosticItem)
                     nextBlock.Complete();
-                }, Context.CancellationToken);
+                });//, Context.CancellationToken);
 
                 return nextBlock;
             }
@@ -355,23 +379,23 @@ namespace PipelineLauncher.PipelineSetup
                         SingleProducerConstrained = stage.Configuration.SingleProducerConstrained
                     });
 
-                buffer.LinkTo(nextBlock, new DataflowLinkOptions() { PropagateCompletion = true });
+                buffer.LinkTo(nextBlock, new DataflowLinkOptions() { PropagateCompletion = false });
                 rePostBlock = nextBlock;
 
                 buffer.Completion.ContinueWith(x =>
                 {
                     nextBlock.Complete();
-                }, Context.CancellationToken);
+                });//, Context.CancellationToken);
 
                 var next = DataflowBlock.Encapsulate(buffer, nextBlock);
                 var currentBlock = Current.RetrieveExecutionBlock(options);
 
-                currentBlock.LinkTo(next, new DataflowLinkOptions() { PropagateCompletion = true });
+                currentBlock.LinkTo(next, new DataflowLinkOptions() { PropagateCompletion = false });
 
                 currentBlock.Completion.ContinueWith(x =>
                 {
                     next.Complete();
-                }, Context.CancellationToken);
+                });//, Context.CancellationToken);
 
                 return next;
             }

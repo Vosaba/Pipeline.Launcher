@@ -1,4 +1,5 @@
 ﻿using PipelineLauncher.Abstractions.PipelineEvents;
+using System.Threading;
 
 namespace PipelineLauncher.Abstractions.PipelineRunner
 {
@@ -7,5 +8,7 @@ namespace PipelineLauncher.Abstractions.PipelineRunner
         event ItemReceivedEventHandler<TOutput> ItemReceivedEvent;
         event ExceptionItemsReceivedEventHandler ExceptionItemsReceivedEvent;
         event SkippedItemReceivedEventHandler SkippedItemReceivedEvent;
+
+        public IPipelineRunnerBase<TInput, TOutput> SetupCancellationToken(CancellationToken cancellationToken);
     }
 }

@@ -16,6 +16,7 @@ using PipelineLauncher.Abstractions.PipelineStage.Dto;
 using PipelineLauncher.Extensions;
 using Xunit;
 using Xunit.Abstractions;
+using PipelineLauncher.Abstractions.Stages;
 
 namespace PipelineLauncher.Demo.Tests.Modules
 {
@@ -199,20 +200,20 @@ namespace PipelineLauncher.Demo.Tests.Modules
             var y = t.GetReferencedAssemblies();
 
             //Test input 6 items
-            List<Item> input = MakeInput(5);
+            List<Item> input = MakeInput(2);
 
             CancellationTokenSource source = new CancellationTokenSource();
 
             //Configure stages
             var pipelineSetup = PipelineCreator
-                .WithToken(source.Token)
-                .WithDiagnostic(item =>
-                {
-                    if (item.State == DiagnosticState.Process)
-                    {
-                        Output.WriteLine($"{item.StageName}: '{string.Join("'; '", item.ItemsHashCode)}'");
-                    }
-                })
+                //.WithToken(source.Token)
+                //.WithDiagnostic(item =>
+                //{
+                //    if (item.State == DiagnosticState.Process)
+                //    {
+                //        Output.WriteLine($"{item.StageName}: '{string.Join("'; '", item.ItemsHashCode)}'");
+                //    }
+                //})
                 //.Prepare<Item>()
                 .Stage(new Stage1())
                 .Stage<Stage1>()
@@ -226,17 +227,10 @@ namespace PipelineLauncher.Demo.Tests.Modules
                     return item;
                 })
                 .Branch(
-                    (item => item.Value == "Item#1->AsyncStage1->",
+                    (item => item.Value.StartsWith("Item#1->"),
                         branch => branch
                             .Stage<Stage2>()
-                            .BulkStage(items =>
-                            {
-                                var itemsArray = items.ToList();
-
-                                itemsArray.Add(new Item("Item#NEW->"));
-
-                                return itemsArray;
-                            })
+                            
                     ),
                     (item => true,
                         branch => branch
@@ -254,31 +248,23 @@ namespace PipelineLauncher.Demo.Tests.Modules
                                     branch1 => branch1
                                         .Stage((Item x, StageOption<Item, Item> stageOption) =>
                                         {
-                                            
+
                                             x.Value += "222->";
                                             return x;
                                         })))
                     ))
-                 //.Delay(12000)
-                 //.BulkStage(new BulkStageStage3
+                //.Delay(12000)
+                //.BulkStage(new BulkStageStage3
                 .Stage((item) =>
                 {
                     item.Value += "333->";
                     return item;
                 })
-                .BulkStage((items) =>
-                {
-                    var count = items.Count();
-                    return items;
-                })
                 
+
                 //s.Stage(Task.FromResult)
                 //.BulkDelay(5000)
-                .BulkStage((items) =>
-                {
-                    var count = items.Count();
-                    return items;
-                })
+                
                 .Stage<Stage4>()
                 .Stage((Item item, StageOption<Item, Item> stageOption) =>
                 {
@@ -292,7 +278,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
                     item.Value += $"[{t.Second + "." + t.Millisecond}]->";
 
                     return item;
-                }).BulkStage<BulkStageStage4>();
+                });
                 //.Stage<Stage4>();//.ExtensionContext(extensionContext => extensionContext.MssCall(""));
 
 
@@ -314,9 +300,11 @@ namespace PipelineLauncher.Demo.Tests.Modules
 
             };
 
+            //source.CancelAfter(4900);
+
             //run
             stopWatch.Start();
-            var result = pipeline.Process(input).ToArray();
+            var result = pipeline.SetupCancellationToken(source.Token).Process(input).ToArray();
 
             stopWatch.Stop();
 
@@ -386,7 +374,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
             List<Item> input = MakeInput(6);
 
             //Configure stages
-            var stageSetup = new PipelineCreator(new FakeServicesRegistry.StageService())
+            var stageSetup = new PipelineCreator(t => (IStage)Activator.CreateInstance(t))
                 .BulkStage(new BulkStageStage1())
                 .BulkStage(new BulkStageStage2())//, new Stage2Alternative())
                 .BulkStage(new BulkStageStage4())
