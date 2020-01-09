@@ -51,4 +51,12 @@ namespace PipelineLauncher.Dataflow
 
         #endregion
     }
+
+    public class FF
+    {
+        public FF()
+        {
+            
+        }
+    }
 }

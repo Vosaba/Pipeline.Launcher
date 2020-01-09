@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using PipelineLauncher.Dataflow;
 
 namespace PipelineLauncher.Demo.Tests.Stages
 {
@@ -123,6 +124,11 @@ namespace PipelineLauncher.Demo.Tests.Stages
     public class Stage4 : Stage<Item>
     {
 
+        public Stage4(FF df)
+        {
+            
+        }
+        
         public override async Task<Item> ExecuteAsync(Item item)
         {
             item.Value = item.Value + "AsyncStage4->";
