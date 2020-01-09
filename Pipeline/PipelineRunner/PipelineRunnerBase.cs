@@ -3,16 +3,18 @@ using System.Threading;
 using System.Threading.Tasks.Dataflow;
 using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.PipelineEvents;
+using PipelineLauncher.Abstractions.PipelineRunner;
 using PipelineLauncher.Abstractions.PipelineStage;
+using PipelineLauncher.PipelineSetup;
 using PipelineLauncher.PipelineStage;
 
 namespace PipelineLauncher.PipelineRunner
 {
-    internal abstract class PipelineRunnerBase<TInput, TOutput>
+    internal abstract class PipelineRunnerBase<TInput, TOutput> : IPipelineRunnerBase<TInput, TOutput>
     {
         protected abstract StageCreationOptions CreationOptions { get; }
 
-        protected readonly CancellationToken CancellationToken;
+        protected readonly PipelineSetupContext PipelineSetupContext;
 
         protected Func<StageCreationOptions, bool, ITargetBlock<PipelineStageItem<TInput>>> RetrieveFirstBlock;
         protected Func<StageCreationOptions, bool, ISourceBlock<PipelineStageItem<TOutput>>> RetrieveLastBlock;
@@ -25,9 +27,9 @@ namespace PipelineLauncher.PipelineRunner
         internal PipelineRunnerBase(
             Func<StageCreationOptions, bool, ITargetBlock<PipelineStageItem<TInput>>> retrieveFirstBlock,
             Func<StageCreationOptions, bool, ISourceBlock<PipelineStageItem<TOutput>>> retrieveLastBlock,
-            CancellationToken cancellationToken)
+            PipelineSetupContext pipelineSetupContext)
         {
-            CancellationToken = cancellationToken;
+            PipelineSetupContext = pipelineSetupContext;
 
             RetrieveFirstBlock = retrieveFirstBlock;
             RetrieveLastBlock = retrieveLastBlock;
@@ -52,8 +54,19 @@ namespace PipelineLauncher.PipelineRunner
 
                 block.LinkTo(sortingBlock, new DataflowLinkOptions { PropagateCompletion = false });
 
+                block.Completion.ContinueWith(e =>
+                {
+                    sortingBlock.Complete();
+                });//, PipelineSetupContext.CancellationToken);
+
                 return sortingBlock;
             };
+        }
+
+        public IPipelineRunnerBase<TInput, TOutput> SetupCancellationToken(CancellationToken cancellationToken)
+        {
+            PipelineSetupContext.SetupCancellationToken(cancellationToken);
+            return this;
         }
     }
 }

@@ -9,6 +9,7 @@ using System.Threading.Tasks.Dataflow;
 using PipelineLauncher.Abstractions.PipelineRunner;
 using PipelineLauncher.Abstractions.PipelineRunner.Configurations;
 using PipelineLauncher.Abstractions.PipelineStage;
+using PipelineLauncher.PipelineSetup;
 
 namespace PipelineLauncher.PipelineRunner
 {
@@ -24,10 +25,10 @@ namespace PipelineLauncher.PipelineRunner
         internal AwaitablePipelineRunner(
             Func<StageCreationOptions, bool, ITargetBlock<PipelineStageItem<TInput>>> retrieveFirstBlock,
             Func<StageCreationOptions, bool, ISourceBlock<PipelineStageItem<TOutput>>> retrieveLastBlock,
-            CancellationToken cancellationToken,
+            PipelineSetupContext pipelineSetupContext,
             Action destroyTaskStages,
             AwaitablePipelineConfig pipelineConfig)
-            : base(retrieveFirstBlock, retrieveLastBlock, cancellationToken)
+            : base(retrieveFirstBlock, retrieveLastBlock, pipelineSetupContext)
         {
             _destroyTaskStages = destroyTaskStages;
             PipelineConfig = pipelineConfig ?? new AwaitablePipelineConfig();
@@ -60,7 +61,7 @@ namespace PipelineLauncher.PipelineRunner
             lastBlock.Completion.ContinueWith(x =>
             {
                 sortingBlock.Complete();
-            });
+            });//, PipelineSetupContext.CancellationToken);
 
             sortingBlock.Completion.Wait();
 
@@ -77,5 +78,8 @@ namespace PipelineLauncher.PipelineRunner
         {
             throw items.Exception;
         }
+
+        IAwaitablePipelineRunner<TInput, TOutput> IAwaitablePipelineRunner<TInput, TOutput>.SetupCancellationToken(CancellationToken cancellationToken) 
+            => (IAwaitablePipelineRunner<TInput, TOutput>)SetupCancellationToken(cancellationToken);
     }
 }

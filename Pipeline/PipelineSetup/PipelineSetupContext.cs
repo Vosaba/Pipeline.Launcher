@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using System.Threading.Tasks;
 using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.PipelineEvents;
 using PipelineLauncher.Abstractions.PipelineStage;
@@ -14,7 +15,9 @@ namespace PipelineLauncher.PipelineSetup
     {
         private IStageService _stageService;
         private Action<DiagnosticItem> _diagnosticAction;
-        public Func<object[], int[]> _getItemsIdentify;
+        private Func<object[], int[]> _getItemsIdentify;
+
+        public TaskContinuationOptions TaskContinuationOptions = TaskContinuationOptions.ExecuteSynchronously;
 
         public bool TryUseDefaultServiceResolver { get; set; } = true;
 
@@ -40,9 +43,19 @@ namespace PipelineLauncher.PipelineSetup
             }
         }
 
+        public PipelineSetupContext()
+        {
+
+        }
+
         public  PipelineSetupContext(IStageService stageService)
         {
             _stageService = stageService;
+        }
+
+        public PipelineSetupContext(Func<Type, IStage> stageResolveFunc)
+        {
+            _stageService = new DefaultLambdaStageService(stageResolveFunc);
         }
 
         public PipelineSetupContext SetupStageService(IStageService stageService)
@@ -51,9 +64,9 @@ namespace PipelineLauncher.PipelineSetup
             return this;
         }
 
-        public PipelineSetupContext SetupStageService(Func<Type, IStage> stageService)
+        public PipelineSetupContext SetupStageService(Func<Type, IStage> stageResolveFunc)
         {
-            _stageService = new DefaultLambdaStageService(stageService);
+            _stageService = new DefaultLambdaStageService(stageResolveFunc);
             return this;
         }
 
