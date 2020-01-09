@@ -12,7 +12,7 @@ namespace PipelineLauncher.Services
 
         public TPipelineStage GetStageInstance<TPipelineStage>() where TPipelineStage : class, IStage
         {
-            if (!_isAssemblyRegistered)
+            if (!_isAssemblyRegistered || (_container.TryGetInstance<TPipelineStage>()) == default(TPipelineStage))
             {
                 _container.RegisterAssembly(Assembly.GetAssembly(typeof(TPipelineStage)));
 
