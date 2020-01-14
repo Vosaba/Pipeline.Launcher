@@ -18,6 +18,8 @@ namespace PipelineLauncher.PipelineStage
 
         public async Task<PipelineStageItem<TOutput>> InternalExecute(PipelineStageItem<TInput> input, PipelineStageContext context)
         {
+            context.ActionsSet.Processed?.Invoke(1);
+
             Func<int[]> getItemsHashCode = null;
             if (context.ActionsSet?.DiagnosticAction != null)
             {
@@ -81,6 +83,7 @@ namespace PipelineLauncher.PipelineStage
                         break;
                 }
 
+                context.ActionsSet.Processed?.Invoke(-1);
                 return result;
             }
             catch (NoneParamException<TOutput> e)
@@ -90,6 +93,7 @@ namespace PipelineLauncher.PipelineStage
             }
             catch (Exception e)
             {
+                context.ActionsSet?.Processed(0);
                 context.ActionsSet?.DiagnosticAction?.Invoke(new DiagnosticItem(getItemsHashCode, GetType(), DiagnosticState.ExceptionOccured, e.Message));
                 return new ExceptionStageItem<TOutput>(e, context.ActionsSet?.ReExecute, GetType(), input != null ? input.Item : default);
             }

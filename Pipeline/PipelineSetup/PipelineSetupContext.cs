@@ -88,12 +88,12 @@ namespace PipelineLauncher.PipelineSetup
             return this;
         }
 
-        public PipelineStageContext GetPipelineStageContext(Action reExecute)
+        public PipelineStageContext GetPipelineStageContext(Action reExecute, Action<int> processed)
         {
             return new PipelineStageContext(
                 CancellationToken, 
                 reExecute != null || _diagnosticAction != null ? 
-                    new ActionsSet(reExecute, _diagnosticAction, _getItemsIdentify) 
+                    new ActionsSet(reExecute, processed, _diagnosticAction, _getItemsIdentify) 
                     : null);
         }
     }

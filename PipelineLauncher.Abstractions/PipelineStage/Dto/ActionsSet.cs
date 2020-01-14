@@ -1,15 +1,15 @@
 using System;
 using System.Linq;
 using PipelineLauncher.Abstractions.Dto;
-using PipelineLauncher.Abstractions.PipelineEvents;
 
 namespace PipelineLauncher.Abstractions.PipelineStage.Dto
 {
     public class ActionsSet
     {
-        public ActionsSet(Action reExecute, Action<DiagnosticItem> diagnosticAction, Func<object[], int[]> getItemsIdentify)
+        public ActionsSet(Action reExecute, Action<int> processed, Action<DiagnosticItem> diagnosticAction, Func<object[], int[]> getItemsIdentify)
         {
             ReExecute = reExecute;
+            Processed = processed;
             DiagnosticAction = diagnosticAction;
 
             if (getItemsIdentify != null)
@@ -26,6 +26,7 @@ namespace PipelineLauncher.Abstractions.PipelineStage.Dto
         }
 
         public Action ReExecute { get; }
+        public Action<int> Processed { get; }
         public Action<DiagnosticItem> DiagnosticAction { get; }
         public Func<object[], int[]> GetItemsHashCode { get; }
     }

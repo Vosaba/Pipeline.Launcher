@@ -200,7 +200,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
             var y = t.GetReferencedAssemblies();
 
             //Test input 6 items
-            List<Item> input = MakeInput(2);
+            List<Item> input = MakeInput(5);
 
             CancellationTokenSource source = new CancellationTokenSource();
 
@@ -216,69 +216,69 @@ namespace PipelineLauncher.Demo.Tests.Modules
                 //})
                 //.Prepare<Item>()
                 .Stage(new Stage1())
-                .Stage<Stage1>()
                 .Stage((Item item, StageOption<Item, Item> option) =>
                 {
-                    if (item.Value.StartsWith("Item#2->"))
+                    if (item.Value.StartsWith("Item#3->"))
                     {
-                        return option.SkipTo<Stage4>(item);
+                        throw new Exception();
+                        //return option.SkipTo<Stage4>(item);
                     }
-
-                    return item;
-                })
-                .Branch(
-                    (item => item.Value.StartsWith("Item#1->"),
-                        branch => branch
-                            .Stage<Stage2>()
-                            
-                    ),
-                    (item => true,
-                        branch => branch
-                            .Stage<Stage2>()
-                            .Stage<Stage2>()
-                            .Broadcast(
-                                (item => true, //=> "Item#NEW->AsyncStage3->AsyncStage4->Stage4->AsyncStage1->",
-                                    branch1 => branch1
-                                        .Stage(x =>
-                                        {
-                                            x.Value += "111->";
-                                            return x;
-                                        })),
-                                (item => true,
-                                    branch1 => branch1
-                                        .Stage((Item x, StageOption<Item, Item> stageOption) =>
-                                        {
-
-                                            x.Value += "222->";
-                                            return x;
-                                        })))
-                    ))
-                //.Delay(12000)
-                //.BulkStage(new BulkStageStage3
-                .Stage((item) =>
-                {
-                    item.Value += "333->";
-                    return item;
-                })
-                
-
-                //s.Stage(Task.FromResult)
-                //.BulkDelay(5000)
-                
-                .Stage<Stage4>()
-                .Stage((Item item, StageOption<Item, Item> stageOption) =>
-                {
-
-                    if (item.Value.StartsWith("Item#0"))
-                    {
-                        //throw new Exception("Test exception");
-                    }
-
-                    var t = DateTime.Now;
-                    item.Value += $"[{t.Second + "." + t.Millisecond}]->";
 
                     return item;
                 });
+                //.Branch(
+                //    (item => item.Value.StartsWith("Item#1->"),
+                //        branch => branch
+                //            .Stage<Stage2>()
+                            
+                //    ),
+                //    (item => true,
+                //        branch => branch
+                //            .Stage<Stage2>()
+                //            .Stage<Stage2>()
+                //            .Broadcast(
+                //                (item => true, // => "Item#NEW->AsyncStage3->AsyncStage4->Stage4->AsyncStage1->",
+                //                    branch1 => branch1
+                //                        .Stage(x =>
+                //                        {
+                //                            x.Value += "111->";
+                //                            return x;
+                //                        })),
+                //                (item => true,
+                //                    branch1 => branch1
+                //                        .Stage((Item x, StageOption<Item, Item> stageOption) =>
+                //                        {
+
+                //                            x.Value += "222->";
+                //                            return x;
+                //                        })))
+                //    ))
+                //.Delay(12000)
+                //.BulkStage(new BulkStageStage3
+                //.Stage((item) =>
+                //{
+                //    item.Value += "333->";
+                //    return item;
+                //})
+                
+
+                ////s.Stage(Task.FromResult)
+                ////.BulkDelay(5000)
+                
+                //.Stage<Stage4>()
+                //.Stage((Item item, StageOption<Item, Item> stageOption) =>
+                //{
+
+                //    if (item.Value.StartsWith("Item#0"))
+                //    {
+                //        //throw new Exception("Test exception");
+                //    }
+
+                //    var t = DateTime.Now;
+                //    item.Value += $"[{t.Second + "." + t.Millisecond}]->";
+
+                //    return item;
+                //});
                 //.Stage<Stage4>();//.ExtensionContext(extensionContext => extensionContext.MssCall(""));
 
 
@@ -297,7 +297,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
 
             pipeline.ExceptionItemsReceivedEvent += delegate (ExceptionItemsEventArgs args)
             {
-
+                args.ReProcess();
             };
 
             //source.CancelAfter(4900);
@@ -344,9 +344,9 @@ namespace PipelineLauncher.Demo.Tests.Modules
 
             var pipeline = pipelineSetup.CreateAwaitable();
 
-            pipeline.ExceptionItemsReceivedEvent += delegate (ExceptionItemsEventArgs items)
+            pipeline.ExceptionItemsReceivedEvent += delegate (ExceptionItemsEventArgs args)
             {
-
+                args.ReProcess();
             };
 
             //run
