@@ -18,8 +18,6 @@ namespace PipelineLauncher.PipelineStage
 
         public async Task<PipelineStageItem<TOutput>> InternalExecute(PipelineStageItem<TInput> input, PipelineStageContext context)
         {
-            context.ActionsSet.Processed?.Invoke(1);
-
             Func<int[]> getItemsHashCode = null;
             if (context.ActionsSet?.DiagnosticAction != null)
             {
@@ -55,7 +53,7 @@ namespace PipelineLauncher.PipelineStage
                             new DiagnosticItem(
                                 () => context.ActionsSet.GetItemsHashCode(new[] { skipItem.OriginalItem }),
                                 GetType(), DiagnosticState.Process));
-                        result = new PipelineStageItem<TOutput>(await ExecuteAsync((TInput) skipItem.OriginalItem,
+                        result = new PipelineStageItem<TOutput>(await ExecuteAsync((TInput)skipItem.OriginalItem,
                             context.CancellationToken));
                         break;
                     case SkipStageItem<TInput> skipItem when typeof(TInput) != skipItem.OriginalItem.GetType():
@@ -66,9 +64,9 @@ namespace PipelineLauncher.PipelineStage
                         when GetType() == skipItemTill.SkipTillType:
                         context.ActionsSet?.DiagnosticAction?.Invoke(
                             new DiagnosticItem(
-                                () => context.ActionsSet.GetItemsHashCode(new [] { skipItemTill.OriginalItem }),
+                                () => context.ActionsSet.GetItemsHashCode(new[] { skipItemTill.OriginalItem }),
                                 GetType(), DiagnosticState.Process));
-                        result = new PipelineStageItem<TOutput>(await ExecuteAsync((TInput) skipItemTill.OriginalItem,
+                        result = new PipelineStageItem<TOutput>(await ExecuteAsync((TInput)skipItemTill.OriginalItem,
                             context.CancellationToken));
                         break;
                     case SkipStageItemTill<TInput> skipItemTill
@@ -83,7 +81,6 @@ namespace PipelineLauncher.PipelineStage
                         break;
                 }
 
-                context.ActionsSet.Processed?.Invoke(-1);
                 return result;
             }
             catch (NoneParamException<TOutput> e)
@@ -93,7 +90,24 @@ namespace PipelineLauncher.PipelineStage
             }
             catch (Exception e)
             {
-                context.ActionsSet?.Processed(0);
+                if (context.ActionsSet?.ExceptionFunc != null)
+                {
+                    var shouldBeReExecuted = false;
+
+                    context.ActionsSet?
+                       .ExceptionFunc(
+                           new ExceptionItemsEventArgs(
+                               new object[] { input }, 
+                               GetType(), 
+                               e,
+                               () => { shouldBeReExecuted = true; }));
+
+                    if (shouldBeReExecuted)
+                    {
+                        return await InternalExecute(input, context);
+                    }
+                }
+
                 context.ActionsSet?.DiagnosticAction?.Invoke(new DiagnosticItem(getItemsHashCode, GetType(), DiagnosticState.ExceptionOccured, e.Message));
                 return new ExceptionStageItem<TOutput>(e, context.ActionsSet?.ReExecute, GetType(), input != null ? input.Item : default);
             }

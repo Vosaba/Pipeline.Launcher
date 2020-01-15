@@ -200,7 +200,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
             var y = t.GetReferencedAssemblies();
 
             //Test input 6 items
-            List<Item> input = MakeInput(5);
+            List<Item> input = MakeInput(2);
 
             CancellationTokenSource source = new CancellationTokenSource();
 
@@ -218,14 +218,15 @@ namespace PipelineLauncher.Demo.Tests.Modules
                 .Stage(new Stage1())
                 .Stage((Item item, StageOption<Item, Item> option) =>
                 {
-                    if (item.Value.StartsWith("Item#3->"))
+                    if (item.Value.StartsWith("Item#0->"))
                     {
                         throw new Exception();
                         //return option.SkipTo<Stage4>(item);
                     }
 
                     return item;
-                });
+                })
+                .Stage(new Stage2());
                 //.Branch(
                 //    (item => item.Value.StartsWith("Item#1->"),
                 //        branch => branch
@@ -297,14 +298,20 @@ namespace PipelineLauncher.Demo.Tests.Modules
 
             pipeline.ExceptionItemsReceivedEvent += delegate (ExceptionItemsEventArgs args)
             {
-                args.ReProcess();
+                //args.ReProcess();
             };
 
             //source.CancelAfter(4900);
 
             //run
             stopWatch.Start();
-            var result = pipeline.SetupCancellationToken(source.Token).Process(input).ToArray();
+            var result = pipeline
+                .SetupCancellationToken(source.Token)
+                .SetupExceptionHandler(args =>
+                {
+                    args.ReProcess();
+                })
+                .Process(input).ToArray();
 
             stopWatch.Stop();
 

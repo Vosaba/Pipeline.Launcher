@@ -175,6 +175,11 @@ namespace PipelineLauncher.PipelineSetup
                     currentBlock.LinkTo(newBranchHead, new DataflowLinkOptions { PropagateCompletion = false },
                         x =>
                         {
+                            if (x == null)
+                            {
+                                return false;
+                            }
+
                             try
                             {
                                 return branch.predicate(x.Item);
@@ -317,26 +322,13 @@ namespace PipelineLauncher.PipelineSetup
 
                 TransformBlock<PipelineStageItem<TOutput>, PipelineStageItem<TNextOutput>> rePostBlock = null;
 
-                int processedCount = 0;
-                Action<int> processed = (int count) =>
-                {
-                    processedCount += count;
-                };
-
-
                 void RePostMessage(PipelineStageItem<TOutput> message)
                 {
-                    completed = () =>
-                    {
-                        rePostBlock?.Complete();
-                    };
-                    rePostBlock?.Post(message);
-
-                    //() => rePostBlock.Complete();
+                     rePostBlock?.Post(message);
                 }
 
                 var nextBlock = new TransformBlock<PipelineStageItem<TOutput>, PipelineStageItem<TNextOutput>>(
-                    async x => await stage.InternalExecute(x, Context.GetPipelineStageContext(() => RePostMessage(x), processed)),
+                    async x => await stage.InternalExecute(x, Context.GetPipelineStageContext(() => RePostMessage(x))),
                     new ExecutionDataflowBlockOptions
                     {
                         MaxDegreeOfParallelism = stage.Configuration.MaxDegreeOfParallelism,
@@ -352,10 +344,8 @@ namespace PipelineLauncher.PipelineSetup
                 currentBlock.Completion.ContinueWith(x =>
                 {
                     //DiagnosticAction?.Invoke(new DiagnosticItem)
-                    if (nextBlock.InputCount != 0 && isSuccess)
-                    {
+
                         nextBlock.Complete();
-                    }
 
                 });//, Context.CancellationToken);
 
@@ -380,21 +370,14 @@ namespace PipelineLauncher.PipelineSetup
                 }
 
                 TransformManyBlock<IEnumerable<PipelineStageItem<TOutput>>, PipelineStageItem<TNextOutput>> rePostBlock = null;
-                Action completed = null;
-                bool isSuccess = true;
-                Action failed = () => isSuccess = false;
 
                 void RePostMessages(IEnumerable<PipelineStageItem<TOutput>> messages)
                 {
-                    completed = () =>
-                    {
-                        rePostBlock?.Complete();
-                    };
                     rePostBlock?.Post(messages);
                 }
 
                 var nextBlock = new TransformManyBlock<IEnumerable<PipelineStageItem<TOutput>>, PipelineStageItem<TNextOutput>>(
-                    async x => await stage.InternalExecute(x, Context.GetPipelineStageContext(() => RePostMessages(x), completed, failed)),
+                    async x => await stage.InternalExecute(x, Context.GetPipelineStageContext(() => RePostMessages(x))),
                     new ExecutionDataflowBlockOptions
                     {
                         MaxDegreeOfParallelism = stage.Configuration.MaxDegreeOfParallelism,
@@ -418,7 +401,6 @@ namespace PipelineLauncher.PipelineSetup
 
                 currentBlock.Completion.ContinueWith(x =>
                 {
-                    if(isSuccess)
                     next.Complete();
                 });//, Context.CancellationToken);
 

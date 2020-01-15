@@ -144,25 +144,16 @@ namespace PipelineLauncher
                 }
 
                 TransformManyBlock<IEnumerable<PipelineStageItem<TInput>>, PipelineStageItem<TOutput>> rePostBlock = null;
-                Action completed = null;
-                bool isSuccess = true;
-                Action failed = () => isSuccess = false;
 
                 void RePostMessages(IEnumerable<PipelineStageItem<TInput>> messages)
                 {
-                    completed = () => 
-                    {
-                        rePostBlock?.Complete();
-                    };
                     rePostBlock?.Post(messages);
                 }
 
                 var nextBlock = new TransformManyBlock<IEnumerable<PipelineStageItem<TInput>>, PipelineStageItem<TOutput>>(
                     async e => await bulkStage
                         .InternalExecute(e, _pipelineSetupContext
-                        .GetPipelineStageContext(() => RePostMessages(e),
-                        completed, 
-                        failed)),
+                        .GetPipelineStageContext(() => RePostMessages(e))),
                     new ExecutionDataflowBlockOptions
                     {
                         MaxDegreeOfParallelism = bulkStage.Configuration.MaxDegreeOfParallelism,
@@ -176,7 +167,6 @@ namespace PipelineLauncher
 
                 buffer.Completion.ContinueWith(x => 
                 { 
-                    if(isSuccess)
                        nextBlock.Complete(); 
                 });//, _pipelineSetupContext.CancellationToken);
 
@@ -192,23 +182,15 @@ namespace PipelineLauncher
             {
                 TransformBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>> rePostBlock = null;
 
-                Action completed = null;
-                bool isSuccess = true;
-                Action failed = () => isSuccess = false;
-
                 void RePostMessage(PipelineStageItem<TInput> message)
                 {
-                    completed = () =>
-                    {
-                        rePostBlock?.Complete();
-                    };
                     rePostBlock?.Post(message);
                 }
 
                 var nextBlock = new TransformBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>>(
                     async e => await stage.InternalExecute(e, 
                     _pipelineSetupContext.
-                    GetPipelineStageContext(() => RePostMessage(e), completed, failed)),
+                    GetPipelineStageContext(() => RePostMessage(e))),
                     new ExecutionDataflowBlockOptions
                     {
                         MaxDegreeOfParallelism = stage.Configuration.MaxDegreeOfParallelism,

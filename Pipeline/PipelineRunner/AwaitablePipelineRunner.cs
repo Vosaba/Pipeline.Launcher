@@ -68,6 +68,11 @@ namespace PipelineLauncher.PipelineRunner
             return _processedItems;
         }
 
+        public IAwaitablePipelineRunner<TInput, TOutput> SetupExceptionHandler(Action<ExceptionItemsEventArgs> exceptionHandler)
+        {
+            PipelineSetupContext.SetupExceptionFunc(exceptionHandler);
+            return this;
+        }
 
         private void AwaitablePipeline_ItemReceivedEvent(TOutput item)
         {

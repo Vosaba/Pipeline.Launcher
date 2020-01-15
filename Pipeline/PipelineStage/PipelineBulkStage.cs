@@ -99,12 +99,10 @@ namespace PipelineLauncher.PipelineStage
                             GetType(), DiagnosticState.Process));
                 }
 
-                context.ActionsSet.Processed?.Invoke();
                 return result;
             }
             catch (Exception ex)
             {
-                context.ActionsSet?.Failed();
                 context.ActionsSet?.DiagnosticAction?.Invoke(
                     new DiagnosticItem(
                         () => context.ActionsSet.GetItemsHashCode(inputArray.Select(e => e.Item).Cast<object>().ToArray()),

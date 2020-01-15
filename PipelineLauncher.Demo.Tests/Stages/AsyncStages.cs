@@ -41,7 +41,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
     }
     public class Stage2 : Stage<Item>
     {
-        public Stage2(F s )
+        public Stage2()
         {
             
         }
