@@ -343,7 +343,7 @@ namespace PipelineLauncher.PipelineSetup
                 currentBlock.LinkTo(nextBlock, new DataflowLinkOptions() { PropagateCompletion = false });
                 currentBlock.Completion.ContinueWith(x =>
                 {
-                    //DiagnosticAction?.Invoke(new DiagnosticItem)
+                    //DiagnosticHandler?.Invoke(new DiagnosticItem)
 
                         nextBlock.Complete();
 

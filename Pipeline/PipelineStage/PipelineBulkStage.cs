@@ -21,7 +21,7 @@ namespace PipelineLauncher.PipelineStage
         {
             var inputArray = input.ToArray();
 
-            context.ActionsSet?.DiagnosticAction?.Invoke(
+            context.ActionsSet?.DiagnosticHandler?.Invoke(
                 new DiagnosticItem(
                     () => context.ActionsSet.GetItemsHashCode(inputArray.Select(e => e.Item).Cast<object>().ToArray()), 
                     GetType(), DiagnosticState.Enter));
@@ -40,7 +40,7 @@ namespace PipelineLauncher.PipelineStage
                 if (removeAndExceptionItems.Any())
                 {
                     result.AddRange(removeAndExceptionItems);
-                    context.ActionsSet?.DiagnosticAction?.Invoke(
+                    context.ActionsSet?.DiagnosticHandler?.Invoke(
                         new DiagnosticItem(
                             () => context.ActionsSet.GetItemsHashCode(removeAndExceptionItems.Cast<object>().ToArray()),
                             GetType(), DiagnosticState.Skip));
@@ -60,7 +60,7 @@ namespace PipelineLauncher.PipelineStage
                 if (skipItemsWithoutProcess.Any())
                 {
                     result.AddRange(skipItemsWithoutProcess);
-                    context.ActionsSet?.DiagnosticAction?.Invoke(
+                    context.ActionsSet?.DiagnosticHandler?.Invoke(
                         new DiagnosticItem(
                             () => context.ActionsSet.GetItemsHashCode(skipItemsWithoutProcess.Cast<object>().ToArray()),
                             GetType(), DiagnosticState.Skip));
@@ -81,7 +81,7 @@ namespace PipelineLauncher.PipelineStage
                 if (skipTillWithoutProcess.Any())
                 {
                     result.AddRange(skipTillWithoutProcess);
-                    context.ActionsSet?.DiagnosticAction?.Invoke(
+                    context.ActionsSet?.DiagnosticHandler?.Invoke(
                         new DiagnosticItem(
                             () => context.ActionsSet.GetItemsHashCode(skipTillWithoutProcess.Cast<object>().ToArray()),
                             GetType(), DiagnosticState.Skip));
@@ -93,7 +93,7 @@ namespace PipelineLauncher.PipelineStage
                 {
                     result.AddRange((await ExecuteAsync(itemsToProcess, context.CancellationToken))
                         .Select(x => new PipelineStageItem<TOutput>(x)));
-                    context.ActionsSet?.DiagnosticAction?.Invoke(
+                    context.ActionsSet?.DiagnosticHandler?.Invoke(
                         new DiagnosticItem(
                             () => context.ActionsSet.GetItemsHashCode(itemsToProcess.Cast<object>().ToArray()),
                             GetType(), DiagnosticState.Process));
@@ -103,7 +103,25 @@ namespace PipelineLauncher.PipelineStage
             }
             catch (Exception ex)
             {
-                context.ActionsSet?.DiagnosticAction?.Invoke(
+                if (context.ActionsSet?.ExceptionHandler != null)
+                {
+                    var shouldBeReExecuted = false;
+
+                    context.ActionsSet?
+                        .ExceptionHandler(
+                            new ExceptionItemsEventArgs(
+                                inputArray.Cast<object>().ToArray(),
+                                GetType(),
+                                ex,
+                                () => { shouldBeReExecuted = true; }));
+
+                    if (shouldBeReExecuted)
+                    {
+                        return await InternalExecute(inputArray, context);
+                    }
+                }
+
+                context.ActionsSet?.DiagnosticHandler?.Invoke(
                     new DiagnosticItem(
                         () => context.ActionsSet.GetItemsHashCode(inputArray.Select(e => e.Item).Cast<object>().ToArray()),
                         GetType(), DiagnosticState.ExceptionOccured, ex.Message));

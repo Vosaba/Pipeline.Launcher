@@ -204,6 +204,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
 
             CancellationTokenSource source = new CancellationTokenSource();
 
+            var errorsCount = 0;
             //Configure stages
             var pipelineSetup = PipelineCreator
                 //.WithToken(source.Token)
@@ -220,7 +221,8 @@ namespace PipelineLauncher.Demo.Tests.Modules
                 {
                     if (item.Value.StartsWith("Item#0->"))
                     {
-                        throw new Exception();
+                        errorsCount++;
+                        throw new Exception("lol");
                         //return option.SkipTo<Stage4>(item);
                     }
 
@@ -315,10 +317,12 @@ namespace PipelineLauncher.Demo.Tests.Modules
 
             stopWatch.Stop();
 
-            PrintOutputAndTime(stopWatch.ElapsedMilliseconds, result);
+            PrintOutputAndTime(stopWatch.ElapsedMilliseconds, new object[]{errorsCount});
             stopWatch.Reset();
 
             //var pipeline2 = pipelineSetup.CreateAwaitable();
+
+
             return;
             //run
             stopWatch.Start();

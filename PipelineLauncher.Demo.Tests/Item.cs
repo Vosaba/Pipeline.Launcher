@@ -14,7 +14,7 @@ namespace PipelineLauncher.Demo.Tests
 
         public override string ToString()
         {
-            return $"ExceptionFunc by:  '{{{string.Join("}, {", ProcessedBy.ToArray())}}}'; Result: '{Value}'";
+            return $"ExceptionHandler by:  '{{{string.Join("}, {", ProcessedBy.ToArray())}}}'; Result: '{Value}'";
         }
     }
 
