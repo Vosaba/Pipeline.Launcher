@@ -175,6 +175,11 @@ namespace PipelineLauncher.PipelineSetup
                     currentBlock.LinkTo(newBranchHead, new DataflowLinkOptions { PropagateCompletion = false },
                         x =>
                         {
+                            if (x == null)
+                            {
+                                return false;
+                            }
+
                             try
                             {
                                 return branch.predicate(x.Item);
@@ -319,7 +324,7 @@ namespace PipelineLauncher.PipelineSetup
 
                 void RePostMessage(PipelineStageItem<TOutput> message)
                 {
-                    rePostBlock?.Post(message);
+                     rePostBlock?.Post(message);
                 }
 
                 var nextBlock = new TransformBlock<PipelineStageItem<TOutput>, PipelineStageItem<TNextOutput>>(
@@ -338,8 +343,10 @@ namespace PipelineLauncher.PipelineSetup
                 currentBlock.LinkTo(nextBlock, new DataflowLinkOptions() { PropagateCompletion = false });
                 currentBlock.Completion.ContinueWith(x =>
                 {
-                    //DiagnosticAction?.Invoke(new DiagnosticItem)
-                    nextBlock.Complete();
+                    //DiagnosticHandler?.Invoke(new DiagnosticItem)
+
+                        nextBlock.Complete();
+
                 });//, Context.CancellationToken);
 
                 return nextBlock;

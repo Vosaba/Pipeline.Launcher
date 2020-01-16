@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading;
+using PipelineLauncher.Abstractions.PipelineEvents;
 
 namespace PipelineLauncher.Abstractions.PipelineRunner
 {
@@ -7,6 +9,8 @@ namespace PipelineLauncher.Abstractions.PipelineRunner
     {
         IEnumerable<TOutput> Process(TInput input);
         IEnumerable<TOutput> Process(IEnumerable<TInput> input);
+
+        IAwaitablePipelineRunner<TInput, TOutput> SetupExceptionHandler(Action<ExceptionItemsEventArgs> exceptionHandler);
 
         new IAwaitablePipelineRunner<TInput, TOutput> SetupCancellationToken(CancellationToken cancellationToken);
     }

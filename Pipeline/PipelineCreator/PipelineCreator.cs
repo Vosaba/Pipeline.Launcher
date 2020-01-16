@@ -152,7 +152,8 @@ namespace PipelineLauncher
 
                 var nextBlock = new TransformManyBlock<IEnumerable<PipelineStageItem<TInput>>, PipelineStageItem<TOutput>>(
                     async e => await bulkStage
-                        .InternalExecute(e, _pipelineSetupContext.GetPipelineStageContext(() => RePostMessages(e))),
+                        .InternalExecute(e, _pipelineSetupContext
+                        .GetPipelineStageContext(() => RePostMessages(e))),
                     new ExecutionDataflowBlockOptions
                     {
                         MaxDegreeOfParallelism = bulkStage.Configuration.MaxDegreeOfParallelism,
@@ -164,7 +165,10 @@ namespace PipelineLauncher
                 buffer.LinkTo(nextBlock, new DataflowLinkOptions() { PropagateCompletion = false });
                 rePostBlock = nextBlock;
 
-                buffer.Completion.ContinueWith(x => { nextBlock.Complete(); });//, _pipelineSetupContext.CancellationToken);
+                buffer.Completion.ContinueWith(x => 
+                { 
+                       nextBlock.Complete(); 
+                });//, _pipelineSetupContext.CancellationToken);
 
                 return DataflowBlock.Encapsulate(buffer, nextBlock);
             }
@@ -176,16 +180,17 @@ namespace PipelineLauncher
         {
             IPropagatorBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>> MakeNextBlock(StageCreationOptions options)
             {
-
-
                 TransformBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>> rePostBlock = null;
+
                 void RePostMessage(PipelineStageItem<TInput> message)
                 {
                     rePostBlock?.Post(message);
                 }
 
                 var nextBlock = new TransformBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>>(
-                    async e => await stage.InternalExecute(e, _pipelineSetupContext.GetPipelineStageContext(() => RePostMessage(e))),
+                    async e => await stage.InternalExecute(e, 
+                    _pipelineSetupContext.
+                    GetPipelineStageContext(() => RePostMessage(e))),
                     new ExecutionDataflowBlockOptions
                     {
                         MaxDegreeOfParallelism = stage.Configuration.MaxDegreeOfParallelism,
