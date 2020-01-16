@@ -70,7 +70,7 @@ namespace PipelineLauncher.PipelineRunner
 
         public IAwaitablePipelineRunner<TInput, TOutput> SetupExceptionHandler(Action<ExceptionItemsEventArgs> exceptionHandler)
         {
-            PipelineSetupContext.SetupExceptionFunc(exceptionHandler);
+            PipelineSetupContext.SetupExceptionHandler(exceptionHandler);
             return this;
         }
 

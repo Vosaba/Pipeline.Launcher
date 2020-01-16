@@ -62,18 +62,18 @@ namespace PipelineLauncher.PipelineStage
     {
         public object[] FailedItems => (object[])OriginalItem;
         public Exception Exception { get; }
-        public Action ReProcessItems { get; }
+        public Action Retry { get; }
 
         public ExceptionStageItem(Exception exception, Action reProcess, Type stageType, params object[] failedItems)
             : base(failedItems, stageType)
         {
             Exception = exception;
-            ReProcessItems = reProcess;
+            Retry = reProcess;
         }
 
         public override NoneResultStageItem<TNewItem> Return<TNewItem>()
         {
-            return new ExceptionStageItem<TNewItem>(Exception, ReProcessItems, StageType, FailedItems);
+            return new ExceptionStageItem<TNewItem>(Exception, Retry, StageType, FailedItems);
         }
     }
 }

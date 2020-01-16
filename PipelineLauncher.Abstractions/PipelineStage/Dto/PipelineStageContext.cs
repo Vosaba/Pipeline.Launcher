@@ -4,6 +4,7 @@ namespace PipelineLauncher.Abstractions.PipelineStage.Dto
 {
     public class PipelineStageContext
     {
+        public int ExecutionTryCount { get; private set; } = 0;
         public CancellationToken CancellationToken { get; }
         public ActionsSet ActionsSet { get; }
 
@@ -11,6 +12,11 @@ namespace PipelineLauncher.Abstractions.PipelineStage.Dto
         {
             CancellationToken = cancellationToken;
             ActionsSet = actionsSet;
+        }
+
+        public void AddExecutionTryCount()
+        {
+            ExecutionTryCount++;
         }
     }
 }

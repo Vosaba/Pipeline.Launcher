@@ -70,9 +70,9 @@ namespace PipelineLauncher.PipelineSetup
             return this;
         }
 
-        public PipelineSetupContext SetupExceptionFunc(Action<ExceptionItemsEventArgs> exceptionFunc)
+        public PipelineSetupContext SetupExceptionHandler(Action<ExceptionItemsEventArgs> exceptionHandler)
         {
-            _exceptionHandler = exceptionFunc;
+            _exceptionHandler = exceptionHandler;
             return this;
         }
 
@@ -94,11 +94,11 @@ namespace PipelineLauncher.PipelineSetup
             return this;
         }
 
-        public PipelineStageContext GetPipelineStageContext(Action reExecute)
+        public PipelineStageContext GetPipelineStageContext(Action retry)
         {
             return new PipelineStageContext(
                 CancellationToken, 
-                new ActionsSet(reExecute, _exceptionHandler, _diagnosticHandler, _getItemsIdentify));
+                new ActionsSet(retry, _exceptionHandler, _diagnosticHandler, _getItemsIdentify));
         }
     }
 }

@@ -94,13 +94,12 @@ namespace PipelineLauncher.PipelineStage
                 {
                     var shouldBeReExecuted = false;
 
-                    context.ActionsSet?
-                       .ExceptionHandler(
-                           new ExceptionItemsEventArgs(
-                               new object[] { input.Item }, 
-                               GetType(), 
-                               ex,
-                               () => { shouldBeReExecuted = true; }));
+                    context.ActionsSet?.ExceptionHandler(
+                               new ExceptionItemsEventArgs(
+                                   new object[] { input.Item }, 
+                                   GetType(), 
+                                   ex,
+                                   () => { shouldBeReExecuted = true; }));
 
                     if (shouldBeReExecuted)
                     {
@@ -109,7 +108,7 @@ namespace PipelineLauncher.PipelineStage
                 }
 
                 context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(getItemsHashCode, GetType(), DiagnosticState.ExceptionOccured, ex.Message));
-                return new ExceptionStageItem<TOutput>(ex, context.ActionsSet?.ReExecute, GetType(), input != null ? input.Item : default);
+                return new ExceptionStageItem<TOutput>(ex, context.ActionsSet?.Retry, GetType(), input != null ? input.Item : default);
             }
         }
     }

@@ -18,6 +18,7 @@ using PipelineLauncher.PipelineStage;
 using PipelineLauncher.Stages;
 using PipelineLauncher.StageSetup;
 using System.Collections.Concurrent;
+using PipelineLauncher.Exceptions;
 
 namespace PipelineLauncher.PipelineSetup
 {
@@ -322,9 +323,14 @@ namespace PipelineLauncher.PipelineSetup
 
                 TransformBlock<PipelineStageItem<TOutput>, PipelineStageItem<TNextOutput>> rePostBlock = null;
 
-                void RePostMessage(PipelineStageItem<TOutput> message)
+                Action<PipelineStageItem<TOutput>> RePostMessage;
+                if (options.PipelineType == PipelineType.Normal)
                 {
-                     rePostBlock?.Post(message);
+                    RePostMessage = message => rePostBlock?.Post(message);
+                }
+                else
+                {
+                    RePostMessage = message => throw new PipelineUsageException(Helpers.Strings.RetryOnAwaitable);
                 }
 
                 var nextBlock = new TransformBlock<PipelineStageItem<TOutput>, PipelineStageItem<TNextOutput>>(
@@ -371,9 +377,14 @@ namespace PipelineLauncher.PipelineSetup
 
                 TransformManyBlock<IEnumerable<PipelineStageItem<TOutput>>, PipelineStageItem<TNextOutput>> rePostBlock = null;
 
-                void RePostMessages(IEnumerable<PipelineStageItem<TOutput>> messages)
+                Action<IEnumerable<PipelineStageItem<TOutput>>> RePostMessages;
+                if (options.PipelineType == PipelineType.Normal)
                 {
-                    rePostBlock?.Post(messages);
+                    RePostMessages = messages => rePostBlock?.Post(messages);
+                }
+                else
+                {
+                    RePostMessages = messages => throw new PipelineUsageException(Helpers.Strings.RetryOnAwaitable);
                 }
 
                 var nextBlock = new TransformManyBlock<IEnumerable<PipelineStageItem<TOutput>>, PipelineStageItem<TNextOutput>>(
@@ -410,12 +421,12 @@ namespace PipelineLauncher.PipelineSetup
             return CreateNextBlock(MakeNextBlock, stage.Configuration);
         }
 
-        private PipelineSetup<TInput, TNextOutput> CreateNextBlock<TNextOutput>(Func<StageCreationOptions, IPropagatorBlock<PipelineStageItem<TOutput>, PipelineStageItem<TNextOutput>>> nextBlock, PipelineBaseConfiguration pipelineBaseConfiguration)
+        private PipelineSetup<TInput, TNextOutput> CreateNextBlock<TNextOutput>(Func<StageCreationOptions, IPropagatorBlock<PipelineStageItem<TOutput>, PipelineStageItem<TNextOutput>>> nextBlock, StageBaseConfiguration stageConfiguration)
         {
             var nextStage = new StageSetupOut<TNextOutput>(nextBlock)
             {
                 Previous = Current,
-                PipelineBaseConfiguration = pipelineBaseConfiguration
+                PipelineBaseConfiguration = stageConfiguration
             };
 
             Current.Next.Add(nextStage);

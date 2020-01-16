@@ -52,7 +52,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
             //Configure stages
 
             var pipelineSetup = PipelineCreator
-                    .WithToken(source.Token)
+                    .WithCancellationToken(source.Token)
                     //.WithDiagnostic(e =>
                     //{
                     //    Output.WriteLine($"WD: {e.StageType.Name}: {e.State}: {e.RunningTime.TotalMilliseconds}: {e.Message}");
@@ -300,7 +300,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
 
             pipeline.ExceptionItemsReceivedEvent += delegate (ExceptionItemsEventArgs args)
             {
-                //args.ReProcess();
+                args.Retry();
             };
 
             //source.CancelAfter(4900);
@@ -309,15 +309,15 @@ namespace PipelineLauncher.Demo.Tests.Modules
             stopWatch.Start();
             var result = pipeline
                 .SetupCancellationToken(source.Token)
-                .SetupExceptionHandler(args =>
-                {
-                    args.ReProcess();
-                })
+                //.SetupExceptionHandler(args =>
+                //{
+                //    //args.ReProcess();
+                //})
                 .Process(input).ToArray();
 
             stopWatch.Stop();
 
-            PrintOutputAndTime(stopWatch.ElapsedMilliseconds, new object[]{errorsCount});
+            PrintOutputAndTime(stopWatch.ElapsedMilliseconds, result);
             stopWatch.Reset();
 
             //var pipeline2 = pipelineSetup.CreateAwaitable();
@@ -343,7 +343,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
             CancellationTokenSource source = new CancellationTokenSource();
             //Configure stages
             var pipelineSetup = PipelineCreator
-                .WithToken(source.Token)
+                .WithCancellationToken(source.Token)
                 .Stage(async (Item item) =>
                 {
                     await Task.Delay(1000);
@@ -357,7 +357,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
 
             pipeline.ExceptionItemsReceivedEvent += delegate (ExceptionItemsEventArgs args)
             {
-                args.ReProcess();
+                args.Retry();
             };
 
             //run

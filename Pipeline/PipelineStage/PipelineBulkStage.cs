@@ -126,7 +126,7 @@ namespace PipelineLauncher.PipelineStage
                         () => context.ActionsSet.GetItemsHashCode(inputArray.Select(e => e.Item).Cast<object>().ToArray()),
                         GetType(), DiagnosticState.ExceptionOccured, ex.Message));
 
-                return new[] { new ExceptionStageItem<TOutput>(ex, context.ActionsSet?.ReExecute, GetType(), inputArray.Select(e => e.Item)) };
+                return new[] { new ExceptionStageItem<TOutput>(ex, context.ActionsSet?.Retry, GetType(), inputArray.Select(e => e.Item)) };
             }
         }
     }

@@ -13,6 +13,8 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
+using PipelineLauncher.Abstractions.PipelineEvents;
+using PipelineLauncher.Exceptions;
 
 namespace PipelineLauncher
 {
@@ -35,7 +37,7 @@ namespace PipelineLauncher
             _pipelineSetupContext = new PipelineSetupContext(stageResolveFunc);
         }
 
-        public IPipelineCreator WithToken(CancellationToken cancellationToken)
+        public IPipelineCreator WithCancellationToken(CancellationToken cancellationToken)
         {
             _pipelineSetupContext.SetupCancellationToken(cancellationToken);
             return this;
@@ -56,6 +58,12 @@ namespace PipelineLauncher
         public IPipelineCreator WithDiagnostic(Action<DiagnosticItem> diagnosticHandler)
         {
             _pipelineSetupContext.SetupDiagnosticAction(diagnosticHandler);
+            return this;
+        }
+
+        public IPipelineCreator WithExceptionHandler(Action<ExceptionItemsEventArgs> exceptionHandler)
+        {
+            _pipelineSetupContext.SetupExceptionHandler(exceptionHandler);
             return this;
         }
 
@@ -145,15 +153,21 @@ namespace PipelineLauncher
 
                 TransformManyBlock<IEnumerable<PipelineStageItem<TInput>>, PipelineStageItem<TOutput>> rePostBlock = null;
 
-                void RePostMessages(IEnumerable<PipelineStageItem<TInput>> messages)
+                Action<IEnumerable<PipelineStageItem<TInput>>> RePostMessages;
+                if (options.PipelineType == PipelineType.Normal)
                 {
-                    rePostBlock?.Post(messages);
+                    RePostMessages = items =>  rePostBlock?.Post(items);
+                }
+                else
+                {
+                    RePostMessages = items => throw new PipelineUsageException(Helpers.Strings.RetryOnAwaitable);
                 }
 
                 var nextBlock = new TransformManyBlock<IEnumerable<PipelineStageItem<TInput>>, PipelineStageItem<TOutput>>(
-                    async e => await bulkStage
-                        .InternalExecute(e, _pipelineSetupContext
-                        .GetPipelineStageContext(() => RePostMessages(e))),
+                    async delegate(IEnumerable<PipelineStageItem<TInput>> items)
+                    {
+                        return await bulkStage.InternalExecute(items, _pipelineSetupContext.GetPipelineStageContext(() => RePostMessages(items)));
+                    },
                     new ExecutionDataflowBlockOptions
                     {
                         MaxDegreeOfParallelism = bulkStage.Configuration.MaxDegreeOfParallelism,
@@ -182,15 +196,21 @@ namespace PipelineLauncher
             {
                 TransformBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>> rePostBlock = null;
 
-                void RePostMessage(PipelineStageItem<TInput> message)
+                Action<PipelineStageItem<TInput>> RePostMessage;
+                if (options.PipelineType == PipelineType.Normal)
                 {
-                    rePostBlock?.Post(message);
+                    RePostMessage = item => rePostBlock?.Post(item);
+                }
+                else
+                {
+                    RePostMessage = item => throw new PipelineUsageException(Helpers.Strings.RetryOnAwaitable);
                 }
 
                 var nextBlock = new TransformBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>>(
-                    async e => await stage.InternalExecute(e, 
-                    _pipelineSetupContext.
-                    GetPipelineStageContext(() => RePostMessage(e))),
+                    async item =>
+                    {
+                        return await stage.InternalExecute(item, _pipelineSetupContext.GetPipelineStageContext(() => RePostMessage(item)));
+                    },
                     new ExecutionDataflowBlockOptions
                     {
                         MaxDegreeOfParallelism = stage.Configuration.MaxDegreeOfParallelism,
@@ -207,14 +227,14 @@ namespace PipelineLauncher
             return CreateNextBlock(MakeNextBlock, stage.Configuration);
         }
 
-        private PipelineSetup<TInput, TOutput> CreateNextBlock<TInput, TOutput>(Func<StageCreationOptions, IPropagatorBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>>> executionBlock, PipelineBaseConfiguration pipelineBaseConfiguration)
+        private PipelineSetup<TInput, TOutput> CreateNextBlock<TInput, TOutput>(Func<StageCreationOptions, IPropagatorBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>>> executionBlock, StageBaseConfiguration stageConfiguration)
         {
             return AppendStage(
                 new StageSetup<TInput, TOutput>(executionBlock)
                 {
                     Previous = null,
-                    PipelineBaseConfiguration = pipelineBaseConfiguration
-                }); ;
+                    PipelineBaseConfiguration = stageConfiguration
+                });
         }
 
         private PipelineSetup<TInput, TOutput> AppendStage<TInput, TOutput>(IStageSetup<TInput, TOutput> stageSetup)
