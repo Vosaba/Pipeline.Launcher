@@ -219,7 +219,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
                 .Stage(new Stage1())
                 .Stage((Item item, StageOption<Item, Item> option) =>
                 {
-                    if (item.Value.StartsWith("Item#0->"))
+                    if (item.Value.StartsWith("Item#0->") && errorsCount< 5)
                     {
                         errorsCount++;
                         throw new Exception("lol");
@@ -300,7 +300,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
 
             pipeline.ExceptionItemsReceivedEvent += delegate (ExceptionItemsEventArgs args)
             {
-                args.Retry();
+                //args.Retry();
             };
 
             //source.CancelAfter(4900);
@@ -309,10 +309,10 @@ namespace PipelineLauncher.Demo.Tests.Modules
             stopWatch.Start();
             var result = pipeline
                 .SetupCancellationToken(source.Token)
-                //.SetupExceptionHandler(args =>
-                //{
-                //    //args.ReProcess();
-                //})
+                .SetupExceptionHandler(args =>
+                {
+                    //args.ReProcess();
+                })
                 .Process(input).ToArray();
 
             stopWatch.Stop();

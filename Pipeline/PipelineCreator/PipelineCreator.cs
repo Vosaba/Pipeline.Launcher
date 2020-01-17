@@ -166,7 +166,7 @@ namespace PipelineLauncher
                 var nextBlock = new TransformManyBlock<IEnumerable<PipelineStageItem<TInput>>, PipelineStageItem<TOutput>>(
                     async delegate(IEnumerable<PipelineStageItem<TInput>> items)
                     {
-                        return await bulkStage.InternalExecute(items, _pipelineSetupContext.GetPipelineStageContext(() => RePostMessages(items)));
+                        return await bulkStage.BaseExecute(items, _pipelineSetupContext.GetPipelineStageContext(() => RePostMessages(items)));
                     },
                     new ExecutionDataflowBlockOptions
                     {
@@ -209,7 +209,7 @@ namespace PipelineLauncher
                 var nextBlock = new TransformBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>>(
                     async item =>
                     {
-                        return await stage.InternalExecute(item, _pipelineSetupContext.GetPipelineStageContext(() => RePostMessage(item)));
+                        return await stage.BaseExecute(item, _pipelineSetupContext.GetPipelineStageContext(() => RePostMessage(item)));
                     },
                     new ExecutionDataflowBlockOptions
                     {
