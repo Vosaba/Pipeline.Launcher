@@ -132,6 +132,7 @@ namespace PipelineLauncher.PipelineSetup
 
             var newCurrent = CreateNextBlock(MakeNextBlock, Current.PipelineBaseConfiguration);
 
+            //return PipelineSetupExtensions.RemoveDuplicates(newCurrent.Branch(branches));
             return newCurrent.Branch(branches).RemoveDuplicatesPermanent();
         }
 
@@ -234,7 +235,7 @@ namespace PipelineLauncher.PipelineSetup
 
         #endregion
 
-        public IPipelineSetup<TInput, TOutput> RemoveDublicates()
+        public IPipelineSetup<TInput, TOutput> RemoveDuplicates()
         {
             TransformBlock<PipelineStageItem<TOutput>, PipelineStageItem<TOutput>> MakeNextBlock(StageCreationOptions options)
             {
@@ -247,7 +248,7 @@ namespace PipelineLauncher.PipelineSetup
 
                 var processedHash = new ConcurrentDictionary<int, byte>();
 
-                //currentBlock.LinkTo(mergeBlock);
+                currentBlock.LinkTo(mergeBlock);
 
                 currentBlock.Completion.ContinueWith(x => mergeBlock.Complete());//, Context.CancellationToken);
 
@@ -263,6 +264,7 @@ namespace PipelineLauncher.PipelineSetup
 
             ISourceBlock<PipelineStageItem<TNextOutput>> MakeNextBlock(StageCreationOptions options)
             {
+               
                 Current.Next.Add(nextBlock);
                 nextBlock.Previous = Current;
                 var currentBlock = Current.RetrieveExecutionBlock(options);
@@ -291,12 +293,12 @@ namespace PipelineLauncher.PipelineSetup
             return new PipelineSetup<TInput, TNextOutput>(nextStage, Context);
         }
 
-        public static PipelineSetup<TInput, TOutput> operator +(PipelineSetup<TInput, TOutput> pipelineSetup, PipelineSetup<TOutput, TOutput> pipelineSetup2)
-        {
-            var y =  pipelineSetup.MergeWith(pipelineSetup2);
+        //public static PipelineSetup<TInput, TOutput> operator +(PipelineSetup<TInput, TOutput> pipelineSetup, PipelineSetup<TOutput, TOutput> pipelineSetup2)
+        //{
+        //    var y =  pipelineSetup.MergeWith(pipelineSetup2);
 
-            return (PipelineSetup<TInput, TOutput>) y;
-        }
+        //    return (PipelineSetup<TInput, TOutput>) y;
+        //}
 
         public IAwaitablePipelineRunner<TInput, TOutput> CreateAwaitable(AwaitablePipelineConfig pipelineConfig = null)
         {

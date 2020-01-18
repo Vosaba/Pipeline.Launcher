@@ -216,70 +216,88 @@ namespace PipelineLauncher.Demo.Tests.Modules
                 //})
                 //.Prepare<Item>()
                 .Stage(new Stage1())
-                .Stage<Stage1>()
+                .Broadcast(
+                    (item => true, // => "Item#NEW->AsyncStage3->AsyncStage4->Stage4->AsyncStage1->",
+                        branch1 => branch1
+                            .Stage(x =>
+                            {
+                                x.Value += "branch1->";
+                                return x;
+                            })),
+                    (item => true,
+                        branch1 => branch1
+                            .Stage((Item item, StageOption<Item, Item> stageOption) =>
+                            {
+                                if (item.Value.StartsWith("Item#0->"))
+                                {
+                                    return stageOption.SkipTo<Stage2>(item);
+                                }
+
+                                item.Value += "branch2->";
+                                return item;
+                            })))
                 .Stage((Item item, StageOption<Item, Item> option) =>
                 {
-                    if (item.Value.StartsWith("Item#2->"))
-                    {
-                        return option.SkipTo<Stage4>(item);
-                    }
+                    item.Value += "lambda->";
+
 
                     return item;
                 })
-                .Branch(
-                    (item => item.Value.StartsWith("Item#1->"),
-                        branch => branch
-                            .Stage<Stage2>()
-                            
-                    ),
-                    (item => true,
-                        branch => branch
-                            .Stage<Stage2>()
-                            .Stage<Stage2>()
-                            .Broadcast(
-                                (item => true, //=> "Item#NEW->AsyncStage3->AsyncStage4->Stage4->AsyncStage1->",
-                                    branch1 => branch1
-                                        .Stage(x =>
-                                        {
-                                            x.Value += "111->";
-                                            return x;
-                                        })),
-                                (item => true,
-                                    branch1 => branch1
-                                        .Stage((Item x, StageOption<Item, Item> stageOption) =>
-                                        {
+                .Stage(new Stage2());
+            //.Branch(
+            //    (item => item.Value.StartsWith("Item#1->"),
+            //        branch => branch
+            //            .Stage<Stage2>()
 
-                                            x.Value += "222->";
-                                            return x;
-                                        })))
-                    ))
-                //.Delay(12000)
-                //.BulkStage(new BulkStageStage3
-                .Stage((item) =>
-                {
-                    item.Value += "333->";
-                    return item;
-                })
-                
+            //    ),
+            //    (item => true,
+            //        branch => branch
+            //            .Stage<Stage2>()
+            //            .Stage<Stage2>()
+            //            .Broadcast(
+            //                (item => true, // => "Item#NEW->AsyncStage3->AsyncStage4->Stage4->AsyncStage1->",
+            //                    branch1 => branch1
+            //                        .Stage(x =>
+            //                        {
+            //                            x.Value += "111->";
+            //                            return x;
+            //                        })),
+            //                (item => true,
+            //                    branch1 => branch1
+            //                        .Stage((Item x, StageOption<Item, Item> stageOption) =>
+            //                        {
 
-                //s.Stage(Task.FromResult)
-                //.BulkDelay(5000)
-                
-                .Stage<Stage4>()
-                .Stage((Item item, StageOption<Item, Item> stageOption) =>
-                {
+            //                            x.Value += "222->";
+            //                            return x;
+            //                        })))
+            //    ))
+            //.Delay(12000)
+            //.BulkStage(new BulkStageStage3
+            //.Stage((item) =>
+            //{
+            //    item.Value += "333->";
+            //    return item;
+            //})
 
-                    if (item.Value.StartsWith("Item#0"))
-                    {
-                        //throw new Exception("Test exception");
-                    }
 
-                    var t = DateTime.Now;
-                    item.Value += $"[{t.Second + "." + t.Millisecond}]->";
+            ////s.Stage(Task.FromResult)
+            ////.BulkDelay(5000)
 
-                    return item;
-                });
-                //.Stage<Stage4>();//.ExtensionContext(extensionContext => extensionContext.MssCall(""));
+            //.Stage<Stage4>()
+            //.Stage((Item item, StageOption<Item, Item> stageOption) =>
+            //{
+
+            //    if (item.Value.StartsWith("Item#0"))
+            //    {
+            //        //throw new Exception("Test exception");
+            //    }
+
+            //    var t = DateTime.Now;
+            //    item.Value += $"[{t.Second + "." + t.Millisecond}]->";
+
+            //    return item;
+            //});
+            //.Stage<Stage4>();//.ExtensionContext(extensionContext => extensionContext.MssCall(""));
 
 
             Stopwatch stopWatch = new Stopwatch();
@@ -297,14 +315,20 @@ namespace PipelineLauncher.Demo.Tests.Modules
 
             pipeline.ExceptionItemsReceivedEvent += delegate (ExceptionItemsEventArgs args)
             {
-
+                //args.ReProcess();
             };
 
             //source.CancelAfter(4900);
 
             //run
             stopWatch.Start();
-            var result = pipeline.SetupCancellationToken(source.Token).Process(input).ToArray();
+            var result = pipeline
+                .SetupCancellationToken(source.Token)
+                //.SetupExceptionHandler(args =>
+                //{
+                //    args.ReProcess();
+                //})
+                .Process(input).ToArray();
 
             stopWatch.Stop();
 
@@ -312,6 +336,8 @@ namespace PipelineLauncher.Demo.Tests.Modules
             stopWatch.Reset();
 
             //var pipeline2 = pipelineSetup.CreateAwaitable();
+
+
             return;
             //run
             stopWatch.Start();
@@ -344,9 +370,9 @@ namespace PipelineLauncher.Demo.Tests.Modules
 
             var pipeline = pipelineSetup.CreateAwaitable();
 
-            pipeline.ExceptionItemsReceivedEvent += delegate (ExceptionItemsEventArgs items)
+            pipeline.ExceptionItemsReceivedEvent += delegate (ExceptionItemsEventArgs args)
             {
-
+                args.ReProcess();
             };
 
             //run
