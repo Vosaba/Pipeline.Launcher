@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using PipelineLauncher.Abstractions.PipelineStage.Configurations;
@@ -12,16 +13,19 @@ namespace PipelineLauncher.Stages
     {
         public override BulkStageConfiguration Configuration => new BulkStageConfiguration();
 
+        [DebuggerStepThrough]
         public override async Task<IEnumerable<TOutput>> ExecuteAsync(IEnumerable<TInput> input, CancellationToken cancellationToken)
         {
             return await ExecuteAsync(input);
         }
 
-         public virtual Task<IEnumerable<TOutput>> ExecuteAsync(IEnumerable<TInput> input)
+        [DebuggerStepThrough]
+        public virtual Task<IEnumerable<TOutput>> ExecuteAsync(IEnumerable<TInput> input)
          {
              return Task.FromResult(Execute(input));
          }
 
+        [DebuggerStepThrough]
         public virtual IEnumerable<TOutput> Execute(IEnumerable<TInput> param)
         {
             throw new NotImplementedException($"Neither of {nameof(Execute)} methods, are not implemented");

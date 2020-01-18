@@ -18,13 +18,13 @@ namespace PipelineLauncher.Abstractions.PipelineEvents
         public object[] Items { get; }
         public Exception Exception { get; }
 
-        public Action ReProcess { get; }
+        public Action Retry { get; }
 
-        public ExceptionItemsEventArgs(object[] items, Type stageType, Exception exception, Action reProcess)
+        public ExceptionItemsEventArgs(object[] items, Type stageType, Exception exception, Action retry)
             : base(stageType)
         {
             Items = items;
-            ReProcess = reProcess;
+            Retry = retry;
             Exception = exception;
         }
     }

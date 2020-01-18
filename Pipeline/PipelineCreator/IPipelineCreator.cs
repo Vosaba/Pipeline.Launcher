@@ -14,13 +14,15 @@ namespace PipelineLauncher
 {
     public interface IPipelineCreator
     {
-        IPipelineCreator WithToken(CancellationToken cancellationToken);
+        IPipelineCreator WithCancellationToken(CancellationToken cancellationToken);
 
         IPipelineCreator WithStageService(IStageService stageService);
 
         IPipelineCreator WithStageService(Func<Type, IStage> stageService);
         
         IPipelineCreator WithDiagnostic(Action<DiagnosticItem> diagnosticHandler);
+
+        IPipelineCreator WithExceptionHandler(Action<ExceptionItemsEventArgs> exceptionHandler);
 
         IPipelineSetup<TInput, TInput> Prepare<TInput>();
 

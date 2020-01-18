@@ -16,7 +16,7 @@ namespace PipelineLauncher.StageSetup
     {
         IDataflowBlock RetrieveExecutionBlock(StageCreationOptions options, bool forceCreation = false);
 
-        PipelineBaseConfiguration PipelineBaseConfiguration { get; }
+        StageBaseConfiguration PipelineBaseConfiguration { get; }
 
         IList<IStageSetup> Next { get; set; }
 

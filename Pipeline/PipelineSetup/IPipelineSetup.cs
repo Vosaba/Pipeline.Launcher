@@ -15,7 +15,7 @@ namespace PipelineLauncher.PipelineSetup
 {
     public interface IPipelineSetup
     {
-        //Action<DiagnosticItem> DiagnosticAction { get; }
+        //Action<DiagnosticItem> DiagnosticHandler { get; }
         IStageSetup Current { get; }
     }
 

@@ -14,8 +14,9 @@ namespace PipelineLauncher.PipelineSetup
     internal class PipelineSetupContext
     {
         private IStageService _stageService;
-        private Action<DiagnosticItem> _diagnosticAction;
+        private Action<DiagnosticItem> _diagnosticHandler;
         private Func<object[], int[]> _getItemsIdentify;
+        private Action<ExceptionItemsEventArgs> _exceptionHandler;
 
         public TaskContinuationOptions TaskContinuationOptions = TaskContinuationOptions.ExecuteSynchronously;
 
@@ -45,7 +46,6 @@ namespace PipelineLauncher.PipelineSetup
 
         public PipelineSetupContext()
         {
-
         }
 
         public  PipelineSetupContext(IStageService stageService)
@@ -70,6 +70,12 @@ namespace PipelineLauncher.PipelineSetup
             return this;
         }
 
+        public PipelineSetupContext SetupExceptionHandler(Action<ExceptionItemsEventArgs> exceptionHandler)
+        {
+            _exceptionHandler = exceptionHandler;
+            return this;
+        }
+
         public PipelineSetupContext SetupItemIdentify(Func<object[], int[]> getItemsIdentify)
         {
             _getItemsIdentify = getItemsIdentify;
@@ -78,7 +84,7 @@ namespace PipelineLauncher.PipelineSetup
 
         public PipelineSetupContext SetupDiagnosticAction(Action<DiagnosticItem> diagnosticAction)
         {
-            _diagnosticAction = diagnosticAction;
+            _diagnosticHandler = diagnosticAction;
             return this;
         }
 
@@ -88,13 +94,11 @@ namespace PipelineLauncher.PipelineSetup
             return this;
         }
 
-        public PipelineStageContext GetPipelineStageContext(Action reExecute)
+        public PipelineStageContext GetPipelineStageContext(Action retry)
         {
             return new PipelineStageContext(
                 CancellationToken, 
-                reExecute != null || _diagnosticAction != null ? 
-                    new ActionsSet(reExecute, _diagnosticAction, _getItemsIdentify) 
-                    : null);
+                new ActionsSet(retry, _exceptionHandler, _diagnosticHandler, _getItemsIdentify));
         }
     }
 }

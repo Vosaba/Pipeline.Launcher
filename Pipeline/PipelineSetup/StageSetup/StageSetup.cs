@@ -23,7 +23,7 @@ namespace PipelineLauncher.StageSetup
             return _executionBlock;
         }
 
-        public PipelineBaseConfiguration PipelineBaseConfiguration { get; set; }
+        public StageBaseConfiguration PipelineBaseConfiguration { get; set; }
         public IList<IStageSetup> Next { get; set; } = new List<IStageSetup>();
         public IStageSetup Previous { get; set; }
 
