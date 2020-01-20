@@ -255,7 +255,18 @@ namespace PipelineLauncher.PipelineSetup
                 {
                     foreach (var item in items)
                     {
-                        if (processedHash.TryAdd(context.ActionsSet.GetItemsHashCode(item.Item), 1))
+                        object originalItem;
+                        switch (item)
+                        {
+                            case NoneResultStageItem<TInput> noneResultItem:
+                                originalItem = noneResultItem.OriginalItem;
+                                break;
+                            default:
+                                originalItem = item.Item;
+                                break;
+                        }
+
+                        if (processedHash.TryAdd(context.ActionsSet.GetItemsHashCode(originalItem), 1))
                         {
                             yield return item;
                         }

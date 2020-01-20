@@ -243,9 +243,15 @@ namespace PipelineLauncher.Demo.Tests.Modules
                             })),
                     (item => true,
                         branch1 => branch1
-                            .Stage(async (Item x, StageOption<Item, Item> stageOption) =>
+                            .Stage((Item x, StageOption<Item, Item> stageOption) =>
                             {
-                                await Task.Delay(2000, source.Token);
+                                //await Task.Delay(2000, source.Token);
+                                if (x.Value.StartsWith("Item#0->"))
+                                {
+                                    return stageOption.SkipTo<Stage4>(x);
+                                    //throw new Exception("lol");
+                                    //return option.SkipTo<Stage4>(item);
+                                }
                                 x.Value += "222->";
                                 return x;
                             })))
