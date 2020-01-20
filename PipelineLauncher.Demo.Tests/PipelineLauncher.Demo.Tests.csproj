@@ -15,7 +15,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\PipelineLauncher.Dataflow\PipelineLauncher.Dataflow.csproj" />
     <ProjectReference Include="..\Pipeline\PipelineLauncher.csproj" />
   </ItemGroup>
 

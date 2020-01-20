@@ -7,28 +7,25 @@ namespace PipelineLauncher.Abstractions.PipelineStage.Dto
 {
     public class ActionsSet
     {
-        public ActionsSet(Action retry, Action<ExceptionItemsEventArgs> exceptionHandler, Action<DiagnosticItem> diagnosticHandler, Func<object[], int[]> getItemsIdentify)
+        public ActionsSet(Action retry, Action<ExceptionItemsEventArgs> exceptionHandler, Action<DiagnosticItem> diagnosticHandler, Func<object, int> getItemIdentify)
         {
             Retry = retry;
             ExceptionHandler = exceptionHandler;
             DiagnosticHandler = diagnosticHandler;
 
-            if (getItemsIdentify != null)
+            if (getItemIdentify != null)
             {
-                GetItemsHashCode = items => getItemsIdentify(items.Where(x => x != null).ToArray());
+                GetItemsHashCode = getItemIdentify;
             }
             else
             {
-                GetItemsHashCode = items =>
-                {
-                    return items.Where(x => x != null).Select(x => x.GetHashCode()).ToArray();
-                };
+                GetItemsHashCode = item => item?.GetHashCode() ?? 0;
             }
         }
 
         public Action Retry { get; }
         public Action<ExceptionItemsEventArgs> ExceptionHandler { get; }
         public Action<DiagnosticItem> DiagnosticHandler { get; }
-        public Func<object[], int[]> GetItemsHashCode { get; }
+        public Func<object, int> GetItemsHashCode { get; }
     }
 }

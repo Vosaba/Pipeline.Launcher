@@ -11,7 +11,7 @@ using PipelineLauncher.Abstractions.Dto;
 
 namespace PipelineLauncher.PipelineStage
 {
-    public abstract class PipelineBulkStage<TInput, TOutput> : PipelineBaseStage<TInput, TOutput>, IPipelineBulkStage<TInput, TOutput>
+    public abstract class PipelineBulkStage<TInput, TOutput> : PipelineBaseStage<IEnumerable<PipelineStageItem<TInput>>, IEnumerable<PipelineStageItem<TOutput>>>, IPipelineBulkStage<TInput, TOutput>
     {
         public new abstract BulkStageConfiguration Configuration { get; }
 
@@ -77,6 +77,16 @@ namespace PipelineLauncher.PipelineStage
             }
 
             return result;
+        }
+
+        protected override IEnumerable<PipelineStageItem<TOutput>> GetExceptionItem(IEnumerable<PipelineStageItem<TInput>> input, Exception ex, PipelineStageContext context)
+        {
+            return new[] { new ExceptionStageItem<TOutput>(ex, context.ActionsSet?.Retry, GetType(), GetOriginalItems(input)) };
+        }
+
+        protected override int[] GetItemsHashCode(IEnumerable<PipelineStageItem<TInput>> input, PipelineStageContext context)
+        {
+            return input.Select(x => context.ActionsSet.GetItemsHashCode(x)).ToArray();
         }
     }
 }

@@ -14,12 +14,16 @@ namespace PipelineLauncher.PipelineStage
     {
         public virtual StageBaseConfiguration Configuration { get; }
 
-        public abstract Task<IEnumerable<PipelineStageItem<TOutput>>> InternalExecute(IEnumerable<PipelineStageItem<TInput>> input, PipelineStageContext context);
+        protected abstract int[] GetItemsHashCode(TInput input, PipelineStageContext context);
 
-        public async Task<IEnumerable<PipelineStageItem<TOutput>>> BaseExecute(IEnumerable<PipelineStageItem<TInput>> input, PipelineStageContext context)
+        protected abstract object[] GetOriginalItems(TInput input);
+
+        protected abstract TOutput GetExceptionItem(TInput input, Exception ex, PipelineStageContext context);
+
+        public abstract Task<TOutput> InternalExecute(TInput input, PipelineStageContext context);
+
+        public async Task<TOutput> BaseExecute(TInput input, PipelineStageContext context)
         {
-            var inputArray = input.ToArray();
-
             Func<int[]> getItemsHashCode = null;
             if (context.ActionsSet?.DiagnosticHandler != null)
             {
@@ -28,7 +32,7 @@ namespace PipelineLauncher.PipelineStage
                 {
                     if (itemsHashCode == null)
                     {
-                        itemsHashCode = context.ActionsSet.GetItemsHashCode(inputArray.Select(e => e.Item).Cast<object>().ToArray());
+                        itemsHashCode = GetItemsHashCode(input, context);
                     }
 
                     return itemsHashCode;
@@ -39,7 +43,7 @@ namespace PipelineLauncher.PipelineStage
 
             try
             {
-                var result = await InternalExecute(inputArray, context);
+                var result = await InternalExecute(input, context);
 
                 context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(getItemsHashCode, GetType(), DiagnosticState.Process));
 
@@ -53,26 +57,21 @@ namespace PipelineLauncher.PipelineStage
 
                     context.ActionsSet?.ExceptionHandler(
                         new ExceptionItemsEventArgs(
-                            inputArray.Cast<object>().ToArray(), 
+                            GetOriginalItems(input), 
                             GetType(), 
                             ex, 
                             () => { shouldBeReExecuted = true; }));
 
                     if (shouldBeReExecuted)
                     {
-                        return await InternalExecute(inputArray, context);
+                        return await InternalExecute(input, context);
                     }
                 }
 
                 context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(getItemsHashCode, GetType(), DiagnosticState.ExceptionOccured, ex.Message));
 
-                return new[] { new ExceptionStageItem<TOutput>(ex, context.ActionsSet?.Retry, GetType(), inputArray.Select(e => e.Item)) };
+                return GetExceptionItem(input, ex, context);
             }
-        }
-
-        public async Task<PipelineStageItem<TOutput>> BaseExecute(PipelineStageItem<TInput> input, PipelineStageContext context)
-        {
-            return (await BaseExecute(new[] {input}, context)).First();
         }
     }
 }

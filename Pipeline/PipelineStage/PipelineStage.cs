@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,16 +10,11 @@ using PipelineLauncher.Exceptions;
 
 namespace PipelineLauncher.PipelineStage
 {
-    public abstract class PipelineStage<TInput, TOutput> : PipelineBaseStage<TInput, TOutput>, IPipelineStage<TInput, TOutput>
+    public abstract class PipelineStage<TInput, TOutput> : PipelineBaseStage<PipelineStageItem<TInput>, PipelineStageItem<TOutput>>, IPipelineStage<TInput, TOutput>
     {
         public new abstract StageConfiguration Configuration { get; }
 
         public abstract Task<TOutput> ExecuteAsync(TInput input, CancellationToken cancellationToken);
-
-        public override async Task<IEnumerable<PipelineStageItem<TOutput>>> InternalExecute(IEnumerable<PipelineStageItem<TInput>> input, PipelineStageContext context)
-        {
-            return new [] { await InternalExecute(input.First(), context)};
-        }
 
         public async Task<PipelineStageItem<TOutput>> InternalExecute(PipelineStageItem<TInput> input, PipelineStageContext context)
         {
@@ -65,6 +61,16 @@ namespace PipelineLauncher.PipelineStage
                 //context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(getItemsHashCode, GetType(), DiagnosticState.Skip));
                 return e.StageItem;
             }
+        }
+
+        protected override PipelineStageItem<TOutput> GetExceptionItem(PipelineStageItem<TInput> input, Exception ex, PipelineStageContext context)
+        {
+            return new ExceptionStageItem<TOutput>(ex, context.ActionsSet?.Retry, GetType(), GetOriginalItems(input));
+        }
+
+        protected override int[] GetItemsHashCode(PipelineStageItem<TInput> input, PipelineStageContext context)
+        {
+            throw new NotImplementedException();
         }
     }
 }
