@@ -134,7 +134,7 @@ namespace PipelineLauncher.PipelineSetup
             var newCurrent = CreateNextBlock(MakeNextBlock, Current.PipelineBaseConfiguration);
 
             //return PipelineSetupExtensions.RemoveDuplicates(newCurrent.Branch(branches));
-            return newCurrent.Branch(branches).RemoveDuplicatesPermanent();
+            return newCurrent.Branch(branches).RemoveDuplicates();
         }
 
         public IPipelineSetup<TInput, TNextOutput> Branch<TNextOutput>((Predicate<TOutput> predicate,
@@ -243,22 +243,40 @@ namespace PipelineLauncher.PipelineSetup
 
         public IPipelineSetup<TInput, TOutput> RemoveDuplicates()
         {
-            TransformBlock<PipelineStageItem<TOutput>, PipelineStageItem<TOutput>> MakeNextBlock(StageCreationOptions options)
+            IPropagatorBlock<PipelineStageItem<TOutput>, PipelineStageItem<TOutput>> MakeNextBlock(StageCreationOptions options)
             {
-                var mergeBlock = new TransformBlock<PipelineStageItem<TOutput>, PipelineStageItem<TOutput>>(x =>
+                var processedHash = new ConcurrentDictionary<int, byte>();
+
+                var buffer = new BatchBlock<PipelineStageItem<TOutput>>(1); //TODO
+                var context = Context.GetPipelineStageContext(null);
+
+
+                IEnumerable<PipelineStageItem<TOutput>> Filter(IEnumerable<PipelineStageItem<TOutput>> items)
                 {
-                    return x;
-                });
+                    foreach (var item in items)
+                    {
+                        if (processedHash.TryAdd(context.ActionsSet.GetItemsHashCode(item.Item), 1))
+                        {
+                            yield return item;
+                        }
+                    }
+                }
+
+                var mergeBlock = new TransformManyBlock<IEnumerable<PipelineStageItem<TOutput>>, PipelineStageItem<TOutput>>(x => Filter(x));
+               
+                buffer.LinkTo(mergeBlock);
+                buffer.Completion.ContinueWith(x => mergeBlock.Complete());
+
+                var next = DataflowBlock.Encapsulate(buffer, mergeBlock);
 
                 var currentBlock = Current.RetrieveExecutionBlock(options);
 
-                var processedHash = new ConcurrentDictionary<int, byte>();
+                currentBlock.LinkTo(next);
 
-                currentBlock.LinkTo(mergeBlock);
+                currentBlock.Completion.ContinueWith(x => next.Complete());//, Context.CancellationToken);
 
-                currentBlock.Completion.ContinueWith(x => mergeBlock.Complete());//, Context.CancellationToken);
 
-                return mergeBlock;
+                return next;
             }
 
             return CreateNextBlock(MakeNextBlock, Current.PipelineBaseConfiguration);

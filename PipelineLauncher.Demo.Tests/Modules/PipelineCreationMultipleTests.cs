@@ -200,7 +200,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
             var y = t.GetReferencedAssemblies();
 
             //Test input 6 items
-            List<Item> input = MakeInput(4);
+            List<Item> input = MakeInput(2);
 
             CancellationTokenSource source = new CancellationTokenSource();
 
@@ -221,18 +221,34 @@ namespace PipelineLauncher.Demo.Tests.Modules
                 //})
                 //.Prepare<Item>()
                 .Stage<Stage1, Item>()
-                .Stage((Item item, StageOption<Item, Item> option) =>
-                {
-                    if (item.Value.StartsWith("Item#0->"))
-                    {
-                        errorsCount++;
-                        throw new Exception("lol");
-                        //return option.SkipTo<Stage4>(item);
-                    }
+                //.Stage((Item item, StageOption<Item, Item> option) =>
+                //{
+                //    if (item.Value.StartsWith("Item#0->"))
+                //    {
+                //        errorsCount++;
+                //        //throw new Exception("lol");
+                //        //return option.SkipTo<Stage4>(item);
+                //    }
 
-                    return item;
-                })
+                //    return item;
+                //})
                 .BulkStage(new BulkStageStage2())
+                .Broadcast(
+                    (item => true, // => "Item#NEW->AsyncStage3->AsyncStage4->Stage4->AsyncStage1->",
+                        branch1 => branch1
+                            .Stage(x =>
+                            {
+                                x.Value += "111->";
+                                return x;
+                            })),
+                    (item => true,
+                        branch1 => branch1
+                            .Stage(async (Item x, StageOption<Item, Item> stageOption) =>
+                            {
+                                await Task.Delay(2000, source.Token);
+                                x.Value += "222->";
+                                return x;
+                            })))
                 .Stage(new Stage3())
                 .Stage(new Stage4());
                 //.Branch(
