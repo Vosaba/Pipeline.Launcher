@@ -16,7 +16,7 @@ namespace PipelineLauncher.PipelineStage
 
         public abstract Task<TOutput> ExecuteAsync(TInput input, CancellationToken cancellationToken);
 
-        public async Task<PipelineStageItem<TOutput>> InternalExecute(PipelineStageItem<TInput> input, PipelineStageContext context)
+        protected override async Task<PipelineStageItem<TOutput>> InternalExecute(PipelineStageItem<TInput> input, PipelineStageContext context)
         {
             try
             {
@@ -70,7 +70,12 @@ namespace PipelineLauncher.PipelineStage
 
         protected override int[] GetItemsHashCode(PipelineStageItem<TInput> input, PipelineStageContext context)
         {
-            throw new NotImplementedException();
+            return new[] { context.ActionsSet.GetItemsHashCode(input.Item) };
+        }
+
+        protected override object[] GetOriginalItems(PipelineStageItem<TInput> input)
+        {
+            return new object[] { input.Item };
         }
     }
 }

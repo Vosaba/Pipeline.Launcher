@@ -15,7 +15,7 @@ namespace PipelineLauncher.PipelineSetup
     {
         private IStageService _stageService;
         private Action<DiagnosticItem> _diagnosticHandler;
-        private Func<object[], int[]> _getItemsIdentify;
+        private Func<object, int> _getItemIdentify;
         private Action<ExceptionItemsEventArgs> _exceptionHandler;
 
         public TaskContinuationOptions TaskContinuationOptions = TaskContinuationOptions.ExecuteSynchronously;
@@ -76,9 +76,9 @@ namespace PipelineLauncher.PipelineSetup
             return this;
         }
 
-        public PipelineSetupContext SetupItemIdentify(Func<object[], int[]> getItemsIdentify)
+        public PipelineSetupContext SetupItemIdentify(Func<object, int> getItemsIdentify)
         {
-            _getItemsIdentify = getItemsIdentify;
+            _getItemIdentify = getItemsIdentify;
             return this;
         }
 
@@ -98,7 +98,7 @@ namespace PipelineLauncher.PipelineSetup
         {
             return new PipelineStageContext(
                 CancellationToken, 
-                new ActionsSet(retry, _exceptionHandler, _diagnosticHandler, _getItemsIdentify));
+                new ActionsSet(retry, _exceptionHandler, _diagnosticHandler, _getItemIdentify));
         }
     }
 }

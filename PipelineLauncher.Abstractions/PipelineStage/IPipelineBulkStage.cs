@@ -9,7 +9,7 @@ namespace PipelineLauncher.Abstractions.PipelineStage
 {
     public interface IPipelineBulkStage<TInput, TOutput> : IStage<TInput, TOutput>
     {
-        Task<IEnumerable<PipelineStageItem<TOutput>>> InternalExecute(IEnumerable<PipelineStageItem<TInput>> input, PipelineStageContext context);
+        //Task<IEnumerable<PipelineStageItem<TOutput>>> InternalExecute(IEnumerable<PipelineStageItem<TInput>> input, PipelineStageContext context);
         BulkStageConfiguration Configuration { get; }
     }
 }

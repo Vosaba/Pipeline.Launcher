@@ -17,7 +17,7 @@ namespace PipelineLauncher.PipelineStage
 
         public abstract Task<IEnumerable<TOutput>> ExecuteAsync(IEnumerable<TInput> input, CancellationToken cancellationToken);
 
-        public override async Task<IEnumerable<PipelineStageItem<TOutput>>> InternalExecute(IEnumerable<PipelineStageItem<TInput>> input, PipelineStageContext context)
+        protected override async Task<IEnumerable<PipelineStageItem<TOutput>>> InternalExecute(IEnumerable<PipelineStageItem<TInput>> input, PipelineStageContext context)
         {
             var inputArray = input.ToArray();
 
@@ -87,6 +87,11 @@ namespace PipelineLauncher.PipelineStage
         protected override int[] GetItemsHashCode(IEnumerable<PipelineStageItem<TInput>> input, PipelineStageContext context)
         {
             return input.Select(x => context.ActionsSet.GetItemsHashCode(x)).ToArray();
+        }
+
+        protected override object[] GetOriginalItems(IEnumerable<PipelineStageItem<TInput>> input)
+        {
+            return input.Select(x => x.Item).Cast<object>().ToArray();
         }
     }
 }

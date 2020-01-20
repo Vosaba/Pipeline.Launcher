@@ -48,7 +48,7 @@ namespace PipelineLauncher
                 $"on one of '{nameof(IAwaitablePipelineRunner<object, object>)}' or '{nameof(IPipelineCreator)}' to perform that action.";
 
             public static string RetriesMaxCountReached =
-                $"You called {nameof(ActionsSet.Retry)} action more than '{0}' times.";
+                $"You called {nameof(ActionsSet.Retry)}" + " action more than '{0}' times.";
         }
     }
 }

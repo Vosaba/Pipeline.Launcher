@@ -8,7 +8,7 @@ namespace PipelineLauncher.Abstractions.PipelineStage
 {
     public interface IPipelineStage<TInput, TOutput> : IStage<TInput, TOutput>
     {
-        Task<PipelineStageItem<TOutput>> InternalExecute(PipelineStageItem<TInput> input, PipelineStageContext context);
+        //Task<PipelineStageItem<TOutput>> InternalExecute(PipelineStageItem<TInput> input, PipelineStageContext context);
         StageConfiguration Configuration { get; }
     }
 }
