@@ -134,7 +134,7 @@ namespace PipelineLauncher.PipelineSetup
             var newCurrent = CreateNextBlock(MakeNextBlock, Current.PipelineBaseConfiguration);
 
             //return PipelineSetupExtensions.RemoveDuplicates(newCurrent.Branch(branches));
-            return newCurrent.Branch(branches).RemoveDuplicates();
+            return newCurrent.Branch(branches).RemoveDuplicates(branches.Length);
         }
 
         public IPipelineSetup<TInput, TNextOutput> Branch<TNextOutput>((Predicate<TOutput> predicate,
@@ -241,11 +241,11 @@ namespace PipelineLauncher.PipelineSetup
 
         #endregion
 
-        public IPipelineSetup<TInput, TOutput> RemoveDuplicates()
+        public IPipelineSetup<TInput, TOutput> RemoveDuplicates(int totalOccurrences)
         {
             IPropagatorBlock<PipelineStageItem<TOutput>, PipelineStageItem<TOutput>> MakeNextBlock(StageCreationOptions options)
             {
-                var processedHash = new ConcurrentDictionary<int, byte>();
+                var processedHash = new ConcurrentDictionary<int, int>();
 
                 var buffer = new BatchBlock<PipelineStageItem<TOutput>>(1); //TODO
                 var context = Context.GetPipelineStageContext(null);
@@ -266,9 +266,19 @@ namespace PipelineLauncher.PipelineSetup
                                 break;
                         }
 
-                        if (processedHash.TryAdd(context.ActionsSet.GetItemsHashCode(originalItem), 1))
+                        var hashCode = context.ActionsSet.GetItemsHashCode(originalItem);
+                        if (processedHash.TryAdd(hashCode, 1))
                         {
                             yield return item;
+                        }
+                        else
+                        {
+                            processedHash[hashCode]++;
+                        }
+
+                        if (processedHash[hashCode] == totalOccurrences)
+                        {
+                            processedHash.Remove(hashCode, out _);
                         }
                     }
                 }

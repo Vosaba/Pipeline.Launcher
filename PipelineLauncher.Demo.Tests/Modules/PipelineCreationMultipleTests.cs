@@ -200,7 +200,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
             var y = t.GetReferencedAssemblies();
 
             //Test input 6 items
-            List<Item> input = MakeInput(2);
+            List<Item> input = MakeInput(1);
 
             CancellationTokenSource source = new CancellationTokenSource();
 
@@ -236,23 +236,50 @@ namespace PipelineLauncher.Demo.Tests.Modules
                 .Broadcast(
                     (item => true, // => "Item#NEW->AsyncStage3->AsyncStage4->Stage4->AsyncStage1->",
                         branch1 => branch1
-                            .Stage(x =>
+                            .BulkStage(async xx =>
                             {
-                                x.Value += "111->";
-                                return x;
+                                foreach(var x in xx)
+                                {
+                                    if (x.Value.StartsWith("Item#0->"))
+                                    {
+                                        // await Task.Delay(2000);
+
+                                    }
+                                    x.Value += "111->";
+                                }
+                                
+                                return xx;
                             })),
                     (item => true,
                         branch1 => branch1
-                            .Stage((Item x, StageOption<Item, Item> stageOption) =>
+                            .Stage(async (Item x, StageOption<Item, Item> stageOption) =>
                             {
                                 //await Task.Delay(2000, source.Token);
                                 if (x.Value.StartsWith("Item#0->"))
                                 {
-                                    return stageOption.SkipTo<Stage4>(x);
+                                    //await Task.Delay(1000);
+                                    //return stageOption.Remove(x);
+
+                                    //return stageOption.SkipTo<Stage4>(x);
                                     //throw new Exception("lol");
                                     //return option.SkipTo<Stage4>(item);
                                 }
                                 x.Value += "222->";
+                                return x;
+                            })),
+                    (item => true,
+                        branch1 => branch1
+                            .Stage( (Item x, StageOption<Item, Item> stageOption) =>
+                            {
+                                //await Task.Delay(2000, source.Token);
+                                if (x.Value.StartsWith("Item#0->"))
+                                {
+                                    //return stageOption.Remove(x);
+                                    //throw new Exception("lol");
+                                    //return option.SkipTo<Stage4>(item);
+                                    //return new Item("Item#2000->");
+                                }
+                                x.Value += "333->";
                                 return x;
                             })))
                 .Stage(new Stage3())
