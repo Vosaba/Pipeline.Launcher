@@ -33,7 +33,6 @@ namespace PipelineLauncher.PipelineStage
             if (removeAndExceptionItems.Any())
             {
                 result.AddRange(removeAndExceptionItems);
-                //context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(() => context.ActionsSet.GetItemsHashCode(removeAndExceptionItems.Cast<object>().ToArray()), GetType(), DiagnosticState.Skip));
             }
 
             var skipItems = inputArray.Where(x =>
@@ -49,7 +48,6 @@ namespace PipelineLauncher.PipelineStage
             if (skipItemsWithoutProcess.Any())
             {
                 result.AddRange(skipItemsWithoutProcess);
-                //context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(() => context.ActionsSet.GetItemsHashCode(skipItemsWithoutProcess.Cast<object>().ToArray()), GetType(), DiagnosticState.Skip));
             }
             
             var skipTillItems = inputArray.Where(x =>
@@ -65,7 +63,6 @@ namespace PipelineLauncher.PipelineStage
             if (skipTillWithoutProcess.Any())
             {
                 result.AddRange(skipTillWithoutProcess);
-                //context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(() => context.ActionsSet.GetItemsHashCode(skipTillWithoutProcess.Cast<object>().ToArray()), GetType(), DiagnosticState.Skip));
             }
 
             itemsToProcess.AddRange(inputArray.Where(x => x.GetType() == typeof(PipelineStageItem<TInput>)).Select(x => x.Item));
@@ -73,7 +70,6 @@ namespace PipelineLauncher.PipelineStage
             if (itemsToProcess.Any())
             {
                 result.AddRange((await ExecuteAsync(itemsToProcess, context.CancellationToken)).Select(x => new PipelineStageItem<TOutput>(x)));
-                //context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(() => context.ActionsSet.GetItemsHashCode(itemsToProcess.Cast<object>().ToArray()), GetType(), DiagnosticState.Process));
             }
 
             return result;
@@ -82,11 +78,6 @@ namespace PipelineLauncher.PipelineStage
         protected override IEnumerable<PipelineStageItem<TOutput>> GetExceptionItem(IEnumerable<PipelineStageItem<TInput>> input, Exception ex, PipelineStageContext context)
         {
             return new[] { new ExceptionStageItem<TOutput>(ex, context.ActionsSet?.Retry, GetType(), GetOriginalItems(input)) };
-        }
-
-        protected override int[] GetItemsHashCode(IEnumerable<PipelineStageItem<TInput>> input, PipelineStageContext context)
-        {
-            return input.Select(x => context.ActionsSet.GetItemsHashCode(x)).ToArray();
         }
 
         protected override object[] GetOriginalItems(IEnumerable<PipelineStageItem<TInput>> input)

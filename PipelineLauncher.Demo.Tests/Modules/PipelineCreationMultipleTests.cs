@@ -1,22 +1,16 @@
-using PipelineLauncher.Demo.Tests.Fakes;
 using PipelineLauncher.Demo.Tests.Stages;
 using PipelineLauncher.Stages;
 using PipelineLauncher.PipelineSetup;
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.PipelineEvents;
-using PipelineLauncher.Abstractions.PipelineStage.Configurations;
-using PipelineLauncher.Abstractions.PipelineStage.Dto;
 using PipelineLauncher.Extensions;
 using Xunit;
 using Xunit.Abstractions;
-using PipelineLauncher.Abstractions.Stages;
 
 namespace PipelineLauncher.Demo.Tests.Modules
 {
@@ -212,13 +206,13 @@ namespace PipelineLauncher.Demo.Tests.Modules
                    // args.Retry();
                 })
                 //.WithToken(source.Token)
-                //.WithDiagnostic(item =>
-                //{
-                //    if (item.State == DiagnosticState.Process)
-                //    {
-                //        Output.WriteLine($"{item.StageName}: '{string.Join("'; '", item.ItemsHashCode)}'");
-                //    }
-                //})
+                .WithDiagnostic(item =>
+                {
+                    //if (item.State == DiagnosticState.Process)
+                    {
+                        //Output.WriteLine($"{item.StageType.Name}: {item.State} :'{string.Join("'; '", item.Input)}'");
+                    }
+                })
                 //.Prepare<Item>()
                 .Stage<Stage1, Item>()
                 //.Stage((Item item, StageOption<Item, Item> option) =>
@@ -234,11 +228,11 @@ namespace PipelineLauncher.Demo.Tests.Modules
                 //})
                 .BulkStage(new BulkStageStage2())
                 .Broadcast(
-                    (item => true, // => "Item#NEW->AsyncStage3->AsyncStage4->Stage4->AsyncStage1->",
+                    (item => false, // => "Item#NEW->AsyncStage3->AsyncStage4->Stage4->AsyncStage1->",
                         branch1 => branch1
-                            .BulkStage(async xx =>
+                            .BulkStage(xx =>
                             {
-                                foreach(var x in xx)
+                                foreach (var x in xx)
                                 {
                                     if (x.Value.StartsWith("Item#0->"))
                                     {
@@ -247,10 +241,10 @@ namespace PipelineLauncher.Demo.Tests.Modules
                                     }
                                     x.Value += "111->";
                                 }
-                                
+
                                 return xx;
                             })),
-                    (item => true,
+                    (item => false,
                         branch1 => branch1
                             .Stage(async (Item x, StageOption<Item, Item> stageOption) =>
                             {
@@ -267,7 +261,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
                                 x.Value += "222->";
                                 return x;
                             })),
-                    (item => true,
+                    (item => false,
                         branch1 => branch1
                             .Stage( (Item x, StageOption<Item, Item> stageOption) =>
                             {
@@ -389,6 +383,14 @@ namespace PipelineLauncher.Demo.Tests.Modules
             stopWatch.Reset();
         }
 
+
+        public async IAsyncEnumerable<int> F()
+        {
+            await Task.Delay(3);
+            yield return 0;
+        }
+
+
         [Fact]
         public void Pipeline_Creation_Multiple_AsyncStages_Simple()
         {
@@ -440,12 +442,15 @@ namespace PipelineLauncher.Demo.Tests.Modules
             List<Item> input = MakeInput(6);
 
             //Configure stages
-            var stageSetup = new PipelineCreator(t => (IStage)Activator.CreateInstance(t))
-                .BulkStage(new BulkStageStage1())
-                .BulkStage(new BulkStageStage2())//, new Stage2Alternative())
+            var stageSetup = PipelineCreator
+                .Stage(new Stage1())
+                .BulkStage(new BulkStageStage2());//, new Stage2Alternative())
+
+            var nextStageSetup = PipelineCreator
                 .BulkStage(new BulkStageStage4())
                 .BulkStage(new BulkStageStage4());
 
+            stageSetup = stageSetup.MergeWith(nextStageSetup);
             Stopwatch stopWatch = new Stopwatch();
 
             //Make pipeline from stageSetup

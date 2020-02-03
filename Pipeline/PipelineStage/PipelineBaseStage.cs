@@ -20,8 +20,6 @@ namespace PipelineLauncher.PipelineStage
     {
         public virtual StageBaseConfiguration Configuration { get; }
 
-        protected abstract int[] GetItemsHashCode(TInput input, PipelineStageContext context);
-
         protected abstract object[] GetOriginalItems(TInput input);
 
         protected abstract TOutput GetExceptionItem(TInput input, Exception ex, PipelineStageContext context);
@@ -30,29 +28,12 @@ namespace PipelineLauncher.PipelineStage
 
         public async Task<TOutput> BaseExecute(TInput input, PipelineStageContext context, int tryCount = 0)
         {
-            Func<int[]> getItemsHashCode = null;
-            if (context.ActionsSet?.DiagnosticHandler != null)
-            {
-                int[] itemsHashCode = null;
-                getItemsHashCode = () =>
-                {
-                    if (itemsHashCode == null)
-                    {
-                        itemsHashCode = GetItemsHashCode(input, context);
-                    }
-
-                    return itemsHashCode;
-                };
-
-                context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(getItemsHashCode, GetType(), DiagnosticState.Enter));
-            }
-
             try
             {
+                context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(input, GetType(), DiagnosticState.Input));
                 var result = await InternalExecute(input, context);
 
-                context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(getItemsHashCode, GetType(), DiagnosticState.Process));
-
+                context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(result, GetType(), DiagnosticState.Output));
                 return result;
             }
             catch (Exception ex)
@@ -68,15 +49,18 @@ namespace PipelineLauncher.PipelineStage
                     {
                         if (tryCount >= context.ExecutionTryCount)
                         {
-                            return GetExceptionItem(input, new StageRetryCountException(context.ExecutionTryCount), context);
+                            var retryException = new StageRetryCountException(context.ExecutionTryCount);
+
+                            context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(input, GetType(), DiagnosticState.ExceptionOccured, retryException.Message));
+                            return GetExceptionItem(input, retryException, context);
                         }
 
+                        context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(input, GetType(), DiagnosticState.Retry, ex.Message));
                         return await BaseExecute(input, context, ++tryCount);
                     }
                 }
 
-                context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(getItemsHashCode, GetType(), DiagnosticState.ExceptionOccured, ex.Message));
-
+                context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(input, GetType(), DiagnosticState.ExceptionOccured, ex.Message));
                 return GetExceptionItem(input, ex, context);
             }
         }

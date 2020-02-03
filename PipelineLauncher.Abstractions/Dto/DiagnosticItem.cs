@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Linq;
 
 namespace PipelineLauncher.Abstractions.Dto
 {
     public struct DiagnosticItem
     {
-        public int[] ItemsHashCode { get; }
+        public object Input { get; }
 
         public Type StageType { get; }
         public TimeSpan TimeSpan { get; } 
@@ -13,22 +12,23 @@ namespace PipelineLauncher.Abstractions.Dto
         public string Message { get; }
 
         public string StageName => StageType.FullName;
-        
-        public DiagnosticItem(Func<int[]> getItemsHashCode, Type stageType, DiagnosticState diagnosticState, string message = null)
+
+        public DiagnosticItem(object input, Type stageType, DiagnosticState diagnosticState, string message = null)
         {
             StageType = stageType;
             TimeSpan = DateTime.Now.TimeOfDay;
             State = diagnosticState;
             Message = message;
-            ItemsHashCode = getItemsHashCode();
+            Input = input;
         }
     }
 
     public enum DiagnosticState
     {
-        Enter,
-        Process,
+        Input,
+        Output,
         ExceptionOccured,
+        Retry,
         Skip
     }
 }

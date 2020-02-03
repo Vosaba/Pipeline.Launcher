@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.PipelineStage;
 using PipelineLauncher.Abstractions.PipelineStage.Configurations;
 using PipelineLauncher.Abstractions.PipelineStage.Dto;
@@ -20,45 +19,33 @@ namespace PipelineLauncher.PipelineStage
         {
             try
             {
-                PipelineStageItem<TOutput> result;
                 switch (input)
                 {
                     case RemoveStageItem<TInput> removeItem:
-                        result = removeItem.Return<TOutput>();
-                        break;
+                        return removeItem.Return<TOutput>();
 
                     case ExceptionStageItem<TInput> exceptionItem:
-                        result = exceptionItem.Return<TOutput>();
-                        break;
+                        return exceptionItem.Return<TOutput>();
 
                     case SkipStageItem<TInput> skipItem when typeof(TInput) == skipItem.OriginalItem.GetType():
-                        //context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(() => context.ActionsSet.GetItemsHashCode(new[] { skipItem.OriginalItem }), GetType(), DiagnosticState.Process));
-                        result = new PipelineStageItem<TOutput>(await ExecuteAsync((TInput)skipItem.OriginalItem, context.CancellationToken));
-                        break;
+                        return new PipelineStageItem<TOutput>(await ExecuteAsync((TInput)skipItem.OriginalItem, context.CancellationToken));
                     case SkipStageItem<TInput> skipItem when typeof(TInput) != skipItem.OriginalItem.GetType():
-                        result = skipItem.Return<TOutput>();
-                        break;
+                        return skipItem.Return<TOutput>();
 
                     case SkipStageItemTill<TInput> skipItemTill
                         when GetType() == skipItemTill.SkipTillType:
-                        //context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(() => context.ActionsSet.GetItemsHashCode(new[] { skipItemTill.OriginalItem }), GetType(), DiagnosticState.Process));
-                        result = new PipelineStageItem<TOutput>(await ExecuteAsync((TInput)skipItemTill.OriginalItem, context.CancellationToken));
-                        break;
+                        return new PipelineStageItem<TOutput>(await ExecuteAsync((TInput)skipItemTill.OriginalItem, context.CancellationToken));
                     case SkipStageItemTill<TInput> skipItemTill
                         when GetType() != skipItemTill.SkipTillType:
-                        result = skipItemTill.Return<TOutput>();
-                        break;
+                        return skipItemTill.Return<TOutput>();
 
                     default:
-                        result = new PipelineStageItem<TOutput>(await ExecuteAsync(input.Item, context.CancellationToken));
-                        break;
+                        return new PipelineStageItem<TOutput>(await ExecuteAsync(input.Item, context.CancellationToken));
                 }
-
-                return result;
             }
             catch (NoneParamException<TOutput> e)
             {
-                //context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(getItemsHashCode, GetType(), DiagnosticState.Skip));
+                context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(input, GetType(), DiagnosticState.Skip));
                 return e.StageItem;
             }
         }
@@ -66,11 +53,6 @@ namespace PipelineLauncher.PipelineStage
         protected override PipelineStageItem<TOutput> GetExceptionItem(PipelineStageItem<TInput> input, Exception ex, PipelineStageContext context)
         {
             return new ExceptionStageItem<TOutput>(ex, context.ActionsSet?.Retry, GetType(), GetOriginalItems(input));
-        }
-
-        protected override int[] GetItemsHashCode(PipelineStageItem<TInput> input, PipelineStageContext context)
-        {
-            return new[] { context.ActionsSet.GetItemsHashCode(input.Item) };
         }
 
         protected override object[] GetOriginalItems(PipelineStageItem<TInput> input)

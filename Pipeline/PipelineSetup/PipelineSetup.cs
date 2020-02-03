@@ -245,7 +245,7 @@ namespace PipelineLauncher.PipelineSetup
         {
             IPropagatorBlock<PipelineStageItem<TOutput>, PipelineStageItem<TOutput>> MakeNextBlock(StageCreationOptions options)
             {
-                var processedHash = new ConcurrentDictionary<int, int>();
+                var processedHash = new ConcurrentDictionary<object, int>();
 
                 var buffer = new BatchBlock<PipelineStageItem<TOutput>>(1); //TODO
                 var context = Context.GetPipelineStageContext(null);
@@ -266,24 +266,23 @@ namespace PipelineLauncher.PipelineSetup
                                 break;
                         }
 
-                        var hashCode = context.ActionsSet.GetItemsHashCode(originalItem);
-                        if (processedHash.TryAdd(hashCode, 1))
+                        if (processedHash.TryAdd(originalItem, 1))
                         {
                             yield return item;
                         }
                         else
                         {
-                            processedHash[hashCode]++;
+                            processedHash[originalItem]++;
                         }
 
-                        if (processedHash[hashCode] == totalOccurrences)
+                        if (processedHash[originalItem] == totalOccurrences)
                         {
-                            processedHash.Remove(hashCode, out _);
+                            processedHash.Remove(originalItem, out _);
                         }
                     }
                 }
 
-                var mergeBlock = new TransformManyBlock<IEnumerable<PipelineStageItem<TOutput>>, PipelineStageItem<TOutput>>(x => Filter(x));
+                var mergeBlock = new TransformManyBlock<IEnumerable<PipelineStageItem<TOutput>>, PipelineStageItem<TOutput>>(Filter);
                
                 buffer.LinkTo(mergeBlock);
                 buffer.Completion.ContinueWith(x => mergeBlock.Complete());
@@ -309,7 +308,6 @@ namespace PipelineLauncher.PipelineSetup
 
             ISourceBlock<PipelineStageItem<TNextOutput>> MakeNextBlock(StageCreationOptions options)
             {
-               
                 Current.Next.Add(nextBlock);
                 nextBlock.Previous = Current;
                 var currentBlock = Current.RetrieveExecutionBlock(options);

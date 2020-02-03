@@ -15,12 +15,11 @@ namespace PipelineLauncher.PipelineSetup
     {
         private IStageService _stageService;
         private Action<DiagnosticItem> _diagnosticHandler;
-        private Func<object, int> _getItemIdentify;
         private Action<ExceptionItemsEventArgs> _exceptionHandler;
 
-        public TaskContinuationOptions TaskContinuationOptions = TaskContinuationOptions.ExecuteSynchronously;
+        //public TaskContinuationOptions TaskContinuationOptions = TaskContinuationOptions.ExecuteSynchronously;
 
-        public bool TryUseDefaultServiceResolver { get; set; } = true;
+        public bool UseDefaultServiceResolver { get; private set; } = true;
 
         public CancellationToken CancellationToken { get; private set; }
 
@@ -30,7 +29,7 @@ namespace PipelineLauncher.PipelineSetup
             {
                 if (_stageService == null)
                 {
-                    if (TryUseDefaultServiceResolver)
+                    if (UseDefaultServiceResolver)
                     {
                         _stageService = new DefaultStageService();
                     }
@@ -76,9 +75,9 @@ namespace PipelineLauncher.PipelineSetup
             return this;
         }
 
-        public PipelineSetupContext SetupItemIdentify(Func<object, int> getItemsIdentify)
+        public PipelineSetupContext SetupConfiguration(bool useDefaultServiceResolver)
         {
-            _getItemIdentify = getItemsIdentify;
+            UseDefaultServiceResolver = useDefaultServiceResolver;
             return this;
         }
 
@@ -98,7 +97,7 @@ namespace PipelineLauncher.PipelineSetup
         {
             return new PipelineStageContext(
                 CancellationToken, 
-                new ActionsSet(retry, _exceptionHandler, _diagnosticHandler, _getItemIdentify));
+                new ActionsSet(retry, _exceptionHandler, _diagnosticHandler));
         }
     }
 }

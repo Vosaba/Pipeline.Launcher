@@ -24,6 +24,8 @@ namespace PipelineLauncher
 
         IPipelineCreator WithExceptionHandler(Action<ExceptionItemsEventArgs> exceptionHandler);
 
+        IPipelineCreator UseDefaultServiceResolver(bool useDefaultServiceResolver);
+
         IPipelineSetup<TInput, TInput> Prepare<TInput>();
 
         IPipelineSetup<TInput, TInput> BulkPrepare<TInput>(BulkStageConfiguration stageConfiguration = null);

@@ -67,6 +67,12 @@ namespace PipelineLauncher
             return this;
         }
 
+        public IPipelineCreator UseDefaultServiceResolver(bool useDefaultServiceResolver)
+        {
+            _pipelineSetupContext.SetupConfiguration(useDefaultServiceResolver);
+            return this;
+        }
+
         public IPipelineSetup<TInput, TInput> Prepare<TInput>()
             => Stage<TInput, TInput>(x => x);
 

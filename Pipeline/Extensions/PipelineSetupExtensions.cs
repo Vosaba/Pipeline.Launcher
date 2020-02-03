@@ -11,7 +11,7 @@ namespace PipelineLauncher.Extensions
 {
     public static class PipelineSetupExtensions
     {
-        public static IPipelineSetup<TInput, TOutput> RemoveDuplicates<TInput, TOutput>(this IPipelineSetup<TInput, TOutput> pipelineSetup, Func<TOutput, int> hashFunc = null)
+        private static IPipelineSetup<TInput, TOutput> RemoveDuplicates<TInput, TOutput>(this IPipelineSetup<TInput, TOutput> pipelineSetup, Func<TOutput, int> hashFunc = null)
         {
             var processedHash = new ConcurrentDictionary<int, byte>();
 
@@ -23,7 +23,7 @@ namespace PipelineLauncher.Extensions
             });
         }
 
-        public static IPipelineSetup<TInput, TOutput>RemoveDuplicatesPermanent<TInput, TOutput>(this IPipelineSetup<TInput, TOutput> pipelineSetup, Func<TOutput, int> hashFunc = null)
+        private static IPipelineSetup<TInput, TOutput>RemoveDuplicatesPermanent<TInput, TOutput>(this IPipelineSetup<TInput, TOutput> pipelineSetup, Func<TOutput, int> hashFunc = null)
         {
             var processedHash = new ConcurrentDictionary<int, byte>();
 
@@ -48,13 +48,13 @@ namespace PipelineLauncher.Extensions
         public static IStageService AccessStageService<TOutput>(this IPipelineSetupOut<TOutput> pipelineSetup)
         {
             var ty = pipelineSetup.GetType();
-            var pi = ty.GetProperty("StageService", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.GetProperty);
+            var pi = ty.GetProperty(nameof(PipelineSetupContext.StageService), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.GetProperty);
             object o = pi.GetValue(pipelineSetup, null);
 
             return (IStageService)o;
         }
 
-        public static IPipelineSetup<TInput, TOutput> DelayWithLock<TInput, TOutput>(this IPipelineSetup<TInput, TOutput> pipelineSetup, long millisecondsDelay)
+        private static IPipelineSetup<TInput, TOutput> DelayWithLock<TInput, TOutput>(this IPipelineSetup<TInput, TOutput> pipelineSetup, long millisecondsDelay)
         {
             object @lock = new object();
             DateTime performedTime = DateTime.Now;
