@@ -25,20 +25,20 @@ namespace PipelineLauncher.PipelineSetup
 
         #region BulkStages
 
-        new IPipelineSetup<TInput, TNextOutput> BulkStage<TBulkStage, TNextOutput>()
+        new IPipelineSetup<TInput, TNextOutput> BulkStage<TBulkStage, TNextOutput>(Predicate<TOutput> predicate = null)
             where TBulkStage : BulkStage<TOutput, TNextOutput>;
 
-        new IPipelineSetup<TInput, TOutput> BulkStage<TBulkStage>()
+        new IPipelineSetup<TInput, TOutput> BulkStage<TBulkStage>(Predicate<TOutput> predicate = null)
             where TBulkStage : BulkStage<TOutput, TOutput>;
 
         #endregion
 
         #region Stages
 
-        new IPipelineSetup<TInput, TOutput> Stage<TStage>()
+        new IPipelineSetup<TInput, TOutput> Stage<TStage>(Predicate<TOutput> predicate = null)
            where TStage : Stages.Stage<TOutput, TOutput>;
 
-        new IPipelineSetup<TInput, TNextOutput> Stage<TStage, TNextOutput>()
+        new IPipelineSetup<TInput, TNextOutput> Stage<TStage, TNextOutput>(Predicate<TOutput> predicate = null)
            where TStage : Stages.Stage<TOutput, TNextOutput>;
 
         #endregion
@@ -49,7 +49,7 @@ namespace PipelineLauncher.PipelineSetup
 
         #region BulkStages
 
-        new IPipelineSetup<TInput, TNextOutput> BulkStage<TNextOutput>(BulkStage<TOutput, TNextOutput> bulkStage);
+        new IPipelineSetup<TInput, TNextOutput> BulkStage<TNextOutput>(BulkStage<TOutput, TNextOutput> bulkStage, Predicate<TOutput> predicate = null);
 
         new IPipelineSetup<TInput, TNextOutput> BulkStage<TNextOutput>(Func<IEnumerable<TOutput>, IEnumerable<TNextOutput>> bulkFunc, BulkStageConfiguration bulkStageConfiguration = null);
 
@@ -59,7 +59,7 @@ namespace PipelineLauncher.PipelineSetup
 
         #region Stages
 
-        new IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(Stages.Stage<TOutput, TNextOutput> stage);
+        new IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(Stages.Stage<TOutput, TNextOutput> stage, Predicate<TOutput> predicate = null);
 
         new IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(Func<TOutput, TNextOutput> func);
 

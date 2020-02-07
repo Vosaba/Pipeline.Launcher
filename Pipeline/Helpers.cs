@@ -1,8 +1,13 @@
-﻿using PipelineLauncher.PipelineSetup;
+﻿using System;
+using System.Collections.Generic;
+using PipelineLauncher.PipelineSetup;
 using System.Linq;
+using System.Threading.Tasks.Dataflow;
 using PipelineLauncher.Abstractions.PipelineRunner;
+using PipelineLauncher.Abstractions.PipelineStage;
 using PipelineLauncher.Abstractions.PipelineStage.Dto;
 using PipelineLauncher.PipelineRunner;
+using PipelineLauncher.PipelineStage;
 using PipelineLauncher.StageSetup;
 
 namespace PipelineLauncher
@@ -36,6 +41,65 @@ namespace PipelineLauncher
                 DestroyStageBlocks(nextStage);
             }
         }
+
+        public static Predicate<PipelineStageItem<TOutput>> GetPredicate<TOutput>(this Predicate<TOutput> predicate, ITargetBlock<PipelineStageItem<TOutput>> block)
+        {
+            return x =>
+            {
+                if (x == null)
+                {
+                    return false;
+                }
+
+                if (x.Item == null)
+                {
+                    return true;
+                }
+
+                try
+                {
+                    return predicate(x.Item);
+                }
+                catch (Exception ex)
+                {
+                    block.Post(new ExceptionStageItem<TOutput>(ex, null, block.GetType(), x.Item));
+                    return false;
+                }
+            };
+        }
+
+        //public static Predicate<IEnumerable<PipelineStageItem<TOutput>>> GetPredicate<TOutput>(this Predicate<TOutput[]> predicate, ITargetBlock<IEnumerable<PipelineStageItem<TOutput>>> block)
+        //{
+        //    return x =>
+        //    {
+        //        if (x == null)
+        //        {
+        //            return false;
+        //        }
+
+        //        var nonProcessableItems = x.Where(e => e.Item == null).ToArray();
+        //        if (nonProcessableItems.Any())
+        //        {
+        //            block.Post(nonProcessableItems);
+        //        }
+
+        //        var items = x.Where(e => e.Item != null).Select(e => e.Item).ToArray();
+        //        try
+        //        {
+        //            return predicate(items);
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            block.Post(
+        //                new[]
+        //                {
+        //                    new ExceptionStageItem<TOutput>(ex, null, block.GetType(), items.Cast<object>().ToArray())
+        //                });
+
+        //            return false;
+        //        }
+        //    };
+        //}
     }
 
     internal static partial class Helpers

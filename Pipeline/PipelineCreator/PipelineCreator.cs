@@ -76,7 +76,7 @@ namespace PipelineLauncher
         public IPipelineSetup<TInput, TInput> Prepare<TInput>()
             => Stage<TInput, TInput>(x => x);
 
-        public IPipelineSetup<TInput, TInput> BulkPrepare<TInput>(BulkStageConfiguration stageConfiguration)
+        public IPipelineSetup<TInput, TInput> BulkPrepare<TInput>(BulkStageConfiguration stageConfiguration = null)
             => BulkStage<TInput, TInput>(x => x, stageConfiguration);
 
         #region Generic Stages

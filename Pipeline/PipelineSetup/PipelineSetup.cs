@@ -2,6 +2,7 @@
 using PipelineLauncher.Abstractions.Services;
 using PipelineLauncher.Blocks;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -49,25 +50,25 @@ namespace PipelineLauncher.PipelineSetup
 
         #region BulkStages
 
-        public IPipelineSetup<TInput, TNextOutput> BulkStage<TBulkStage, TNextOutput>()
+        public IPipelineSetup<TInput, TNextOutput> BulkStage<TBulkStage, TNextOutput>(Predicate<TOutput> predicate = null)
             where TBulkStage : BulkStage<TOutput, TNextOutput>
-            => CreateNextBulkStage<TNextOutput>(StageService.GetStageInstance<TBulkStage>());
+            => CreateNextBulkStage<TNextOutput>(StageService.GetStageInstance<TBulkStage>(), predicate);
 
-        public IPipelineSetup<TInput, TOutput> BulkStage<TBulkStage>()
+        public IPipelineSetup<TInput, TOutput> BulkStage<TBulkStage>(Predicate<TOutput> predicate = null)
             where TBulkStage : BulkStage<TOutput, TOutput>
-            => CreateNextBulkStage<TOutput>(StageService.GetStageInstance<TBulkStage>());
+            => CreateNextBulkStage<TOutput>(StageService.GetStageInstance<TBulkStage>(), predicate);
 
         #endregion
 
         #region Stages
 
-        public IPipelineSetup<TInput, TOutput> Stage<TStage>()
+        public IPipelineSetup<TInput, TOutput> Stage<TStage>(Predicate<TOutput> predicate = null)
             where TStage : Stages.Stage<TOutput, TOutput>
-            => CreateNextStage<TOutput>(StageService.GetStageInstance<TStage>());
+            => CreateNextStage<TOutput>(StageService.GetStageInstance<TStage>(), predicate);
 
-        public IPipelineSetup<TInput, TNextOutput> Stage<TStage, TNextOutput>()
+        public IPipelineSetup<TInput, TNextOutput> Stage<TStage, TNextOutput>(Predicate<TOutput> predicate = null)
             where TStage : Stages.Stage<TOutput, TNextOutput>
-            => CreateNextStage<TNextOutput>(StageService.GetStageInstance<TStage>());
+            => CreateNextStage<TNextOutput>(StageService.GetStageInstance<TStage>(), predicate);
 
         #endregion
 
@@ -77,8 +78,8 @@ namespace PipelineLauncher.PipelineSetup
 
         #region BulkStages
 
-        public IPipelineSetup<TInput, TNextOutput> BulkStage<TNextOutput>(BulkStage<TOutput, TNextOutput> bulkStage)
-            => CreateNextBulkStage(bulkStage);
+        public IPipelineSetup<TInput, TNextOutput> BulkStage<TNextOutput>(BulkStage<TOutput, TNextOutput> bulkStage, Predicate<TOutput> predicate = null)
+            => CreateNextBulkStage(bulkStage, predicate);
 
         public IPipelineSetup<TInput, TNextOutput> BulkStage<TNextOutput>(Func<IEnumerable<TOutput>, IEnumerable<TNextOutput>> bulkFunc, BulkStageConfiguration bulkStageConfiguration)
             => BulkStage(new LambdaBulkStage<TOutput, TNextOutput>(bulkFunc, bulkStageConfiguration));
@@ -90,8 +91,8 @@ namespace PipelineLauncher.PipelineSetup
 
         #region Stages
 
-        public IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(Stages.Stage<TOutput, TNextOutput> stage)
-            => CreateNextStage(stage);
+        public IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(Stages.Stage<TOutput, TNextOutput> stage, Predicate<TOutput> predicate = null)
+            => CreateNextStage(stage, predicate);
 
         public IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(Func<TOutput, TNextOutput> func)
             => Stage(new LambdaStage<TOutput, TNextOutput>(func));
@@ -172,14 +173,17 @@ namespace PipelineLauncher.PipelineSetup
 
                     var newBranch = branch.branch(nextBlockAfterCurrent);
 
-
-
                     currentBlock.LinkTo(newBranchHead, new DataflowLinkOptions { PropagateCompletion = false },
                         x =>
                         {
                             if (x == null)
                             {
                                 return false;
+                            }
+
+                            if (x.Item == null)
+                            {
+                                return true;
                             }
 
                             try
@@ -200,7 +204,7 @@ namespace PipelineLauncher.PipelineSetup
                                         throw;
                                 }
                             }
-                        }); ;
+                        });
 
                     var newBranchBlock = newBranch.Current.RetrieveExecutionBlock(options);
 
@@ -318,10 +322,10 @@ namespace PipelineLauncher.PipelineSetup
                     nextBlock.RetrieveExecutionBlock(options).Complete();
                 });//, Context.CancellationToken);
 
-                currentBlock.Completion.ContinueWith(x =>
-                {
-                    nextBlock.RetrieveExecutionBlock(options).Complete();
-                });//, Context.CancellationToken);
+                //currentBlock.Completion.ContinueWith(x =>
+                //{
+                //    nextBlock.RetrieveExecutionBlock(options).Complete();
+                //});//, Context.CancellationToken);
 
                 return pipelineSetup.Current.RetrieveExecutionBlock(options);
             };
@@ -336,13 +340,6 @@ namespace PipelineLauncher.PipelineSetup
             return new PipelineSetup<TInput, TNextOutput>(nextStage, Context);
         }
 
-        //public static PipelineSetup<TInput, TOutput> operator +(PipelineSetup<TInput, TOutput> pipelineSetup, PipelineSetup<TOutput, TOutput> pipelineSetup2)
-        //{
-        //    var y =  pipelineSetup.MergeWith(pipelineSetup2);
-
-        //    return (PipelineSetup<TInput, TOutput>) y;
-        //}
-
         public IAwaitablePipelineRunner<TInput, TOutput> CreateAwaitable(AwaitablePipelineConfig pipelineConfig = null)
         {
             IStageSetupIn<TInput> firstStageSetup = this.GetFirstStage<TInput>();
@@ -355,7 +352,7 @@ namespace PipelineLauncher.PipelineSetup
             return new PipelineRunner<TInput, TOutput>(firstStageSetup.RetrieveExecutionBlock, Current.RetrieveExecutionBlock, Context, pipelineConfig);
         }
 
-        private PipelineSetup<TInput, TNextOutput> CreateNextStage<TNextOutput>(PipelineStage<TOutput, TNextOutput> stage)
+        private PipelineSetup<TInput, TNextOutput> CreateNextStage<TNextOutput>(PipelineStage<TOutput, TNextOutput> stage, Predicate<TOutput> predicate)
         {
             IPropagatorBlock<PipelineStageItem<TOutput>, PipelineStageItem<TNextOutput>> MakeNextBlock(StageCreationOptions options)
             {
@@ -385,7 +382,7 @@ namespace PipelineLauncher.PipelineSetup
                 rePostBlock = nextBlock;
                 var currentBlock = Current.RetrieveExecutionBlock(options);
 
-                currentBlock.LinkTo(nextBlock, new DataflowLinkOptions() { PropagateCompletion = false });
+                currentBlock.LinkTo(nextBlock, new DataflowLinkOptions() { PropagateCompletion = false }, predicate.GetPredicate(nextBlock));
                 currentBlock.Completion.ContinueWith(x =>
                 {
                     //DiagnosticHandler?.Invoke(new DiagnosticItem)
@@ -400,7 +397,7 @@ namespace PipelineLauncher.PipelineSetup
             return CreateNextBlock(MakeNextBlock, stage.Configuration);
         }
 
-        private PipelineSetup<TInput, TNextOutput> CreateNextBulkStage<TNextOutput>(PipelineBulkStage<TOutput, TNextOutput> stage)
+        private PipelineSetup<TInput, TNextOutput> CreateNextBulkStage<TNextOutput>(PipelineBulkStage<TOutput, TNextOutput> stage, Predicate<TOutput> predicate)
         {
             IPropagatorBlock<PipelineStageItem<TOutput>, PipelineStageItem<TNextOutput>> MakeNextBlock(StageCreationOptions options)
             {
@@ -447,7 +444,7 @@ namespace PipelineLauncher.PipelineSetup
                 var next = DataflowBlock.Encapsulate(buffer, nextBlock);
                 var currentBlock = Current.RetrieveExecutionBlock(options);
 
-                currentBlock.LinkTo(next, new DataflowLinkOptions() { PropagateCompletion = false });
+                currentBlock.LinkTo(next, new DataflowLinkOptions() { PropagateCompletion = false }, predicate.GetPredicate(next));
 
                 currentBlock.Completion.ContinueWith(x =>
                 {
@@ -472,5 +469,6 @@ namespace PipelineLauncher.PipelineSetup
 
             return new PipelineSetup<TInput, TNextOutput>(nextStage, Context);
         }
+
     }
 }
