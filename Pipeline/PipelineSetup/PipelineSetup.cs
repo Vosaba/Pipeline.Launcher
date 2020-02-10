@@ -382,7 +382,16 @@ namespace PipelineLauncher.PipelineSetup
                 rePostBlock = nextBlock;
                 var currentBlock = Current.RetrieveExecutionBlock(options);
 
-                currentBlock.LinkTo(nextBlock, new DataflowLinkOptions() { PropagateCompletion = false }, predicate.GetPredicate(nextBlock));
+                if (predicate == null)
+                {
+                    currentBlock.LinkTo(nextBlock, new DataflowLinkOptions() {PropagateCompletion = false});
+                }
+                else
+                {
+                    currentBlock.LinkTo(nextBlock, new DataflowLinkOptions() {PropagateCompletion = false},
+                        predicate.GetPredicate(nextBlock));
+                }
+
                 currentBlock.Completion.ContinueWith(x =>
                 {
                     //DiagnosticHandler?.Invoke(new DiagnosticItem)
@@ -444,7 +453,14 @@ namespace PipelineLauncher.PipelineSetup
                 var next = DataflowBlock.Encapsulate(buffer, nextBlock);
                 var currentBlock = Current.RetrieveExecutionBlock(options);
 
-                currentBlock.LinkTo(next, new DataflowLinkOptions() { PropagateCompletion = false }, predicate.GetPredicate(next));
+                if (predicate == null)
+                {
+                    currentBlock.LinkTo(next, new DataflowLinkOptions() {PropagateCompletion = false});
+                }
+                else
+                {
+                    currentBlock.LinkTo(next, new DataflowLinkOptions() {PropagateCompletion = false}, predicate.GetPredicate(next));
+                }
 
                 currentBlock.Completion.ContinueWith(x =>
                 {
