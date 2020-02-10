@@ -15,4 +15,9 @@
     public interface IStage<TInput, TOutput>: IStageIn<TInput>, IStageOut<TOutput>
     {
     }
+
+    public interface IConditionalStage<TInput> : IStageIn<TInput>
+    {
+        bool Predicate(TInput input);
+    }
 }

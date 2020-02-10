@@ -20,6 +20,7 @@ using PipelineLauncher.Stages;
 using PipelineLauncher.StageSetup;
 using System.Collections.Concurrent;
 using PipelineLauncher.Exceptions;
+using PipelineLauncher.Abstractions.Stages;
 
 namespace PipelineLauncher.PipelineSetup
 {
@@ -382,14 +383,21 @@ namespace PipelineLauncher.PipelineSetup
                 rePostBlock = nextBlock;
                 var currentBlock = Current.RetrieveExecutionBlock(options);
 
-                if (predicate == null)
+                if (predicate != null || stage is IConditionalStage<TOutput>)
                 {
-                    currentBlock.LinkTo(nextBlock, new DataflowLinkOptions() {PropagateCompletion = false});
+                    var stageCondition = stage as IConditionalStage<TOutput>;
+
+                    if(stageCondition != null)
+                    {
+                        predicate = stageCondition.Predicate;
+                    }
+
+                    currentBlock.LinkTo(nextBlock, new DataflowLinkOptions() { PropagateCompletion = false },
+                        predicate.GetPredicate(nextBlock));
                 }
                 else
                 {
-                    currentBlock.LinkTo(nextBlock, new DataflowLinkOptions() {PropagateCompletion = false},
-                        predicate.GetPredicate(nextBlock));
+                    currentBlock.LinkTo(nextBlock, new DataflowLinkOptions() { PropagateCompletion = false });
                 }
 
                 currentBlock.Completion.ContinueWith(x =>
@@ -453,13 +461,20 @@ namespace PipelineLauncher.PipelineSetup
                 var next = DataflowBlock.Encapsulate(buffer, nextBlock);
                 var currentBlock = Current.RetrieveExecutionBlock(options);
 
-                if (predicate == null)
+                if (predicate != null || stage is IConditionalStage<TOutput>)
                 {
-                    currentBlock.LinkTo(next, new DataflowLinkOptions() {PropagateCompletion = false});
+                    var stageCondition = stage as IConditionalStage<TOutput>;
+
+                    if (stageCondition != null)
+                    {
+                        predicate = stageCondition.Predicate;
+                    }
+
+                    currentBlock.LinkTo(next, new DataflowLinkOptions() { PropagateCompletion = false }, predicate.GetPredicate(next));
                 }
                 else
                 {
-                    currentBlock.LinkTo(next, new DataflowLinkOptions() {PropagateCompletion = false}, predicate.GetPredicate(next));
+                    currentBlock.LinkTo(next, new DataflowLinkOptions() { PropagateCompletion = false });
                 }
 
                 currentBlock.Completion.ContinueWith(x =>
