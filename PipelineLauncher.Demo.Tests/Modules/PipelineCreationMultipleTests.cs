@@ -190,7 +190,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
         public void Pipeline_Creation_Multiple_Stages()
         {
             var t = Assembly.GetExecutingAssembly();
-
+            
             var y = t.GetReferencedAssemblies();
 
             //Test input 6 items

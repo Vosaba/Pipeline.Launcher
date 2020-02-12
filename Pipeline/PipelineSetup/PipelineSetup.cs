@@ -377,7 +377,8 @@ namespace PipelineLauncher.PipelineSetup
                         MaxDegreeOfParallelism = stage.Configuration.MaxDegreeOfParallelism,
                         MaxMessagesPerTask = stage.Configuration.MaxMessagesPerTask,
                         CancellationToken = Context.CancellationToken,
-                        SingleProducerConstrained = stage.Configuration.SingleProducerConstrained
+                        SingleProducerConstrained = stage.Configuration.SingleProducerConstrained,
+                        EnsureOrdered = stage.Configuration.EnsureOrdered
                     });
 
                 rePostBlock = nextBlock;
@@ -447,7 +448,8 @@ namespace PipelineLauncher.PipelineSetup
                         MaxDegreeOfParallelism = stage.Configuration.MaxDegreeOfParallelism,
                         MaxMessagesPerTask = stage.Configuration.MaxMessagesPerTask,
                         CancellationToken = Context.CancellationToken,
-                        SingleProducerConstrained = stage.Configuration.SingleProducerConstrained
+                        SingleProducerConstrained = stage.Configuration.SingleProducerConstrained,
+                        EnsureOrdered = stage.Configuration.EnsureOrdered
                     });
 
                 buffer.LinkTo(nextBlock, new DataflowLinkOptions() { PropagateCompletion = false });
