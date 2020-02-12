@@ -15,7 +15,7 @@ namespace PipelineLauncher.PipelineStage
     {
         public new abstract BulkStageConfiguration Configuration { get; }
 
-        public abstract Task<IEnumerable<TOutput>> ExecuteAsync(IEnumerable<TInput> input, CancellationToken cancellationToken);
+        public abstract Task<IEnumerable<TOutput>> ExecuteAsync(TInput[] input, CancellationToken cancellationToken);
 
         protected override async Task<IEnumerable<PipelineStageItem<TOutput>>> InternalExecute(IEnumerable<PipelineStageItem<TInput>> input, PipelineStageContext context)
         {
@@ -69,7 +69,7 @@ namespace PipelineLauncher.PipelineStage
 
             if (itemsToProcess.Any())
             {
-                result.AddRange((await ExecuteAsync(itemsToProcess, context.CancellationToken)).Select(x => new PipelineStageItem<TOutput>(x)));
+                result.AddRange((await ExecuteAsync(itemsToProcess.ToArray(), context.CancellationToken)).Select(x => new PipelineStageItem<TOutput>(x)));
             }
 
             return result;

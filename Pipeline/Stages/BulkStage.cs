@@ -14,19 +14,19 @@ namespace PipelineLauncher.Stages
         public override BulkStageConfiguration Configuration => new BulkStageConfiguration();
 
         [DebuggerStepThrough]
-        public override async Task<IEnumerable<TOutput>> ExecuteAsync(IEnumerable<TInput> input, CancellationToken cancellationToken)
+        public override async Task<IEnumerable<TOutput>> ExecuteAsync(TInput[] input, CancellationToken cancellationToken)
         {
             return await ExecuteAsync(input);
         }
 
         [DebuggerStepThrough]
-        public virtual Task<IEnumerable<TOutput>> ExecuteAsync(IEnumerable<TInput> input)
+        public virtual Task<IEnumerable<TOutput>> ExecuteAsync(TInput[] input)
          {
              return Task.FromResult(Execute(input));
          }
 
         [DebuggerStepThrough]
-        public virtual IEnumerable<TOutput> Execute(IEnumerable<TInput> param)
+        public virtual IEnumerable<TOutput> Execute(TInput[] input)
         {
             throw new NotImplementedException($"Neither of {nameof(Execute)} methods, are not implemented");
         }

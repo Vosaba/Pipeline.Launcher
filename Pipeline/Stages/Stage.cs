@@ -64,4 +64,8 @@ namespace PipelineLauncher.Stages
     public abstract class Stage<TInput> : Stage<TInput, TInput>
     {
     }
+
+    //public abstract class ConditionalStage<TInput, TOutput> : Stage<TInput, TOutput>, IConditionalStage
+    //{
+    //}
 }

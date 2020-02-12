@@ -12,7 +12,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
 {
     public class BulkStageStage1 : BulkStage<Item>
     {
-        public override IEnumerable<Item> Execute(IEnumerable<Item> items)
+        public override IEnumerable<Item> Execute(Item[] items)
         {
             foreach (var item in items)
             {
@@ -33,7 +33,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
 
     public class BulkStageStage2 : BulkStage<Item>
     {
-        public override IEnumerable<Item> Execute(IEnumerable<Item> items)
+        public override IEnumerable<Item> Execute(Item[] items)
         {
             foreach (var item in items)
             {
@@ -59,7 +59,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
 
     public class BulkStageStage2Alternative : BulkStage<Item>
     {
-        public override IEnumerable<Item> Execute(IEnumerable<Item> items)
+        public override IEnumerable<Item> Execute(Item[] items)
         {
             foreach (var item in items)
             {
@@ -85,7 +85,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
 
     public class BulkStageStage3 : BulkStage<Item>
     {
-        public override async Task<IEnumerable<Item>> ExecuteAsync(IEnumerable<Item> items, CancellationToken token)
+        public override async Task<IEnumerable<Item>> ExecuteAsync(Item[] items, CancellationToken token)
         {
             foreach (var item in items)
             {
@@ -108,7 +108,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
 
     public class BulkStageStage4 : BulkStage<Item>
     {
-        public override IEnumerable<Item> Execute(IEnumerable<Item> items)
+        public override IEnumerable<Item> Execute(Item[] items)
         {
             foreach (var item in items)
             {
@@ -136,7 +136,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
 
     public class BulkStageIntStage : BulkStage<int>
     {
-        public override IEnumerable<int> Execute(IEnumerable<int> items)
+        public override IEnumerable<int> Execute(int[] items)
         {
             return items;
         }
@@ -149,7 +149,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
 
     public class BulkStageStageItemToString : BulkStage<Item, string>
     {
-        public override IEnumerable<string> Execute(IEnumerable<Item> items)
+        public override IEnumerable<string> Execute(Item[] items)
         {
             foreach (var item in items)
             {
@@ -170,7 +170,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
 
     public class BulkStageStageStringToObject : BulkStage<string, object>
     {
-        public override IEnumerable<object> Execute(IEnumerable<string> items)
+        public override IEnumerable<object> Execute(string[] items)
         {
             return items.Select(e => new object());
         }
