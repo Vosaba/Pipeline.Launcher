@@ -42,9 +42,9 @@ namespace PipelineLauncher.PipelineSetup
 
        IPipelineSetupOut<TNextOutput> BulkStage<TNextOutput>(BulkStage<TOutput, TNextOutput> baseStageBulkStage, Predicate<TOutput> predicate = null);
 
-       IPipelineSetupOut<TNextOutput> BulkStage<TNextOutput>(Func<IEnumerable<TOutput>, IEnumerable<TNextOutput>> bulkFunc, BulkStageConfiguration bulkStageConfiguration = null);
+       IPipelineSetupOut<TNextOutput> BulkStage<TNextOutput>(Func<TOutput[], IEnumerable<TNextOutput>> bulkFunc, BulkStageConfiguration bulkStageConfiguration = null);
 
-       IPipelineSetupOut<TNextOutput> BulkStage<TNextOutput>(Func<IEnumerable<TOutput>, Task<IEnumerable<TNextOutput>>> bulkFunc, BulkStageConfiguration bulkStageConfiguration = null);
+       IPipelineSetupOut<TNextOutput> BulkStage<TNextOutput>(Func<TOutput[], Task<IEnumerable<TNextOutput>>> bulkFunc, BulkStageConfiguration bulkStageConfiguration = null);
 
         #endregion
 

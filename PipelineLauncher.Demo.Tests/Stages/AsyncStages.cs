@@ -146,7 +146,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
 
     public class BulkcStage_Item_To_String : BulkStage<Item, string>
     {
-        public override IEnumerable<string> Execute(IEnumerable<Item> items)
+        public override IEnumerable<string> Execute(Item[] items)
         {
             foreach (var item in items)
             {
@@ -167,7 +167,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
 
     public class AsyncStage_String_To_Object : BulkStage<string, object>
     {
-        public override IEnumerable<object> Execute(IEnumerable<string> items)
+        public override IEnumerable<object> Execute(string[] items)
         {
             return items.Select(e => new object());
         }
