@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using PipelineLauncher.Abstractions.PipelineStage.Configurations;
 using PipelineLauncher.Abstractions.PipelineStage.Dto;
+using PipelineLauncher.Abstractions.Stages;
 using PipelineLauncher.PipelineStage;
 
 namespace PipelineLauncher.Stages
@@ -34,4 +35,14 @@ namespace PipelineLauncher.Stages
 
     public abstract class BulkStage<TInput> : BulkStage<TInput, TInput>
     {}
+
+    public abstract class ConditionalBulkStage<TInput, TOutput> : BulkStage<TInput, TOutput>, IConditionalStage<TInput>
+    {
+        public abstract bool Predicate(TInput input);
+    }
+
+    public abstract class ConditionalBulkStage<TInput> : BulkStage<TInput>, IConditionalStage<TInput>
+    {
+        public abstract bool Predicate(TInput input);
+    }
 }

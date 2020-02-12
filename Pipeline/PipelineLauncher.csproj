@@ -9,7 +9,7 @@
     <PackageId>PipelineLauncher</PackageId>
     <Company>Abasov Software</Company>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.9.62</Version>
+    <Version>0.9.63</Version>
     <Product>PipelineLauncher</Product>
   </PropertyGroup>
 

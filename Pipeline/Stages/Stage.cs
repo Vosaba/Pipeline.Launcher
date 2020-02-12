@@ -65,7 +65,13 @@ namespace PipelineLauncher.Stages
     {
     }
 
-    //public abstract class ConditionalStage<TInput, TOutput> : Stage<TInput, TOutput>, IConditionalStage
-    //{
-    //}
+    public abstract class ConditionalStage<TInput, TOutput> : Stage<TInput, TOutput>, IConditionalStage<TInput>
+    {
+        public abstract bool Predicate(TInput input);
+    }
+
+    public abstract class ConditionalStage<TInput> : Stage<TInput>, IConditionalStage<TInput>
+    {
+        public abstract bool Predicate(TInput input);
+    }
 }
