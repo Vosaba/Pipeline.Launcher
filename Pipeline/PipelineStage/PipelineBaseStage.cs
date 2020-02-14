@@ -47,9 +47,9 @@ namespace PipelineLauncher.PipelineStage
 
                     if (shouldBeReExecuted)
                     {
-                        if (tryCount >= context.ExecutionTryCount)
+                        if (tryCount >= Configuration.MaxRetriesCount)
                         {
-                            var retryException = new StageRetryCountException(context.ExecutionTryCount);
+                            var retryException = new StageRetryCountException(Configuration.MaxRetriesCount);
 
                             context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(input, GetType(), DiagnosticState.ExceptionOccured, retryException.Message));
                             return GetExceptionItem(input, retryException, context);

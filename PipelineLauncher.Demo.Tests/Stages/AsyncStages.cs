@@ -89,7 +89,7 @@ namespace PipelineLauncher.Demo.Tests.Stages
             return item;
         }
 
-        public override StageConfiguration Configuration => new StageConfiguration { MaxDegreeOfParallelism = 2 };
+        //public override StageConfiguration Configuration => new StageConfiguration { MaxDegreeOfParallelism = 2 };
 
         public bool Condition(Item input)
         {
