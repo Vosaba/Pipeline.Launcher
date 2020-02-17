@@ -200,7 +200,7 @@ namespace PipelineLauncher.PipelineSetup
                                     case ConditionExceptionScenario.AddExceptionAndGoToNextCondition:
                                         mergeBlock.Post(new ExceptionStageItem<TNextOutput>(ex, null, branch.predicate.GetType(), x.Item));
                                         return false;
-                                    case ConditionExceptionScenario.BreakPipelineExecution:
+                                    case ConditionExceptionScenario.StopPipelineExecution:
                                     default:
                                         throw;
                                 }

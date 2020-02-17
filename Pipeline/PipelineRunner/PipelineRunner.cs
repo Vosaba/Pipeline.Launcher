@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.PipelineRunner;
@@ -27,6 +28,12 @@ namespace PipelineLauncher.PipelineRunner
         public bool Post(IEnumerable<TInput> input)
         {
             return input.Select(x => new PipelineStageItem<TInput>(x)).All(x => _firstBlock.Post(x));
+        }
+
+        public Task CompleteExecution()
+        {
+            _firstBlock.Complete();
+            return _lastBlock.Completion;
         }
 
         IPipelineRunner<TInput, TOutput> IPipelineRunner<TInput, TOutput>.SetupCancellationToken(CancellationToken cancellationToken)

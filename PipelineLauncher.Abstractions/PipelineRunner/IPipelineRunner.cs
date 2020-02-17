@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace PipelineLauncher.Abstractions.PipelineRunner
 {
@@ -7,6 +8,8 @@ namespace PipelineLauncher.Abstractions.PipelineRunner
     {
         bool Post(TInput input);
         bool Post(IEnumerable<TInput> input);
+
+        Task CompleteExecution(); 
 
         new IPipelineRunner<TInput, TOutput> SetupCancellationToken(CancellationToken cancellationToken);
     }

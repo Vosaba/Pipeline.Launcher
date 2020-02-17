@@ -3,7 +3,7 @@
     public enum ConditionExceptionScenario
     {
         GoToNextCondition,
-        BreakPipelineExecution,
+        StopPipelineExecution,
         AddExceptionAndGoToNextCondition
     }
 }
