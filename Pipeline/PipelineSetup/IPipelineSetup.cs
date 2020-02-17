@@ -59,7 +59,7 @@ namespace PipelineLauncher.PipelineSetup
 
         #region Stages
 
-        new IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(Stages.Stage<TOutput, TNextOutput> stage, Predicate<TOutput> predicate = null);
+        new IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(Stage<TOutput, TNextOutput> stage, Predicate<TOutput> predicate = null);
 
         new IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(Func<TOutput, TNextOutput> func);
 

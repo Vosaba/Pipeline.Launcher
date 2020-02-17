@@ -62,29 +62,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
                         //}      
                         return item;
                     })
-                    //.Stage((item) =>
-                    //{
-                    //    //item.Value += "2->";
-                    //    //if (item.Value == ("Item#0->1->2->"))
-                    //    //{
-                    //    //    //throw new Exception("Test exception");
-                    //    //}
-
-                    //    return item;
-                    //})
-                    //.Stage((item) =>
-                    //{
-                    //    //item.Value += "3->";
-                    //    //if (item.Value.StartsWith("Item#0"))
-                    //    //{
-                    //    //    //throw new Exception("Test exception");
-                    //    //}
-
-                    //    //var t = DateTime.Now;
-                    //    //item.Value += $"[{t.Second + "." + t.Millisecond}]->";
-
-                    //    return item;
-                    //})
+                    
                 ;
 
 
@@ -194,96 +172,25 @@ namespace PipelineLauncher.Demo.Tests.Modules
             var y = t.GetReferencedAssemblies();
 
             //Test input 6 items
-            List<Item> input = MakeInput(1);
+            List<Item> input = MakeInput(2);
 
             CancellationTokenSource source = new CancellationTokenSource();
 
             var errorsCount = 0;
             //Configure stages
             var pipelineSetup = PipelineCreator
-                .WithExceptionHandler(args =>
-                {
-                    args.Retry();
-                })
-                //.WithToken(source.Token)
-                
-                //.Prepare<Item>()
                 .Stage<Stage1, Item>()
-                //.Stage((Item item, StageOption<Item, Item> option) =>
-                //{
-                //    if (item.Value.StartsWith("Item#0->"))
-                //    {
-                //        errorsCount++;
-                //        //throw new Exception("lol");
-                //        //return option.SkipTo<Stage4>(item);
-                //    }
-
-                //    return item;
-                //})
-                .Stage(x => 
+                .Stage(new Stage4(), item =>
                 {
+                    if (item.Value.StartsWith("Item#1->"))
+                    {
+                        throw new System.Exception();
+                        return false;
 
-                    
+                    }
 
-                    return x;
-                })
-                .BulkStage(new BulkStageStage2())
-                .Stage(new Stage3())
-                .Stage(new Stage4());
-                //.Branch(
-                //    (item => item.Value.StartsWith("Item#1->"),
-                //        branch => branch
-                //            .Stage<Stage2>()
-
-            //    ),
-            //    (item => true,
-            //        branch => branch
-            //            .Stage<Stage2>()
-            //            .Stage<Stage2>()
-            //            .Broadcast(
-            //                (item => true, // => "Item#NEW->AsyncStage3->AsyncStage4->Stage4->AsyncStage1->",
-            //                    branch1 => branch1
-            //                        .Stage(x =>
-            //                        {
-            //                            x.Value += "111->";
-            //                            return x;
-            //                        })),
-            //                (item => true,
-            //                    branch1 => branch1
-            //                        .Stage((Item x, StageOption<Item, Item> stageOption) =>
-            //                        {
-
-            //                            x.Value += "222->";
-            //                            return x;
-            //                        })))
-            //    ))
-            //.Delay(12000)
-            //.BulkStage(new BulkStageStage3
-            //.Stage((item) =>
-            //{
-            //    item.Value += "333->";
-            //    return item;
-            //})
-
-
-            ////s.Stage(Task.FromResult)
-            ////.BulkDelay(5000)
-
-            //.Stage<Stage4>()
-            //.Stage((Item item, StageOption<Item, Item> stageOption) =>
-            //{
-
-            //    if (item.Value.StartsWith("Item#0"))
-            //    {
-            //        //throw new Exception("Test exception");
-            //    }
-
-            //    var t = DateTime.Now;
-            //    item.Value += $"[{t.Second + "." + t.Millisecond}]->";
-
-            //    return item;
-            //});
-            //.Stage<Stage4>();//.ExtensionContext(extensionContext => extensionContext.MssCall(""));
+                    return true;
+                });
 
 
             Stopwatch stopWatch = new Stopwatch();

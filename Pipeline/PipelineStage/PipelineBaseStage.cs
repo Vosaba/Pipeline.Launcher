@@ -18,7 +18,7 @@ namespace PipelineLauncher.PipelineStage
 
     public abstract class PipelineBaseStage<TInput, TOutput> : IPipelineBaseStage<TInput, TOutput>
     {
-        public virtual StageBaseConfiguration Configuration { get; } = new StageBaseConfiguration();
+        public abstract StageBaseConfiguration BaseConfiguration { get; }
 
         protected abstract object[] GetOriginalItems(TInput input);
 
@@ -47,9 +47,9 @@ namespace PipelineLauncher.PipelineStage
 
                     if (shouldBeReExecuted)
                     {
-                        if (tryCount >= Configuration.MaxRetriesCount)
+                        if (tryCount >= BaseConfiguration.MaxRetriesCount)
                         {
-                            var retryException = new StageRetryCountException(Configuration.MaxRetriesCount);
+                            var retryException = new StageRetryCountException(BaseConfiguration.MaxRetriesCount);
 
                             context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(input, GetType(), DiagnosticState.ExceptionOccured, retryException.Message));
                             return GetExceptionItem(input, retryException, context);

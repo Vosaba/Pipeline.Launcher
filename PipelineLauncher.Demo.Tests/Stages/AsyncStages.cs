@@ -124,6 +124,8 @@ namespace PipelineLauncher.Demo.Tests.Stages
         
         MaxRetriesCount = 3};
 
+        public override StageBaseConfiguration BaseConfiguration => base.BaseConfiguration;
+
         public override string ToString()
         {
             return "AsyncStage3";

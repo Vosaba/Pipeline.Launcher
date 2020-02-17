@@ -13,7 +13,8 @@ namespace PipelineLauncher.PipelineStage
 {
     public abstract class PipelineBulkStage<TInput, TOutput> : PipelineBaseStage<IEnumerable<PipelineStageItem<TInput>>, IEnumerable<PipelineStageItem<TOutput>>>, IPipelineBulkStage<TInput, TOutput>
     {
-        public new abstract BulkStageConfiguration Configuration { get; }
+        public abstract BulkStageConfiguration Configuration { get; }
+        public override StageBaseConfiguration BaseConfiguration => Configuration;
 
         public abstract Task<IEnumerable<TOutput>> ExecuteAsync(TInput[] input, CancellationToken cancellationToken);
 

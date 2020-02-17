@@ -42,7 +42,9 @@ namespace PipelineLauncher
             }
         }
 
-        public static Predicate<PipelineStageItem<TOutput>> GetPredicate<TOutput>(this Predicate<TOutput> predicate, ITargetBlock<PipelineStageItem<TOutput>> block)
+        public static Predicate<PipelineStageItem<TOutput>> GetPredicate<TOutput>(
+            this Predicate<TOutput> predicate, 
+            ITargetBlock<PipelineStageItem<TOutput>> target)
         {
             return x =>
             {
@@ -62,7 +64,7 @@ namespace PipelineLauncher
                 }
                 catch (Exception ex)
                 {
-                    block.Post(new ExceptionStageItem<TOutput>(ex, null, block.GetType(), x.Item));
+                    target.Post(new ExceptionStageItem<TOutput>(ex, null, predicate.GetType(), x.Item));
                     return false;
                 }
             };
@@ -112,7 +114,7 @@ namespace PipelineLauncher
                 $"on one of '{nameof(IAwaitablePipelineRunner<object, object>)}' or '{nameof(IPipelineCreator)}' to perform that action.";
 
             public static string RetriesMaxCountReached =
-                $"You called {nameof(ActionsSet.Retry)}" + " action more than '{0}' times.";
+                $"{nameof(ActionsSet.Retry)} was called" + " more than '{0}' times.";
         }
     }
 }
