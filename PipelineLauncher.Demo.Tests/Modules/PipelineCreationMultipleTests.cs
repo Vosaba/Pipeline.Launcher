@@ -165,7 +165,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
         }
 
         [Fact]
-        public void Pipeline_Creation_Multiple_Stages()
+        public async Task Pipeline_Creation_Multiple_Stages()
         {
             var t = Assembly.GetExecutingAssembly();
             
@@ -184,12 +184,23 @@ namespace PipelineLauncher.Demo.Tests.Modules
                 {
                     if (item.Value.StartsWith("Item#1->"))
                     {
-                        throw new System.Exception();
-                        return false;
+                        //throw new System.Exception();
+                        //return false;
 
                     }
 
                     return true;
+                })
+                .Stage(async item =>
+                {
+                    if (item.Value.StartsWith("Item#0->"))
+                    {
+                        //throw new System.Exception();
+                        await Task.Delay(1000);//return false;
+
+                    }
+
+                    return item;
                 });
 
 
@@ -206,26 +217,34 @@ namespace PipelineLauncher.Demo.Tests.Modules
             //    //source.Cancel();
             //});
 
-            pipeline.ExceptionItemsReceivedEvent += delegate (ExceptionItemsEventArgs args)
-            {
-                //args.Retry();
-            };
+            //pipeline.ItemReceivedEvent += delegate (Item args)
+            //{
+            //    //args.Retry();
+            //};
 
+            var dy = await pipeline.ProcessAsync(input);
             //source.CancelAfter(4900);
 
             //run
             stopWatch.Start();
-            var result = pipeline
-                .SetupCancellationToken(source.Token)
-                //.SetupExceptionHandler(args =>
-                //{
-                //    args.Retry();
-                //})
-                .Process(input).ToArray();
+            //var result = pipeline
+            //    .SetupCancellationToken(source.Token)
+            //    //.SetupExceptionHandler(args =>
+            //    //{
+            //    //    args.Retry();
+            //    //})
+            //    .Process(input).ToArray();
+
+            //var result = pipeline.ProcessAsyncEnumerable(input);
+            //await foreach (var item in pipeline.ProcessAsyncEnumerable(input).WithCancellation(source.Token))
+            //{
+                
+            //}
+
 
             stopWatch.Stop();
 
-            PrintOutputAndTime(stopWatch.ElapsedMilliseconds, result);
+           // PrintOutputAndTime(stopWatch.ElapsedMilliseconds, result);
             stopWatch.Reset();
 
             //var pipeline2 = pipelineSetup.CreateAwaitable();
@@ -234,11 +253,11 @@ namespace PipelineLauncher.Demo.Tests.Modules
             return;
             //run
             stopWatch.Start();
-            var result2 = pipeline.Process(result).ToArray();
+            //var result2 = pipeline.Process(result).ToArray();
             stopWatch.Stop();
 
             //Total time 24032
-            PrintOutputAndTime(stopWatch.ElapsedMilliseconds, result2);
+            //PrintOutputAndTime(stopWatch.ElapsedMilliseconds, result2);
             stopWatch.Reset();
         }
 

@@ -327,7 +327,7 @@ namespace PipelineLauncher.PipelineSetup
                     nextBlock.RetrieveExecutionBlock(options).Complete();
                 });//, Context.CancellationToken);
 
-                //currentBlock.Completion.ContinueWith(x =>
+                //currentBlock.GetCompletionTaskFor.ContinueWith(x =>
                 //{
                 //    nextBlock.RetrieveExecutionBlock(options).Complete();
                 //});//, Context.CancellationToken);

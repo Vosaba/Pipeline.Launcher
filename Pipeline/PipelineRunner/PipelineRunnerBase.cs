@@ -36,21 +36,7 @@ namespace PipelineLauncher.PipelineRunner
 
             GenerateSortingBlock = block =>
             {
-                var sortingBlock = new ActionBlock<PipelineStageItem<TOutput>>(input =>
-                {
-                    switch (input)
-                    {
-                        case ExceptionStageItem<TOutput> exceptionItem:
-                            ExceptionItemsReceivedEvent?.Invoke(new ExceptionItemsEventArgs(exceptionItem.FailedItems, exceptionItem.StageType, exceptionItem.Exception, exceptionItem.Retry));
-                            return;
-                        case NoneResultStageItem<TOutput> nonResultItem:
-                            SkippedItemReceivedEvent?.Invoke(new SkippedItemEventArgs(nonResultItem.OriginalItem, nonResultItem.StageType));
-                            return;
-                        default:
-                            ItemReceivedEvent?.Invoke(input.Item);
-                            return;
-                    }
-                });
+                var sortingBlock = new ActionBlock<PipelineStageItem<TOutput>>(SortingMethod);
 
                 block.LinkTo(sortingBlock, new DataflowLinkOptions { PropagateCompletion = false });
 
@@ -67,6 +53,22 @@ namespace PipelineLauncher.PipelineRunner
         {
             PipelineSetupContext.SetupCancellationToken(cancellationToken);
             return this;
+        }
+
+        protected void SortingMethod(PipelineStageItem<TOutput> input)
+        {
+            switch (input)
+            {
+                case ExceptionStageItem<TOutput> exceptionItem:
+                    ExceptionItemsReceivedEvent?.Invoke(new ExceptionItemsEventArgs(exceptionItem.FailedItems, exceptionItem.StageType, exceptionItem.Exception, exceptionItem.Retry));
+                    return;
+                case NoneResultStageItem<TOutput> nonResultItem:
+                    SkippedItemReceivedEvent?.Invoke(new SkippedItemEventArgs(nonResultItem.OriginalItem, nonResultItem.StageType));
+                    return;
+                default:
+                    ItemReceivedEvent?.Invoke(input.Item);
+                    return;
+            }
         }
     }
 }
