@@ -203,16 +203,10 @@ namespace PipelineLauncher.Demo.Tests.Modules
             var pipelineSetup = PipelineCreator
                 .WithExceptionHandler(args =>
                 {
-                   // args.Retry();
+                    args.Retry();
                 })
                 //.WithToken(source.Token)
-                .WithDiagnostic(item =>
-                {
-                    //if (item.State == DiagnosticState.Process)
-                    {
-                        //Output.WriteLine($"{item.StageType.Name}: {item.State} :'{string.Join("'; '", item.Input)}'");
-                    }
-                })
+                
                 //.Prepare<Item>()
                 .Stage<Stage1, Item>()
                 //.Stage((Item item, StageOption<Item, Item> option) =>
@@ -226,56 +220,14 @@ namespace PipelineLauncher.Demo.Tests.Modules
 
                 //    return item;
                 //})
+                .Stage(x => 
+                {
+
+                    
+
+                    return x;
+                })
                 .BulkStage(new BulkStageStage2())
-                .Broadcast(
-                    (item => false, // => "Item#NEW->AsyncStage3->AsyncStage4->Stage4->AsyncStage1->",
-                        branch1 => branch1
-                            .BulkStage(xx =>
-                            {
-                                foreach (var x in xx)
-                                {
-                                    if (x.Value.StartsWith("Item#0->"))
-                                    {
-                                        // await Task.Delay(2000);
-
-                                    }
-                                    x.Value += "111->";
-                                }
-
-                                return xx;
-                            })),
-                    (item => false,
-                        branch1 => branch1
-                            .Stage(async (Item x, StageOption<Item, Item> stageOption) =>
-                            {
-                                //await Task.Delay(2000, source.Token);
-                                if (x.Value.StartsWith("Item#0->"))
-                                {
-                                    //await Task.Delay(1000);
-                                    //return stageOption.Remove(x);
-
-                                    //return stageOption.SkipTo<Stage4>(x);
-                                    //throw new Exception("lol");
-                                    //return option.SkipTo<Stage4>(item);
-                                }
-                                x.Value += "222->";
-                                return x;
-                            })),
-                    (item => false,
-                        branch1 => branch1
-                            .Stage( (Item x, StageOption<Item, Item> stageOption) =>
-                            {
-                                //await Task.Delay(2000, source.Token);
-                                if (x.Value.StartsWith("Item#0->"))
-                                {
-                                    //return stageOption.Remove(x);
-                                    //throw new Exception("lol");
-                                    //return option.SkipTo<Stage4>(item);
-                                    //return new Item("Item#2000->");
-                                }
-                                x.Value += "333->";
-                                return x;
-                            })))
                 .Stage(new Stage3())
                 .Stage(new Stage4());
                 //.Branch(

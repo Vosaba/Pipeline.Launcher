@@ -18,7 +18,7 @@ namespace PipelineLauncher.PipelineStage
 
     public abstract class PipelineBaseStage<TInput, TOutput> : IPipelineBaseStage<TInput, TOutput>
     {
-        public virtual StageBaseConfiguration Configuration { get; }
+        public virtual StageBaseConfiguration Configuration { get; } = new StageBaseConfiguration();
 
         protected abstract object[] GetOriginalItems(TInput input);
 

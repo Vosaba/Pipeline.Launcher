@@ -11,7 +11,7 @@ namespace PipelineLauncher.PipelineStage
 {
     public abstract class PipelineStage<TInput, TOutput> : PipelineBaseStage<PipelineStageItem<TInput>, PipelineStageItem<TOutput>>, IPipelineStage<TInput, TOutput>
     {
-        public new abstract StageConfiguration Configuration { get; }
+        public abstract StageConfiguration Configuration { get; }
 
         public abstract Task<TOutput> ExecuteAsync(TInput input, CancellationToken cancellationToken);
 

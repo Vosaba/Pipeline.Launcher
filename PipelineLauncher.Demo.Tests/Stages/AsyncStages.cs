@@ -109,10 +109,20 @@ namespace PipelineLauncher.Demo.Tests.Stages
             item.Value = item.Value + "AsyncStage3->";
             Thread.Sleep(1000);
 
+            if (item.Value.StartsWith("Item#0->"))
+            {
+                throw new System.Exception();
+
+            }
+
             item.ProcessedBy.Add(Thread.CurrentThread.ManagedThreadId);
 
             return item;
         }
+
+        public override StageConfiguration Configuration => new StageConfiguration { 
+        
+        MaxRetriesCount = 3};
 
         public override string ToString()
         {
