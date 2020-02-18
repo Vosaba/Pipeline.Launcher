@@ -112,7 +112,7 @@ namespace PipelineLauncher.PipelineRunner
             var posted = input.Select(x => new PipelineStageItem<TInput>(x)).All(x => firstBlock.Post(x));
             firstBlock.Complete();
 
-            while (!lastBlock.Completion.IsCompleted)
+            while (await lastBlock.OutputAvailableAsync())
             {
                 var item = await lastBlock.ReceiveAsync();
                 if (item.Item != null)
@@ -121,7 +121,6 @@ namespace PipelineLauncher.PipelineRunner
                 }
 
                 SortingMethod(item);
-
             }
         }
 

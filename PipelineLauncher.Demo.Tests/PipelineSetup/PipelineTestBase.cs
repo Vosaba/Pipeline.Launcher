@@ -55,6 +55,11 @@ namespace PipelineLauncher.Demo.Tests.PipelineSetup
         {
             StopTimerAndPrintElapsedTime(stopWatch);
 
+            PrintResult(items);
+        }
+
+        public void PrintResult(IEnumerable items)
+        {
             foreach (var item in items)
             {
                 WriteLine(item);
