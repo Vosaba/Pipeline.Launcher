@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.PipelineEvents;
 using PipelineLauncher.Extensions;
 using Xunit;
@@ -189,7 +190,7 @@ namespace PipelineLauncher.Demo.Tests.Modules
 
                     }
 
-                    return true;
+                    return PredicateResult.Keep;
                 })
                 .Stage(async item =>
                 {

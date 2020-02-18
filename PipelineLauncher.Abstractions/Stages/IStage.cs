@@ -1,4 +1,6 @@
-﻿namespace PipelineLauncher.Abstractions.Stages
+﻿using PipelineLauncher.Abstractions.Dto;
+
+namespace PipelineLauncher.Abstractions.Stages
 {
     public interface IStage
     {
@@ -18,6 +20,6 @@
 
     public interface IConditionalStage<TInput> : IStageIn<TInput>
     {
-        bool Predicate(TInput input);
+        PredicateResult Predicate(TInput input);
     }
 }

@@ -3,6 +3,7 @@ using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.PipelineStage;
 using PipelineLauncher.Abstractions.PipelineStage.Configurations;
 using PipelineLauncher.Abstractions.PipelineStage.Dto;
@@ -67,11 +68,11 @@ namespace PipelineLauncher.Stages
 
     public abstract class ConditionalStage<TInput, TOutput> : Stage<TInput, TOutput>, IConditionalStage<TInput>
     {
-        public abstract bool Predicate(TInput input);
+        public abstract PredicateResult Predicate(TInput input);
     }
 
     public abstract class ConditionalStage<TInput> : Stage<TInput>, IConditionalStage<TInput>
     {
-        public abstract bool Predicate(TInput input);
+        public abstract PredicateResult Predicate(TInput input);
     }
 }

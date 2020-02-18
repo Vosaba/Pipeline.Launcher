@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using PipelineLauncher.PipelineSetup;
 using System.Linq;
 using System.Threading.Tasks.Dataflow;
+using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.PipelineRunner;
 using PipelineLauncher.Abstractions.PipelineStage;
 using PipelineLauncher.Abstractions.PipelineStage.Dto;
@@ -43,7 +44,7 @@ namespace PipelineLauncher
         }
 
         public static Predicate<PipelineStageItem<TOutput>> GetPredicate<TOutput>(
-            this Predicate<TOutput> predicate, 
+            this PipelinePredicate<TOutput> predicate, 
             ITargetBlock<PipelineStageItem<TOutput>> target)
         {
             return x =>
@@ -60,7 +61,22 @@ namespace PipelineLauncher
 
                 try
                 {
-                    return predicate(x.Item);
+                    var result = predicate(x.Item);
+
+                    switch (result)
+                    {
+                        case PredicateResult.Keep:
+                            return true;
+                        case PredicateResult.Skip:
+                            target.Post(new SkipStageItem<TOutput>(x.Item, predicate.GetType()));
+                            return false;
+                        case PredicateResult.Remove:
+                            target.Post(new RemoveStageItem<TOutput>(x.Item, predicate.GetType()));
+                            return false;
+                        default:
+                            target.Post(new ExceptionStageItem<TOutput>(new ArgumentOutOfRangeException(), null, predicate.GetType(), x.Item));
+                            return false;
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -69,39 +85,6 @@ namespace PipelineLauncher
                 }
             };
         }
-
-        //public static Predicate<IEnumerable<PipelineStageItem<TOutput>>> GetPredicate<TOutput>(this Predicate<TOutput[]> predicate, ITargetBlock<IEnumerable<PipelineStageItem<TOutput>>> block)
-        //{
-        //    return x =>
-        //    {
-        //        if (x == null)
-        //        {
-        //            return false;
-        //        }
-
-        //        var nonProcessableItems = x.Where(e => e.Item == null).ToArray();
-        //        if (nonProcessableItems.Any())
-        //        {
-        //            block.Post(nonProcessableItems);
-        //        }
-
-        //        var items = x.Where(e => e.Item != null).Select(e => e.Item).ToArray();
-        //        try
-        //        {
-        //            return predicate(items);
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            block.Post(
-        //                new[]
-        //                {
-        //                    new ExceptionStageItem<TOutput>(ex, null, block.GetType(), items.Cast<object>().ToArray())
-        //                });
-
-        //            return false;
-        //        }
-        //    };
-        //}
     }
 
     internal static partial class Helpers
@@ -109,7 +92,7 @@ namespace PipelineLauncher
         internal static class Strings
         {
             public static string RetryOnAwaitable = 
-                $"{nameof(ActionsSet.Retry)} action cannot be used in case of '{nameof(IAwaitablePipelineRunner<object, object>)}', " +
+                $"{nameof(ActionsSet.Retry)} action cannot be used on '{nameof(IAwaitablePipelineRunner<object, object>)}', " +
                 $"try use '{nameof(IAwaitablePipelineRunner<object, object>.SetupExceptionHandler)}' " +
                 $"on one of '{nameof(IAwaitablePipelineRunner<object, object>)}' or '{nameof(IPipelineCreator)}' to perform that action.";
 

@@ -51,11 +51,11 @@ namespace PipelineLauncher.PipelineSetup
 
         #region BulkStages
 
-        public IPipelineSetup<TInput, TNextOutput> BulkStage<TBulkStage, TNextOutput>(Predicate<TOutput> predicate = null)
+        public IPipelineSetup<TInput, TNextOutput> BulkStage<TBulkStage, TNextOutput>(PipelinePredicate<TOutput> predicate = null)
             where TBulkStage : BulkStage<TOutput, TNextOutput>
             => CreateNextBulkStage<TNextOutput>(StageService.GetStageInstance<TBulkStage>(), predicate);
 
-        public IPipelineSetup<TInput, TOutput> BulkStage<TBulkStage>(Predicate<TOutput> predicate = null)
+        public IPipelineSetup<TInput, TOutput> BulkStage<TBulkStage>(PipelinePredicate<TOutput> predicate = null)
             where TBulkStage : BulkStage<TOutput, TOutput>
             => CreateNextBulkStage<TOutput>(StageService.GetStageInstance<TBulkStage>(), predicate);
 
@@ -63,11 +63,11 @@ namespace PipelineLauncher.PipelineSetup
 
         #region Stages
 
-        public IPipelineSetup<TInput, TOutput> Stage<TStage>(Predicate<TOutput> predicate = null)
+        public IPipelineSetup<TInput, TOutput> Stage<TStage>(PipelinePredicate<TOutput> predicate = null)
             where TStage : Stages.Stage<TOutput, TOutput>
             => CreateNextStage<TOutput>(StageService.GetStageInstance<TStage>(), predicate);
 
-        public IPipelineSetup<TInput, TNextOutput> Stage<TStage, TNextOutput>(Predicate<TOutput> predicate = null)
+        public IPipelineSetup<TInput, TNextOutput> Stage<TStage, TNextOutput>(PipelinePredicate<TOutput> predicate = null)
             where TStage : Stages.Stage<TOutput, TNextOutput>
             => CreateNextStage<TNextOutput>(StageService.GetStageInstance<TStage>(), predicate);
 
@@ -79,7 +79,7 @@ namespace PipelineLauncher.PipelineSetup
 
         #region BulkStages
 
-        public IPipelineSetup<TInput, TNextOutput> BulkStage<TNextOutput>(BulkStage<TOutput, TNextOutput> bulkStage, Predicate<TOutput> predicate = null)
+        public IPipelineSetup<TInput, TNextOutput> BulkStage<TNextOutput>(BulkStage<TOutput, TNextOutput> bulkStage, PipelinePredicate<TOutput> predicate = null)
             => CreateNextBulkStage(bulkStage, predicate);
 
         public IPipelineSetup<TInput, TNextOutput> BulkStage<TNextOutput>(Func<TOutput[], IEnumerable<TNextOutput>> bulkFunc, BulkStageConfiguration bulkStageConfiguration)
@@ -92,7 +92,7 @@ namespace PipelineLauncher.PipelineSetup
 
         #region Stages
 
-        public IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(Stages.Stage<TOutput, TNextOutput> stage, Predicate<TOutput> predicate = null)
+        public IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(Stages.Stage<TOutput, TNextOutput> stage, PipelinePredicate<TOutput> predicate = null)
             => CreateNextStage(stage, predicate);
 
         public IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(Func<TOutput, TNextOutput> func)
@@ -357,7 +357,7 @@ namespace PipelineLauncher.PipelineSetup
             return new PipelineRunner<TInput, TOutput>(firstStageSetup.RetrieveExecutionBlock, Current.RetrieveExecutionBlock, Context, pipelineConfig);
         }
 
-        private PipelineSetup<TInput, TNextOutput> CreateNextStage<TNextOutput>(PipelineStage<TOutput, TNextOutput> stage, Predicate<TOutput> predicate)
+        private PipelineSetup<TInput, TNextOutput> CreateNextStage<TNextOutput>(PipelineStage<TOutput, TNextOutput> stage, PipelinePredicate<TOutput> predicate)
         {
             IPropagatorBlock<PipelineStageItem<TOutput>, PipelineStageItem<TNextOutput>> MakeNextBlock(StageCreationOptions options)
             {
@@ -418,7 +418,7 @@ namespace PipelineLauncher.PipelineSetup
             return CreateNextBlock(MakeNextBlock, stage.Configuration);
         }
 
-        private PipelineSetup<TInput, TNextOutput> CreateNextBulkStage<TNextOutput>(PipelineBulkStage<TOutput, TNextOutput> stage, Predicate<TOutput> predicate)
+        private PipelineSetup<TInput, TNextOutput> CreateNextBulkStage<TNextOutput>(PipelineBulkStage<TOutput, TNextOutput> stage, PipelinePredicate<TOutput> predicate)
         {
             IPropagatorBlock<PipelineStageItem<TOutput>, PipelineStageItem<TNextOutput>> MakeNextBlock(StageCreationOptions options)
             {

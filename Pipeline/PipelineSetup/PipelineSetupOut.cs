@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.PipelineStage.Configurations;
 using PipelineLauncher.Abstractions.PipelineStage.Dto;
 using PipelineLauncher.Stages;
@@ -13,20 +14,20 @@ namespace PipelineLauncher.PipelineSetup
 
         #region BulkStages
 
-        IPipelineSetupOut<TNextOutput> IPipelineSetupOut<TOutput>.BulkStage<TBulkStage, TNextOutput>(Predicate<TOutput> predicate = null)
+        IPipelineSetupOut<TNextOutput> IPipelineSetupOut<TOutput>.BulkStage<TBulkStage, TNextOutput>(PipelinePredicate<TOutput> predicate = null)
             => BulkStage<TBulkStage, TNextOutput>(predicate);
 
-        IPipelineSetupOut<TOutput> IPipelineSetupOut<TOutput>.BulkStage<TBulkStage>(Predicate<TOutput> predicate = null) 
+        IPipelineSetupOut<TOutput> IPipelineSetupOut<TOutput>.BulkStage<TBulkStage>(PipelinePredicate<TOutput> predicate = null) 
             => BulkStage<TBulkStage>(predicate);
 
         #endregion
 
         #region Stages
 
-        IPipelineSetupOut<TOutput> IPipelineSetupOut<TOutput>.Stage<TStage>(Predicate<TOutput> predicate = null)
+        IPipelineSetupOut<TOutput> IPipelineSetupOut<TOutput>.Stage<TStage>(PipelinePredicate<TOutput> predicate = null)
             => Stage<TStage>(predicate);
 
-        IPipelineSetupOut<TNextOutput> IPipelineSetupOut<TOutput>.Stage<TStage, TNextOutput>(Predicate<TOutput> predicate = null)
+        IPipelineSetupOut<TNextOutput> IPipelineSetupOut<TOutput>.Stage<TStage, TNextOutput>(PipelinePredicate<TOutput> predicate = null)
             => Stage<TStage, TNextOutput>(predicate);
 
         #endregion
@@ -37,7 +38,7 @@ namespace PipelineLauncher.PipelineSetup
 
         #region BulkStages
 
-        IPipelineSetupOut<TNextOutput> IPipelineSetupOut<TOutput>.BulkStage<TNextOutput>(BulkStage<TOutput, TNextOutput> baseStageBulkStage, Predicate<TOutput> predicate = null)
+        IPipelineSetupOut<TNextOutput> IPipelineSetupOut<TOutput>.BulkStage<TNextOutput>(BulkStage<TOutput, TNextOutput> baseStageBulkStage, PipelinePredicate<TOutput> predicate = null)
             => BulkStage<TNextOutput>(baseStageBulkStage, predicate);
 
         IPipelineSetupOut<TNextOutput> IPipelineSetupOut<TOutput>.BulkStage<TNextOutput>(Func<TOutput[], IEnumerable<TNextOutput>> bulkFunc, BulkStageConfiguration bulkStageConfiguration)
@@ -50,7 +51,7 @@ namespace PipelineLauncher.PipelineSetup
 
         #region Stages
 
-        IPipelineSetupOut<TNextOutput> IPipelineSetupOut<TOutput>.Stage<TNextOutput>(Stages.Stage<TOutput, TNextOutput> stage, Predicate<TOutput> predicate = null)
+        IPipelineSetupOut<TNextOutput> IPipelineSetupOut<TOutput>.Stage<TNextOutput>(Stages.Stage<TOutput, TNextOutput> stage, PipelinePredicate<TOutput> predicate = null)
             => Stage<TNextOutput>(stage, predicate);
 
         IPipelineSetupOut<TNextOutput> IPipelineSetupOut<TOutput>.Stage<TNextOutput>(Func<TOutput, TNextOutput> func)
@@ -71,18 +72,18 @@ namespace PipelineLauncher.PipelineSetup
 
         #region Branches
 
-        //public IPipelineSetupOut<TNextOutput> Broadcast<TNextOutput>(params (Predicate<TOutput> predicate, Func<IPipelineSetupOut<TOutput>, IPipelineSetupOut<TNextOutput>> branch)[] branches)
+        //public IPipelineSetupOut<TNextOutput> Broadcast<TNextOutput>(params (PipelinePredicate<TOutput> predicate, Func<IPipelineSetupOut<TOutput>, IPipelineSetupOut<TNextOutput>> branch)[] branches)
         //{
         //    throw new NotImplementedException();
         //}
 
-        //public IPipelineSetupOut<TNextOutput> Branch<TNextOutput>(params (Predicate<TOutput> predicate, Func<IPipelineSetupOut<TOutput>, IPipelineSetupOut<TNextOutput>> branch)[] branches)
+        //public IPipelineSetupOut<TNextOutput> Branch<TNextOutput>(params (PipelinePredicate<TOutput> predicate, Func<IPipelineSetupOut<TOutput>, IPipelineSetupOut<TNextOutput>> branch)[] branches)
         //{
         //    throw new NotImplementedException();
         //}
 
         //public IPipelineSetupOut<TNextOutput> Branch<TNextOutput>(ConditionExceptionScenario conditionExceptionScenario,
-        //    params (Predicate<TOutput> predicate, Func<IPipelineSetupOut<TOutput>, IPipelineSetupOut<TNextOutput>> branch)[] branches)
+        //    params (PipelinePredicate<TOutput> predicate, Func<IPipelineSetupOut<TOutput>, IPipelineSetupOut<TNextOutput>> branch)[] branches)
         //{
         //    return Branch(conditionExceptionScenario, branches);
         //}

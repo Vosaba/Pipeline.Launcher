@@ -197,7 +197,7 @@ namespace PipelineLauncher
             return CreateNextBlock(MakeNextBlock, bulkStage.Configuration);
         }
 
-        private PipelineSetup<TInput, TOutput> CreateNextStage<TInput, TOutput>(PipelineStage<TInput, TOutput> stage, Predicate<TOutput> predicate = null)
+        private PipelineSetup<TInput, TOutput> CreateNextStage<TInput, TOutput>(PipelineStage<TInput, TOutput> stage)
         {
             IPropagatorBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>> MakeNextBlock(StageCreationOptions options)
             {
