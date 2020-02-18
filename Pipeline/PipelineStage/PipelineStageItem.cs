@@ -33,13 +33,16 @@ namespace PipelineLauncher.PipelineStage
 
     internal class SkipStageItem<TItem> : NoneResultStageItem<TItem>
     {
-        public SkipStageItem(object originalItem, Type stageType) : base(originalItem, stageType)
+        public bool ReadyToProcess { get; }
+
+        public SkipStageItem(object originalItem, Type stageType, bool readyToProcess = false) : base(originalItem, stageType)
         {
+            ReadyToProcess = readyToProcess;
         }
 
         public override NoneResultStageItem<TNewItem> Return<TNewItem>()
         {
-            return new SkipStageItem<TNewItem>(OriginalItem, StageType);
+            return new SkipStageItem<TNewItem>(OriginalItem, StageType, true);
         }
     }
 

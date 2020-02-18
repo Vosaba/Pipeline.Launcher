@@ -28,9 +28,9 @@ namespace PipelineLauncher.PipelineStage
                     case ExceptionStageItem<TInput> exceptionItem:
                         return exceptionItem.Return<TOutput>();
 
-                    case SkipStageItem<TInput> skipItem when typeof(TInput) == skipItem.OriginalItem.GetType():
+                    case SkipStageItem<TInput> skipItem when typeof(TInput) == skipItem.OriginalItem.GetType() && skipItem.ReadyToProcess:
                         return new PipelineStageItem<TOutput>(await ExecuteAsync((TInput)skipItem.OriginalItem, context.CancellationToken));
-                    case SkipStageItem<TInput> skipItem when typeof(TInput) != skipItem.OriginalItem.GetType():
+                    case SkipStageItem<TInput> skipItem:
                         return skipItem.Return<TOutput>();
 
                     case SkipStageItemTill<TInput> skipItemTill

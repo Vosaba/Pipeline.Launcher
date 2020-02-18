@@ -42,9 +42,9 @@ namespace PipelineLauncher.PipelineStage
                 return type == typeof(SkipStageItem<TInput>);
             }).Cast<SkipStageItem<TInput>>().ToArray();
 
-            itemsToProcess.AddRange(skipItems.Where(x => typeof(TInput) == x.OriginalItem.GetType()).Select(x => (TInput)x.OriginalItem));
+            itemsToProcess.AddRange(skipItems.Where(x => typeof(TInput) == x.OriginalItem.GetType() && x.ReadyToProcess).Select(x => (TInput)x.OriginalItem));
 
-            var skipItemsWithoutProcess = skipItems.Where(x => typeof(TInput) != x.OriginalItem.GetType()).Select(x => x.Return<TOutput>()).ToArray();
+            var skipItemsWithoutProcess = skipItems.Where(x => typeof(TInput) != x.OriginalItem.GetType() || !x.ReadyToProcess).Select(x => x.Return<TOutput>()).ToArray();
 
             if (skipItemsWithoutProcess.Any())
             {
