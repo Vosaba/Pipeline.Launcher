@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.PipelineEvents;
-using PipelineLauncher.Abstractions.PipelineStage;
 using PipelineLauncher.Abstractions.PipelineStage.Configurations;
 using PipelineLauncher.Abstractions.PipelineStage.Dto;
 using PipelineLauncher.Exceptions;
@@ -21,7 +18,7 @@ namespace PipelineLauncher.PipelineStage
         public abstract StageBaseConfiguration BaseConfiguration { get; }
 
         protected abstract object[] GetOriginalItems(TInput input);
-
+        protected abstract object[] GetOriginalItems(TOutput output);
         protected abstract TOutput GetExceptionItem(TInput input, Exception ex, PipelineStageContext context);
 
         protected abstract Task<TOutput> InternalExecute(TInput input, PipelineStageContext context);
@@ -30,10 +27,10 @@ namespace PipelineLauncher.PipelineStage
         {
             try
             {
-                context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(input, GetType(), DiagnosticState.Input));
+                context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(GetOriginalItems(input), GetType(), DiagnosticState.Input));
                 var result = await InternalExecute(input, context);
 
-                context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(result, GetType(), DiagnosticState.Output));
+                context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(GetOriginalItems(result), GetType(), DiagnosticState.Output));
                 return result;
             }
             catch (Exception ex)
@@ -51,16 +48,16 @@ namespace PipelineLauncher.PipelineStage
                         {
                             var retryException = new StageRetryCountException(BaseConfiguration.MaxRetriesCount);
 
-                            context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(input, GetType(), DiagnosticState.ExceptionOccured, retryException.Message));
+                            context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(GetOriginalItems(input), GetType(), DiagnosticState.ExceptionOccured, retryException.Message));
                             return GetExceptionItem(input, retryException, context);
                         }
 
-                        context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(input, GetType(), DiagnosticState.Retry, ex.Message));
+                        context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(GetOriginalItems(input), GetType(), DiagnosticState.Retry, ex.Message));
                         return await BaseExecute(input, context, ++tryCount);
                     }
                 }
 
-                context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(input, GetType(), DiagnosticState.ExceptionOccured, ex.Message));
+                context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(GetOriginalItems(input), GetType(), DiagnosticState.ExceptionOccured, ex.Message));
                 return GetExceptionItem(input, ex, context);
             }
         }

@@ -46,7 +46,7 @@ namespace PipelineLauncher.PipelineStage
             }
             catch (NoneParamException<TOutput> e)
             {
-                context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(input, GetType(), DiagnosticState.Skip));
+                context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(GetOriginalItems(input), GetType(), DiagnosticState.Skip));
                 return e.StageItem;
             }
         }
@@ -58,7 +58,24 @@ namespace PipelineLauncher.PipelineStage
 
         protected override object[] GetOriginalItems(PipelineStageItem<TInput> input)
         {
-            return new object[] { input.Item };
+            switch (input)
+            {
+                case NoneResultStageItem<TInput> noneResultItem:
+                    return  new [] { noneResultItem.OriginalItem }; ;
+                default:
+                    return new object[] { input.Item };
+            }
+        }
+
+        protected override object[] GetOriginalItems(PipelineStageItem<TOutput> output)
+        {
+            switch (output)
+            {
+                case NoneResultStageItem<TOutput> noneResultItem:
+                    return new[] { noneResultItem.OriginalItem }; ;
+                default:
+                    return new object[] { output.Item };
+            }
         }
     }
 }

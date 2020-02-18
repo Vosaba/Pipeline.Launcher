@@ -20,7 +20,7 @@ namespace PipelineLauncher.PipelineStage
 
         protected override async Task<IEnumerable<PipelineStageItem<TOutput>>> InternalExecute(IEnumerable<PipelineStageItem<TInput>> input, PipelineStageContext context)
         {
-            var inputArray = input.ToArray();
+            var inputArray = input as PipelineStageItem<TInput>[] ?? input.ToArray();
 
             var itemsToProcess = new List<TInput>();
             var result = new List<PipelineStageItem<TOutput>>();
@@ -66,6 +66,11 @@ namespace PipelineLauncher.PipelineStage
                 result.AddRange(skipTillWithoutProcess);
             }
 
+            if (result.Any())
+            {
+                context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(GetOriginalItems(result), GetType(), DiagnosticState.Skip));
+            }
+
             itemsToProcess.AddRange(inputArray.Where(x => x.GetType() == typeof(PipelineStageItem<TInput>)).Select(x => x.Item));
 
             if (itemsToProcess.Any())
@@ -83,7 +88,45 @@ namespace PipelineLauncher.PipelineStage
 
         protected override object[] GetOriginalItems(IEnumerable<PipelineStageItem<TInput>> input)
         {
-            return input.Select(x => x.Item).Cast<object>().ToArray();
+            var pipelineStageItems = input as PipelineStageItem<TInput>[] ?? input.ToArray();
+
+            var noneResultItems = pipelineStageItems
+                .Where(x =>
+                {
+                    var type = x.GetType();
+                    return type != typeof(PipelineStageItem<TInput>) && type != typeof(ExceptionStageItem<TInput>);
+                })
+                .Cast<NoneResultStageItem<TInput>>()
+                .Select(x => x.OriginalItem).ToArray();
+
+            var resultItems = pipelineStageItems
+                .Where(x => x.GetType() == typeof(PipelineStageItem<TInput>))
+                .Select(x => x.Item)
+                .Cast<object>().ToArray();
+
+            return noneResultItems.Concat(resultItems).ToArray();
+        }
+
+        protected override object[] GetOriginalItems(IEnumerable<PipelineStageItem<TOutput>> output)
+        {
+            var pipelineStageItems = output as PipelineStageItem<TOutput>[] ?? output.ToArray();
+
+            //var noneResultItems = pipelineStageItems
+            //    .Where(x =>
+            //    {
+            //        var type = x.GetType();
+            //        return type != typeof(PipelineStageItem<TOutput>) && type != typeof(ExceptionStageItem<TOutput>);
+            //    })
+            //    .Cast<NoneResultStageItem<TOutput>>()
+            //    .Select(x => x.OriginalItem);
+
+            var resultItems = pipelineStageItems
+                .Where(x => x.GetType() == typeof(PipelineStageItem<TOutput>))
+                .Select(x => x.Item)
+                .Cast<object>();
+
+            return resultItems.ToArray();
+            //return noneResultItems.Concat(resultItems).ToArray();
         }
     }
 }

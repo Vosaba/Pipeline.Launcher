@@ -4,7 +4,7 @@ namespace PipelineLauncher.Abstractions.Dto
 {
     public struct DiagnosticItem
     {
-        public object Input { get; }
+        public object[] Items { get; }
 
         public Type StageType { get; }
         public TimeSpan TimeSpan { get; } 
@@ -13,13 +13,13 @@ namespace PipelineLauncher.Abstractions.Dto
 
         public string StageName => StageType.FullName;
 
-        public DiagnosticItem(object input, Type stageType, DiagnosticState diagnosticState, string message = null)
+        public DiagnosticItem(object[] items, Type stageType, DiagnosticState diagnosticState, string message = null)
         {
             StageType = stageType;
             TimeSpan = DateTime.Now.TimeOfDay;
             State = diagnosticState;
             Message = message;
-            Input = input;
+            Items = items;
         }
     }
 
