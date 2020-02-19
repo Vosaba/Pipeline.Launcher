@@ -77,18 +77,18 @@ namespace PipelineLauncher.Demo.Tests.PipelineSetup.AwaitablePipelineRunner
 
             // Configure stages
             var pipelineSetup = PipelineCreator
-                .WithDiagnostic((DiagnosticItem diagnosticItem) =>
-                {
-                    var itemsNames = diagnosticItem.Items.Cast<Item>().Select(x => x.Name).ToArray();
-                    var message = $"Stage: {diagnosticItem.StageType.Name} | Items: {{ {string.Join(" }; { ", itemsNames)} }} | State: {diagnosticItem.State}";
+                //.WithDiagnostic((DiagnosticItem diagnosticItem) =>
+                //{
+                //    var itemsNames = diagnosticItem.Items.Cast<Item>().Select(x => x.Name).ToArray();
+                //    var message = $"Stage: {diagnosticItem.StageType.Name} | Items: {{ {string.Join(" }; { ", itemsNames)} }} | State: {diagnosticItem.State}";
 
-                    if (!string.IsNullOrEmpty(diagnosticItem.Message))
-                    {
-                        message += $" | Message: {diagnosticItem.Message}";
-                    }
+                //    if (!string.IsNullOrEmpty(diagnosticItem.Message))
+                //    {
+                //        message += $" | Message: {diagnosticItem.Message}";
+                //    }
 
-                    WriteLine(message);
-                })
+                //    WriteLine(message);
+                //})
                 .Stage<Stage, Item>()
                 .BulkStage<BulkStage_Async>()
                 .Stage(item =>
@@ -107,6 +107,20 @@ namespace PipelineLauncher.Demo.Tests.PipelineSetup.AwaitablePipelineRunner
             // Make pipeline from stageSetup
             var pipelineRunner = pipelineSetup
                 .CreateAwaitable();
+
+            //pipelineRunner.DiagnosticEvent += (DiagnosticItem diagnosticItem) =>
+            //{
+            //    var itemsNames = diagnosticItem.Items.Cast<Item>().Select(x => x.Name).ToArray();
+            //    var message =
+            //        $"Stage: {diagnosticItem.StageType.Name} | Items: {{ {string.Join(" }; { ", itemsNames)} }} | State: {diagnosticItem.State}";
+
+            //    if (!string.IsNullOrEmpty(diagnosticItem.Message))
+            //    {
+            //        message += $" | Message: {diagnosticItem.Message}";
+            //    }
+
+            //    WriteLine(message);
+            //};
 
             // Process items and print result
             (this, pipelineRunner).ProcessAndPrintResults(items, true);

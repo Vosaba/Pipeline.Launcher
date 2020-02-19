@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Threading;
-using System.Threading.Tasks;
 using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.PipelineEvents;
-using PipelineLauncher.Abstractions.PipelineStage;
 using PipelineLauncher.Abstractions.PipelineStage.Dto;
 using PipelineLauncher.Abstractions.Services;
 using PipelineLauncher.Abstractions.Stages;
@@ -14,9 +12,10 @@ namespace PipelineLauncher.PipelineSetup
     internal class PipelineSetupContext
     {
         private IStageService _stageService;
-        private Action<DiagnosticItem> _diagnosticHandler;
+        //private Action<DiagnosticItem> _diagnosticHandler;
         private Action<ExceptionItemsEventArgs> _exceptionHandler;
 
+        public event DiagnosticEventHandler DiagnosticEvent;
         //public TaskContinuationOptions TaskContinuationOptions = TaskContinuationOptions.ExecuteSynchronously;
 
         public bool UseDefaultServiceResolver { get; private set; } = true;
@@ -81,11 +80,11 @@ namespace PipelineLauncher.PipelineSetup
             return this;
         }
 
-        public PipelineSetupContext SetupDiagnosticAction(Action<DiagnosticItem> diagnosticAction)
-        {
-            _diagnosticHandler = diagnosticAction;
-            return this;
-        }
+        //public PipelineSetupContext SetupDiagnosticAction(Action<DiagnosticItem> diagnosticAction)
+        //{
+        //    _diagnosticHandler = diagnosticAction;
+        //    return this;
+        //}
 
         public PipelineSetupContext SetupCancellationToken(CancellationToken cancellationToken)
         {
@@ -97,7 +96,7 @@ namespace PipelineLauncher.PipelineSetup
         {
             return new PipelineStageContext(
                 CancellationToken, 
-                new ActionsSet(retry, _exceptionHandler, _diagnosticHandler));
+                new ActionsSet(retry, _exceptionHandler, DiagnosticEvent));
         }
     }
 }

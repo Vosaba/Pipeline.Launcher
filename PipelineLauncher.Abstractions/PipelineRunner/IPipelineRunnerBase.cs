@@ -8,6 +8,7 @@ namespace PipelineLauncher.Abstractions.PipelineRunner
         event ItemReceivedEventHandler<TOutput> ItemReceivedEvent;
         event ExceptionItemsReceivedEventHandler ExceptionItemsReceivedEvent;
         event SkippedItemReceivedEventHandler SkippedItemReceivedEvent;
+        event DiagnosticEventHandler DiagnosticEvent;
 
         public IPipelineRunnerBase<TInput, TOutput> SetupCancellationToken(CancellationToken cancellationToken);
     }

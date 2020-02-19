@@ -23,6 +23,11 @@ namespace PipelineLauncher.PipelineRunner
         public event ItemReceivedEventHandler<TOutput> ItemReceivedEvent;
         public event ExceptionItemsReceivedEventHandler ExceptionItemsReceivedEvent;
         public event SkippedItemReceivedEventHandler SkippedItemReceivedEvent;
+        public event DiagnosticEventHandler DiagnosticEvent
+        {
+            add => PipelineSetupContext.DiagnosticEvent += value;
+            remove => PipelineSetupContext.DiagnosticEvent -= value;
+        }
 
         internal PipelineRunnerBase(
             Func<StageCreationOptions, bool, ITargetBlock<PipelineStageItem<TInput>>> retrieveFirstBlock,

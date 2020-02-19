@@ -20,7 +20,7 @@ namespace PipelineLauncher
 
         IPipelineCreator WithStageService(Func<Type, IStage> stageService);
         
-        IPipelineCreator WithDiagnostic(Action<DiagnosticItem> diagnosticHandler);
+        //IPipelineCreator WithDiagnostic(Action<DiagnosticItem> diagnosticHandler);
 
         IPipelineCreator WithExceptionHandler(Action<ExceptionItemsEventArgs> exceptionHandler);
 

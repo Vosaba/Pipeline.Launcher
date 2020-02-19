@@ -110,18 +110,18 @@ namespace PipelineLauncher.Demo.Tests.PipelineSetup.PipelineRunner
 
             // Configure stages
             var pipelineSetup = PipelineCreator
-                .WithDiagnostic((DiagnosticItem diagnosticItem) =>
-                {
-                    var itemsNames = diagnosticItem.Items.Cast<Item>().Select(x => x.Name).ToArray();
-                    var message = $"Stage: {diagnosticItem.StageType.Name} | Items: {{ {string.Join(" }; { ", itemsNames)} }} | State: {diagnosticItem.State}";
+                //.WithDiagnostic((DiagnosticItem diagnosticItem) =>
+                //{
+                //    var itemsNames = diagnosticItem.Items.Cast<Item>().Select(x => x.Name).ToArray();
+                //    var message = $"Stage: {diagnosticItem.StageType.Name} | Items: {{ {string.Join(" }; { ", itemsNames)} }} | State: {diagnosticItem.State}";
 
-                    if (!string.IsNullOrEmpty(diagnosticItem.Message))
-                    {
-                        message += $" | Message: {diagnosticItem.Message}";
-                    }
+                //    if (!string.IsNullOrEmpty(diagnosticItem.Message))
+                //    {
+                //        message += $" | Message: {diagnosticItem.Message}";
+                //    }
 
-                    WriteLine(message);
-                })
+                //    WriteLine(message);
+                //})
                 .Stage<Stage, Item>()
                 .Stage(item =>
                 {

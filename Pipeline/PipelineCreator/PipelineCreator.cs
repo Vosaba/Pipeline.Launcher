@@ -55,11 +55,11 @@ namespace PipelineLauncher
             return this;
         }
 
-        public IPipelineCreator WithDiagnostic(Action<DiagnosticItem> diagnosticHandler)
-        {
-            _pipelineSetupContext.SetupDiagnosticAction(diagnosticHandler);
-            return this;
-        }
+        //public IPipelineCreator WithDiagnostic(Action<DiagnosticItem> diagnosticHandler)
+        //{
+        //    _pipelineSetupContext.SetupDiagnosticAction(diagnosticHandler);
+        //    return this;
+        //}
 
         public IPipelineCreator WithExceptionHandler(Action<ExceptionItemsEventArgs> exceptionHandler)
         {

@@ -7,7 +7,7 @@ namespace PipelineLauncher.Abstractions.PipelineStage.Dto
 {
     public class ActionsSet
     {
-        public ActionsSet(Action retry, Action<ExceptionItemsEventArgs> exceptionHandler, Action<DiagnosticItem> diagnosticHandler)
+        public ActionsSet(Action retry, Action<ExceptionItemsEventArgs> exceptionHandler, DiagnosticEventHandler diagnosticHandler)
         {
             Retry = retry;
             ExceptionHandler = exceptionHandler;
@@ -16,6 +16,6 @@ namespace PipelineLauncher.Abstractions.PipelineStage.Dto
 
         public Action Retry { get; }
         public Action<ExceptionItemsEventArgs> ExceptionHandler { get; }
-        public Action<DiagnosticItem> DiagnosticHandler { get; }
+        public DiagnosticEventHandler DiagnosticHandler { get; }
     }
 }
