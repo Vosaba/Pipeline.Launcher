@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.PipelineStage.Configurations;
 using PipelineLauncher.Abstractions.PipelineStage.Dto;
@@ -8,7 +9,7 @@ namespace PipelineLauncher.Abstractions.PipelineStage
 {
     public interface IPipelineStage<TInput, TOutput> : IStage<TInput, TOutput>
     {
-        //Task<PipelineStageItem<TOutput>> InternalExecute(PipelineStageItem<TInput> input, PipelineStageContext context);
+        Task<TOutput> ExecuteAsync(TInput input, CancellationToken cancellationToken);
         StageConfiguration Configuration { get; }
     }
 }

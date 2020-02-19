@@ -267,7 +267,7 @@ namespace PipelineLauncher.PipelineSetup
                         object originalItem;
                         switch (item)
                         {
-                            case NoneResultStageItem<TInput> noneResultItem:
+                            case NonResultStageItem<TInput> noneResultItem:
                                 originalItem = noneResultItem.OriginalItem;
                                 break;
                             default:
@@ -357,10 +357,11 @@ namespace PipelineLauncher.PipelineSetup
             return new PipelineRunner<TInput, TOutput>(firstStageSetup.RetrieveExecutionBlock, Current.RetrieveExecutionBlock, Context, pipelineConfig);
         }
 
-        private PipelineSetup<TInput, TNextOutput> CreateNextStage<TNextOutput>(PipelineStage<TOutput, TNextOutput> stage, PipelinePredicate<TOutput> predicate)
+        private PipelineSetup<TInput, TNextOutput> CreateNextStage<TNextOutput>(IPipelineStage<TOutput, TNextOutput> stageA, PipelinePredicate<TOutput> predicate)
         {
             IPropagatorBlock<PipelineStageItem<TOutput>, PipelineStageItem<TNextOutput>> MakeNextBlock(StageCreationOptions options)
             {
+                var stage = new PipelineStage<TOutput, TNextOutput>(stageA);
 
                 TransformBlock<PipelineStageItem<TOutput>, PipelineStageItem<TNextOutput>> rePostBlock = null;
 
@@ -415,13 +416,15 @@ namespace PipelineLauncher.PipelineSetup
                 return nextBlock;
             }
 
-            return CreateNextBlock(MakeNextBlock, stage.Configuration);
+            return CreateNextBlock(MakeNextBlock, stageA.Configuration);
         }
 
-        private PipelineSetup<TInput, TNextOutput> CreateNextBulkStage<TNextOutput>(PipelineBulkStage<TOutput, TNextOutput> stage, PipelinePredicate<TOutput> predicate)
+        private PipelineSetup<TInput, TNextOutput> CreateNextBulkStage<TNextOutput>(IPipelineBulkStage<TOutput, TNextOutput> stageA, PipelinePredicate<TOutput> predicate)
         {
             IPropagatorBlock<PipelineStageItem<TOutput>, PipelineStageItem<TNextOutput>> MakeNextBlock(StageCreationOptions options)
             {
+                var stage = new PipelineBulkStage<TOutput, TNextOutput>(stageA);
+
                 IPropagatorBlock<PipelineStageItem<TOutput>, PipelineStageItem<TOutput>[]> buffer;
                 if (options.UseTimeOuts)
                 {
@@ -492,7 +495,7 @@ namespace PipelineLauncher.PipelineSetup
                 return next;
             }
 
-            return CreateNextBlock(MakeNextBlock, stage.Configuration);
+            return CreateNextBlock(MakeNextBlock, stageA.Configuration);
         }
 
         private PipelineSetup<TInput, TNextOutput> CreateNextBlock<TNextOutput>(Func<StageCreationOptions, IPropagatorBlock<PipelineStageItem<TOutput>, PipelineStageItem<TNextOutput>>> nextBlock, StageBaseConfiguration stageConfiguration)

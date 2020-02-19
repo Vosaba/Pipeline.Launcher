@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using PipelineLauncher.Abstractions.Dto;
+using PipelineLauncher.Abstractions.PipelineStage;
 using PipelineLauncher.Abstractions.PipelineStage.Configurations;
 using PipelineLauncher.Abstractions.PipelineStage.Dto;
 using PipelineLauncher.Abstractions.Stages;
@@ -11,12 +12,12 @@ using PipelineLauncher.PipelineStage;
 
 namespace PipelineLauncher.Stages
 {
-    public abstract class BulkStage<TInput, TOutput> : PipelineBulkStage<TInput, TOutput>
+    public abstract class BulkStage<TInput, TOutput> : IPipelineBulkStage<TInput, TOutput>
     {
-        public override BulkStageConfiguration Configuration => new BulkStageConfiguration();
+        public virtual BulkStageConfiguration Configuration => new BulkStageConfiguration();
 
         [DebuggerStepThrough]
-        public override async Task<IEnumerable<TOutput>> ExecuteAsync(TInput[] input, CancellationToken cancellationToken)
+        public async Task<IEnumerable<TOutput>> ExecuteAsync(TInput[] input, CancellationToken cancellationToken)
         {
             return await ExecuteAsync(input);
         }

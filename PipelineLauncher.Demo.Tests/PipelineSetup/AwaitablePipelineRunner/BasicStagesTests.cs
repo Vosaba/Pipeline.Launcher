@@ -63,7 +63,7 @@ namespace PipelineLauncher.Demo.Tests.PipelineSetup.AwaitablePipelineRunner
             // Print elapsed time and result
             PrintResult(result);
 
-            // 3) GetCompletionTaskFor TODO
+            // 3) ItemReceivedEvent TODO
 
             pipelineRunner.ItemReceivedEvent += PrintProcessed;
             // Process items
@@ -71,7 +71,7 @@ namespace PipelineLauncher.Demo.Tests.PipelineSetup.AwaitablePipelineRunner
             pipelineRunner.ItemReceivedEvent -= PrintProcessed;
             WriteSeparator();
 
-            // 4) GetCompletionTaskFor TODO
+            // 4) ProcessAsyncEnumerable TODO
 
             await foreach (var item in pipelineRunner.ProcessAsyncEnumerable(items))
             {

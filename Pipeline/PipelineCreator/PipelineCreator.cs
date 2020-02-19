@@ -143,10 +143,12 @@ namespace PipelineLauncher
 
         #endregion
 
-        private PipelineSetup<TInput, TOutput> CreateNextBulkStage<TInput, TOutput>(PipelineBulkStage<TInput, TOutput> bulkStage)
+        private PipelineSetup<TInput, TOutput> CreateNextBulkStage<TInput, TOutput>(IPipelineBulkStage<TInput, TOutput> bulkStageA)
         {
             IPropagatorBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>> MakeNextBlock(StageCreationOptions options)
             {
+                var bulkStage = new PipelineBulkStage<TInput, TOutput>(bulkStageA);
+
                 IPropagatorBlock<PipelineStageItem<TInput>, PipelineStageItem<TInput>[]> buffer;
                 if (options.UseTimeOuts)
                 {
@@ -194,13 +196,15 @@ namespace PipelineLauncher
                 return DataflowBlock.Encapsulate(buffer, nextBlock);
             }
 
-            return CreateNextBlock(MakeNextBlock, bulkStage.Configuration);
+            return CreateNextBlock(MakeNextBlock, bulkStageA.Configuration);
         }
 
-        private PipelineSetup<TInput, TOutput> CreateNextStage<TInput, TOutput>(PipelineStage<TInput, TOutput> stage)
+        private PipelineSetup<TInput, TOutput> CreateNextStage<TInput, TOutput>(IPipelineStage<TInput, TOutput> stageA)
         {
             IPropagatorBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>> MakeNextBlock(StageCreationOptions options)
             {
+                var stage = new PipelineStage<TInput, TOutput>(stageA);
+
                 TransformBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>> rePostBlock = null;
 
                 Action<PipelineStageItem<TInput>> RePostMessage;
@@ -232,7 +236,7 @@ namespace PipelineLauncher
                 return nextBlock;
             }
 
-            return CreateNextBlock(MakeNextBlock, stage.Configuration);
+            return CreateNextBlock(MakeNextBlock, stageA.Configuration);
         }
 
         private PipelineSetup<TInput, TOutput> CreateNextBlock<TInput, TOutput>(Func<StageCreationOptions, IPropagatorBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>>> executionBlock, StageBaseConfiguration stageConfiguration)

@@ -19,4 +19,19 @@ namespace PipelineLauncher.Demo.Tests.Stages.Single
             return PredicateResult.Keep;
         }
     }
+
+    public class Stage_Conditional_1 : ConditionalStage<Item>
+    {
+        public override Item Execute(Item item)
+        {
+            item.Process(GetType());
+
+            return item;
+        }
+
+        public override PredicateResult Predicate(Item input)
+        {
+            return PredicateResult.Keep;
+        }
+    }
 }

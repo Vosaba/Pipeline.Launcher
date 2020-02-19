@@ -12,146 +12,84 @@ using PipelineLauncher.Abstractions.Dto;
 
 namespace PipelineLauncher.PipelineStage
 {
-    public abstract class PipelineBulkStage<TInput, TOutput> : PipelineBaseStage<IEnumerable<PipelineStageItem<TInput>>, IEnumerable<PipelineStageItem<TOutput>>>, IPipelineBulkStage<TInput, TOutput>
+    internal class PipelineBulkStage<TInput, TOutput> : PipelineBaseStage<IEnumerable<PipelineStageItem<TInput>>, IEnumerable<PipelineStageItem<TOutput>>>
     {
-        public abstract BulkStageConfiguration Configuration { get; }
+        private readonly IPipelineBulkStage<TInput, TOutput> _pipelineBulkStage;
+        public PipelineBulkStage(IPipelineBulkStage<TInput, TOutput> pipelineBulkStage)
+        {
+            _pipelineBulkStage = pipelineBulkStage;
+        }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        public BulkStageConfiguration Configuration => _pipelineBulkStage.Configuration;
+
+        protected Task<IEnumerable<TOutput>> ExecuteAsync(TInput[] input, CancellationToken cancellationToken)
+            => _pipelineBulkStage.ExecuteAsync(input, cancellationToken);
+
         protected override StageBaseConfiguration BaseConfiguration => Configuration;
+        protected override Type StageType => _pipelineBulkStage.GetType();
 
-        public abstract Task<IEnumerable<TOutput>> ExecuteAsync(TInput[] input, CancellationToken cancellationToken);
-
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         protected override async Task<IEnumerable<PipelineStageItem<TOutput>>> InternalExecute(IEnumerable<PipelineStageItem<TInput>> input, PipelineStageContext context)
         {
             var inputArray = input as PipelineStageItem<TInput>[] ?? input.ToArray();
 
-            var itemsToProcess = new List<TInput>();
-            var result = new List<PipelineStageItem<TOutput>>();
+            var itemsToProcess = inputArray
+                .Where(x => x.GetType() == typeof(PipelineStageItem<TInput>));
 
-            var removeAndExceptionItems = inputArray.Where(x =>
-            {
-                var type = x.GetType();
-                return type == typeof(RemoveStageItem<TInput>) || type == typeof(ExceptionStageItem<TInput>);
-            }).Cast<NoneResultStageItem<TInput>>().Select(x => x.Return<TOutput>()).ToArray();
+            var nonItems = inputArray
+                .Where(x => x.GetType() != typeof(PipelineStageItem<TInput>))
+                .Cast<NonResultStageItem<TInput>>()
+                .ToArray();
 
-            if (removeAndExceptionItems.Any())
+            var nonItemsToProcess = nonItems
+                .Where(x => x.ReadyToProcess<TInput>(StageType));
+
+            var nonItemsToReturn = nonItems
+                .Where(x => !x.ReadyToProcess<TInput>(StageType))
+                .Select(x => x.Return<TOutput>())
+                .ToArray();
+
+            if (nonItemsToReturn.Any(x => x.GetType() != typeof(ExceptionStageItem<TOutput>)))
             {
-                result.AddRange(removeAndExceptionItems);
+                context.ActionsSet?.DiagnosticHandler?.Invoke(
+                    new DiagnosticItem(nonItemsToReturn.Where(x => x.GetType() != typeof(ExceptionStageItem<TOutput>)).Select(e=>e.OriginalItem).ToArray(), GetType(), DiagnosticState.Skip));
             }
 
-            var skipItems = inputArray.Where(x =>
-            {
-                var type = x.GetType();
-                return type == typeof(SkipStageItem<TInput>);
-            }).Cast<SkipStageItem<TInput>>().ToArray();
+            var totalItemsToProcess =
+                itemsToProcess.Select(x => x.Item)
+                .Concat(nonItemsToProcess.Select(x => (TInput)x.OriginalItem));
 
-            itemsToProcess.AddRange(skipItems.Where(x => typeof(TInput) == x.OriginalItem.GetType() && x.ReadyToProcess).Select(x => (TInput)x.OriginalItem));
-
-            var skipItemsWithoutProcess = skipItems.Where(x => typeof(TInput) != x.OriginalItem.GetType() || !x.ReadyToProcess).Select(x => x.Return<TOutput>()).ToArray();
-
-            if (skipItemsWithoutProcess.Any())
-            {
-                result.AddRange(skipItemsWithoutProcess);
-            }
-
-            var skipTillItems = inputArray.Where(x =>
-            {
-                var type = x.GetType();
-                return type == typeof(SkipStageItemTill<TInput>);
-            }).Cast<SkipStageItemTill<TInput>>().ToArray();
-
-            itemsToProcess.AddRange(skipTillItems.Where(x => GetType() == x.SkipTillType).Select(x => (TInput)x.OriginalItem));
-
-            var skipTillWithoutProcess = skipTillItems.Where(x => GetType() != x.SkipTillType).Select(x => x.Return<TOutput>()).ToArray();
-
-            if (skipTillWithoutProcess.Any())
-            {
-                result.AddRange(skipTillWithoutProcess);
-            }
-
-            if (skipTillWithoutProcess.Any() || skipItemsWithoutProcess.Any())
-            {
-                context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(skipTillWithoutProcess.Concat(skipItemsWithoutProcess).Select(x => x.OriginalItem).ToArray(), GetType(), DiagnosticState.Skip));
-            }
-
-            itemsToProcess.AddRange(inputArray.Where(x => x.GetType() == typeof(PipelineStageItem<TInput>)).Select(x => x.Item));
-
-            if (itemsToProcess.Any())
-            {
-                result.AddRange((await ExecuteAsync(itemsToProcess.ToArray(), context.CancellationToken)).Select(x => new PipelineStageItem<TOutput>(x)));
-            }
-
-            return result;
+            return (await ExecuteAsync(totalItemsToProcess.ToArray(), context.CancellationToken)).Select(x => new PipelineStageItem<TOutput>(x))
+                .Concat(nonItemsToReturn).ToArray();
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         protected override IEnumerable<PipelineStageItem<TOutput>> GetExceptionItem(IEnumerable<PipelineStageItem<TInput>> input, Exception ex, PipelineStageContext context)
         {
             return new[] { new ExceptionStageItem<TOutput>(ex, context.ActionsSet?.Retry, GetType(), GetOriginalItems(input)) };
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         protected override object[] GetOriginalItems(IEnumerable<PipelineStageItem<TInput>> input)
         {
             var pipelineStageItems = input as PipelineStageItem<TInput>[] ?? input.ToArray();
+            
+            var itemsToProcess = pipelineStageItems
+                .Where(x => x.GetType() == typeof(PipelineStageItem<TInput>));
 
-            var skipItems = pipelineStageItems
-                .Where(x =>
-                {
-                    var type = x.GetType();
-                    return type == typeof(SkipStageItem<TInput>);
-                })
-                .Cast<SkipStageItem<TInput>>()
-                .Where(x => typeof(TInput) == x.OriginalItem.GetType() && x.ReadyToProcess)
-                .Select(x => x.OriginalItem);
+            var nonItems = pipelineStageItems
+                .Where(x => x.GetType() != typeof(PipelineStageItem<TInput>))
+                .Cast<NonResultStageItem<TInput>>();
 
-            var skipTillItems = pipelineStageItems
-                .Where(x =>
-                {
-                    var type = x.GetType();
-                    return type == typeof(SkipStageItemTill<TInput>);
-                })
-                .Cast<SkipStageItemTill<TInput>>()
-                .Where(x => GetType() == x.SkipTillType)
-                .Select(e => e.OriginalItem);
+            var nonItemsToProcess = nonItems
+                .Where(x => x.ReadyToProcess<TInput>(StageType));
 
-            var resultItems = pipelineStageItems
-                .Where(x => x.GetType() == typeof(PipelineStageItem<TInput>))
-                .Select(x => x.Item)
-                .Cast<object>();
-
-            return resultItems.Concat(skipItems).Concat(skipTillItems).ToArray();
+            
+            return itemsToProcess.Select(x => (object)x.Item)
+                    .Concat(nonItemsToProcess.Select(x => x.OriginalItem))
+                    .ToArray();
         }
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         protected override object[] GetOriginalItems(IEnumerable<PipelineStageItem<TOutput>> output)
         {
             var pipelineStageItems = output as PipelineStageItem<TOutput>[] ?? output.ToArray();
-
-            //var exceptionItems = pipelineStageItems
-            //    .Where(x =>
-            //    {
-            //        var type = x.GetType();
-            //        return type == typeof(ExceptionStageItem<TOutput>);
-            //    })
-            //    .Cast<ExceptionStageItem<TOutput>>()
-            //    .Select(x => x.FailedItems)
-            //    .SelectMany(x => x); ;
-
-            //var skipItems = pipelineStageItems
-            //    .Where(x =>
-            //    {
-            //        var type = x.GetType();
-            //        return type == typeof(SkipStageItemTill<TOutput>) || type == typeof(SkipStageItem<TOutput>);
-            //    })
-            //    .Cast<NoneResultStageItem<TOutput>>()
-            //    .Select(x => x.OriginalItem);
 
             var resultItems = pipelineStageItems
                 .Where(x => x.GetType() == typeof(PipelineStageItem<TOutput>))

@@ -1,8 +1,6 @@
-﻿using PipelineLauncher.Abstractions.PipelineStage.Configurations;
+﻿using System.Threading;
 using PipelineLauncher.Demo.Tests.Items;
 using PipelineLauncher.Stages;
-using System.Threading;
-using PipelineLauncher.Demo.Tests.Stages.Bulk;
 
 namespace PipelineLauncher.Demo.Tests.Stages.Single
 {
@@ -14,7 +12,7 @@ namespace PipelineLauncher.Demo.Tests.Stages.Single
 
             if (item.Index == 1)
             {
-                return SkipTo<BulkStage>(item);
+                throw new AbandonedMutexException();
             }
 
             return item;

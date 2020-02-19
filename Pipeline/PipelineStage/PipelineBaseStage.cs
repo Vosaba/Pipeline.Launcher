@@ -10,16 +10,16 @@ using PipelineLauncher.Exceptions;
 
 namespace PipelineLauncher.PipelineStage
 {
-    public interface IPipelineBaseStage<in TInput, TOutput>
+    internal interface IPipelineBaseStage<in TInput, TOutput>
     {
         Task<TOutput> BaseExecute(TInput input, PipelineStageContext context, int tryCount = 0);
     }
 
-    public abstract class PipelineBaseStage<TInput, TOutput> : IPipelineBaseStage<TInput, TOutput>
+    internal abstract class PipelineBaseStage<TInput, TOutput> : IPipelineBaseStage<TInput, TOutput>
     {
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         protected abstract StageBaseConfiguration BaseConfiguration { get; }
+
+        protected abstract Type StageType { get; }
 
         protected abstract object[] GetOriginalItems(TInput input);
         protected abstract object[] GetOriginalItems(TOutput output);

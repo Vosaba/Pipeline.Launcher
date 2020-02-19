@@ -67,7 +67,7 @@ namespace PipelineLauncher.PipelineRunner
                 case ExceptionStageItem<TOutput> exceptionItem:
                     ExceptionItemsReceivedEvent?.Invoke(new ExceptionItemsEventArgs(exceptionItem.FailedItems, exceptionItem.StageType, exceptionItem.Exception, exceptionItem.Retry));
                     return;
-                case NoneResultStageItem<TOutput> nonResultItem:
+                case NonResultStageItem<TOutput> nonResultItem:
                     SkippedItemReceivedEvent?.Invoke(new SkippedItemEventArgs(nonResultItem.OriginalItem, nonResultItem.StageType));
                     return;
                 default:

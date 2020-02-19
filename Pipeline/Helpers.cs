@@ -102,10 +102,8 @@ namespace PipelineLauncher
                 {
                     switch (x)
                     {
-                        case SkipStageItem<TOutput> skipItem when typeof(TOutput) == skipItem.OriginalItem.GetType() && skipItem.ReadyToProcess:
-                            return predicate.ExecutePredicate((TOutput)skipItem.OriginalItem, target);
-                        case SkipStageItemTill<TOutput> skipItemTill when stageType == skipItemTill.SkipTillType:
-                            return predicate.ExecutePredicate((TOutput)skipItemTill.OriginalItem, target);
+                        case NonResultStageItem<TOutput> noneItem when noneItem.ReadyToProcess<TOutput>(stageType):
+                            return predicate.ExecutePredicate((TOutput)noneItem.OriginalItem, target);
                         default:
                             target.Post(new[] { x });
                             return false;
@@ -113,30 +111,30 @@ namespace PipelineLauncher
                 }
 
                 return predicate.ExecutePredicate(x.Item, target);
-                try
-                {
-                    var result = predicate(x.Item);
+                //try
+                //{
+                //    var result = predicate(x.Item);
 
-                    switch (result)
-                    {
-                        case PredicateResult.Keep:
-                            return true;
-                        case PredicateResult.Skip:
-                            target.Post(new[] { new SkipStageItem<TOutput>(x.Item, predicate.GetType()) });
-                            return false;
-                        case PredicateResult.Remove:
-                            target.Post(new[] { new RemoveStageItem<TOutput>(x.Item, predicate.GetType()) });
-                            return false;
-                        default:
-                            target.Post(new[] { new ExceptionStageItem<TOutput>(new ArgumentOutOfRangeException(), null, predicate.GetType(), x.Item) });
-                            return false;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    target.Post(new[] { new ExceptionStageItem<TOutput>(ex, null, predicate.GetType(), x.Item) });
-                    return false;
-                }
+                //    switch (result)
+                //    {
+                //        case PredicateResult.Keep:
+                //            return true;
+                //        case PredicateResult.Skip:
+                //            target.Post(new[] { new SkipStageItem<TOutput>(x.Item, predicate.GetType()) });
+                //            return false;
+                //        case PredicateResult.Remove:
+                //            target.Post(new[] { new RemoveStageItem<TOutput>(x.Item, predicate.GetType()) });
+                //            return false;
+                //        default:
+                //            target.Post(new[] { new ExceptionStageItem<TOutput>(new ArgumentOutOfRangeException(), null, predicate.GetType(), x.Item) });
+                //            return false;
+                //    }
+                //}
+                //catch (Exception ex)
+                //{
+                //    target.Post(new[] { new ExceptionStageItem<TOutput>(ex, null, predicate.GetType(), x.Item) });
+                //    return false;
+                //}
             };
         }
 

@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using PipelineLauncher.Abstractions.PipelineStage.Configurations;
 using PipelineLauncher.Demo.Tests.Items;
 using PipelineLauncher.Stages;
 
@@ -20,10 +19,5 @@ namespace PipelineLauncher.Demo.Tests.Stages.Bulk
 
             return items;
         }
-
-        public override BulkStageConfiguration Configuration => new BulkStageConfiguration
-        {
-            BatchItemsTimeOut = 4000
-        };
     }
 }

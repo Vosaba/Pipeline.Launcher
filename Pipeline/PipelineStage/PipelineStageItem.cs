@@ -1,52 +1,66 @@
 ﻿using System;
 using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.PipelineStage;
+using PipelineLauncher.Abstractions.Stages;
 
 namespace PipelineLauncher.PipelineStage
 {
-    internal abstract class NoneResultStageItem<TItem> : PipelineStageItem<TItem>
+    internal abstract class NonResultStageItem<TItem> : PipelineStageItem<TItem>
     {
         public object OriginalItem { get; }
+        public Type OriginalItemType => OriginalItem.GetType();
         public Type StageType { get; }
 
-        protected NoneResultStageItem(object originalItem, Type stageType) : base(default)
+        protected NonResultStageItem(object originalItem, Type stageType) : base(default)
         {
             StageType = stageType;
             OriginalItem = originalItem;
 
         }
 
-        public abstract NoneResultStageItem<TNewItem> Return<TNewItem>();
+        public abstract NonResultStageItem<TNewItem> Return<TNewItem>();
+
+        public abstract bool ReadyToProcess<TInput>(Type stageType);
     }
 
-    internal class RemoveStageItem<TItem> : NoneResultStageItem<TItem>
+    internal class RemoveStageItem<TItem> : NonResultStageItem<TItem>
     {
         public RemoveStageItem(object originalItem, Type stageType): base(originalItem, stageType)
         {
         }
 
-        public override NoneResultStageItem<TNewItem> Return<TNewItem>()
+        public override NonResultStageItem<TNewItem> Return<TNewItem>()
         {
             return new RemoveStageItem<TNewItem>(OriginalItem, StageType);
         }
+
+        public override bool ReadyToProcess<TInput>(Type stageType)
+        {
+            return false;
+        }
     }
 
-    internal class SkipStageItem<TItem> : NoneResultStageItem<TItem>
+    internal class SkipStageItem<TItem> : NonResultStageItem<TItem>
     {
-        public bool ReadyToProcess { get; }
+        private bool _readyToProcess { get; }
 
         public SkipStageItem(object originalItem, Type stageType, bool readyToProcess = false) : base(originalItem, stageType)
         {
-            ReadyToProcess = readyToProcess;
+            _readyToProcess = readyToProcess;
         }
 
-        public override NoneResultStageItem<TNewItem> Return<TNewItem>()
+        public override NonResultStageItem<TNewItem> Return<TNewItem>()
         {
             return new SkipStageItem<TNewItem>(OriginalItem, StageType, true);
         }
+
+        public override bool ReadyToProcess<TInput>(Type stageType)
+        {
+            return _readyToProcess && typeof(TInput) == OriginalItemType;
+        }
     }
 
-    internal class SkipStageItemTill<TItem> : NoneResultStageItem<TItem>
+    internal class SkipStageItemTill<TItem> : NonResultStageItem<TItem>
     {
         public Type SkipTillType { get; }
 
@@ -55,13 +69,18 @@ namespace PipelineLauncher.PipelineStage
             SkipTillType = skipTillType;
         }
 
-        public override NoneResultStageItem<TNewItem> Return<TNewItem>()
+        public override NonResultStageItem<TNewItem> Return<TNewItem>()
         {
             return new SkipStageItemTill<TNewItem>(SkipTillType, OriginalItem, StageType);
         }
+
+        public override bool ReadyToProcess<TInput>(Type stageType)
+        {
+            return SkipTillType == stageType && OriginalItemType == typeof(TInput);
+        }
     }
 
-    internal class ExceptionStageItem<TItem> : NoneResultStageItem<TItem>
+    internal class ExceptionStageItem<TItem> : NonResultStageItem<TItem>
     {
         public object[] FailedItems => (object[])OriginalItem;
         public Exception Exception { get; }
@@ -74,9 +93,14 @@ namespace PipelineLauncher.PipelineStage
             Retry = reProcess;
         }
 
-        public override NoneResultStageItem<TNewItem> Return<TNewItem>()
+        public override NonResultStageItem<TNewItem> Return<TNewItem>()
         {
             return new ExceptionStageItem<TNewItem>(Exception, Retry, StageType, FailedItems);
+        }
+
+        public override bool ReadyToProcess<TInput>(Type stageType)
+        {
+            return false;
         }
     }
 }
