@@ -48,7 +48,7 @@ namespace PipelineLauncher.Extensions
         public static IStageService AccessStageService<TOutput>(this IPipelineSetupOut<TOutput> pipelineSetup)
         {
             var ty = pipelineSetup.GetType();
-            var pi = ty.GetProperty(nameof(PipelineSetupContext.StageService), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.GetProperty);
+            var pi = ty.GetProperty(nameof(PipelineCreationContext.StageService), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.GetProperty);
             object o = pi.GetValue(pipelineSetup, null);
 
             return (IStageService)o;

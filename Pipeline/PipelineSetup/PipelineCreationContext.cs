@@ -9,18 +9,18 @@ using PipelineLauncher.Services;
 
 namespace PipelineLauncher.PipelineSetup
 {
-    internal class PipelineSetupContext
+    internal class PipelineCreationContext
     {
         private IStageService _stageService;
         //private Action<DiagnosticItem> _diagnosticHandler;
-        private Action<ExceptionItemsEventArgs> _exceptionHandler;
+        //private Action<ExceptionItemsEventArgs> _exceptionHandler;
 
-        public event DiagnosticEventHandler DiagnosticEvent;
+        //public event DiagnosticEventHandler DiagnosticEvent;
         //public TaskContinuationOptions TaskContinuationOptions = TaskContinuationOptions.ExecuteSynchronously;
 
         public bool UseDefaultServiceResolver { get; private set; } = true;
 
-        public CancellationToken CancellationToken { get; private set; }
+        //public CancellationToken CancellationToken { get; private set; }
 
         public IStageService StageService
         {
@@ -42,61 +42,59 @@ namespace PipelineLauncher.PipelineSetup
             }
         }
 
-        public PipelineSetupContext()
+        public PipelineCreationContext()
         {
         }
 
-        public  PipelineSetupContext(IStageService stageService)
+        public  PipelineCreationContext(IStageService stageService)
         {
             _stageService = stageService;
         }
 
-        public PipelineSetupContext(Func<Type, IStage> stageResolveFunc)
+        public PipelineCreationContext(Func<Type, IStage> stageResolveFunc)
         {
             _stageService = new DefaultLambdaStageService(stageResolveFunc);
         }
 
-        public PipelineSetupContext SetupStageService(IStageService stageService)
+        public PipelineCreationContext SetupStageService(IStageService stageService)
         {
             _stageService = stageService;
             return this;
         }
 
-        public PipelineSetupContext SetupStageService(Func<Type, IStage> stageResolveFunc)
+        public PipelineCreationContext SetupStageService(Func<Type, IStage> stageResolveFunc)
         {
             _stageService = new DefaultLambdaStageService(stageResolveFunc);
             return this;
         }
 
-        public PipelineSetupContext SetupExceptionHandler(Action<ExceptionItemsEventArgs> exceptionHandler)
-        {
-            _exceptionHandler = exceptionHandler;
-            return this;
-        }
+        //public PipelineCreationContext SetupExceptionHandler(Action<ExceptionItemsEventArgs> exceptionHandler)
+        //{
+        //    _exceptionHandler = exceptionHandler;
+        //    return this;
+        //}
 
-        public PipelineSetupContext SetupConfiguration(bool useDefaultServiceResolver)
+        public PipelineCreationContext SetupConfiguration(bool useDefaultServiceResolver)
         {
             UseDefaultServiceResolver = useDefaultServiceResolver;
             return this;
         }
 
-        //public PipelineSetupContext SetupDiagnosticAction(Action<DiagnosticItem> diagnosticAction)
+        //public PipelineCreationContext SetupDiagnosticAction(Action<DiagnosticItem> diagnosticAction)
         //{
         //    _diagnosticHandler = diagnosticAction;
         //    return this;
         //}
 
-        public PipelineSetupContext SetupCancellationToken(CancellationToken cancellationToken)
-        {
-            CancellationToken = cancellationToken;
-            return this;
-        }
+        //public PipelineCreationContext SetupCancellationToken(CancellationToken cancellationToken)
+        //{
+        //    CancellationToken = cancellationToken;
+        //    return this;
+        //}
 
-        public PipelineStageContext GetPipelineStageContext(Action retry)
+        public StageExecutionContext GetPipelineStageContext(Action retry, CancellationToken cancellationToken, Action<ExceptionItemsEventArgs> exceptionHandler, DiagnosticEventHandler diagnosticHandler)
         {
-            return new PipelineStageContext(
-                CancellationToken, 
-                new ActionsSet(retry, _exceptionHandler, DiagnosticEvent));
+            return new StageExecutionContext(cancellationToken, new ActionsSet(retry, exceptionHandler, diagnosticHandler));
         }
     }
 }

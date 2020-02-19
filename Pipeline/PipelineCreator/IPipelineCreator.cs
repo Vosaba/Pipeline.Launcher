@@ -14,7 +14,7 @@ namespace PipelineLauncher
 {
     public interface IPipelineCreator
     {
-        IPipelineCreator WithCancellationToken(CancellationToken cancellationToken);
+        //IPipelineCreator WithCancellationToken(CancellationToken cancellationToken);
 
         IPipelineCreator WithStageService(IStageService stageService);
 
@@ -22,7 +22,7 @@ namespace PipelineLauncher
         
         //IPipelineCreator WithDiagnostic(Action<DiagnosticItem> diagnosticHandler);
 
-        IPipelineCreator WithExceptionHandler(Action<ExceptionItemsEventArgs> exceptionHandler);
+        //IPipelineCreator WithExceptionHandler(Action<ExceptionItemsEventArgs> exceptionHandler);
 
         IPipelineCreator UseDefaultServiceResolver(bool useDefaultServiceResolver);
 

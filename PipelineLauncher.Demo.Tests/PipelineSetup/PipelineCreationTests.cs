@@ -36,8 +36,8 @@ namespace PipelineLauncher.Demo.Tests.PipelineSetup
             _pipelineCreator = _pipelineCreator.WithStageService(_stageResolveFunc); // IPipelineCreator
 
             _pipelineCreator = _pipelineCreator
-                .UseDefaultServiceResolver(true) // IPipelineCreator
-                .WithCancellationToken(CancellationToken.None); // IPipelineCreator
+                .UseDefaultServiceResolver(true); // IPipelineCreator
+                //.WithCancellationToken(CancellationToken.None); // IPipelineCreator
         }
     }
 }

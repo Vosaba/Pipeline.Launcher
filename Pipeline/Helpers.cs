@@ -34,7 +34,7 @@ namespace PipelineLauncher
                 return;
             }
 
-            stageSetup.DestroyBlock();
+            stageSetup.DestroyExecutionBlock();
 
             if (stageSetup.Next == null || !stageSetup.Next.Any()) return;
             foreach (var nextStage in stageSetup.Next)
@@ -175,7 +175,7 @@ namespace PipelineLauncher
             public static string RetryOnAwaitable =
                 $"{nameof(ActionsSet.Retry)} action cannot be used on '{nameof(IAwaitablePipelineRunner<object, object>)}', " +
                 $"try use '{nameof(IAwaitablePipelineRunner<object, object>.SetupExceptionHandler)}' " +
-                $"on one of '{nameof(IAwaitablePipelineRunner<object, object>)}' or '{nameof(IPipelineCreator)}' to perform that action.";
+                $"on '{nameof(IAwaitablePipelineRunner<object, object>)}' to perform that action.";
 
             public static string RetriesMaxCountReached =
                 $"{nameof(ActionsSet.Retry)} was called" + " more than '{0}' times.";

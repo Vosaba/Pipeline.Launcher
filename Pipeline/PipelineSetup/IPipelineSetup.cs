@@ -97,8 +97,8 @@ namespace PipelineLauncher.PipelineSetup
 
         IPipelineSetup<TInput, TNextOutput> MergeWith<TNextOutput>(IPipelineSetup<TOutput, TNextOutput> pipelineSetup);
 
-        IAwaitablePipelineRunner<TInput, TOutput> CreateAwaitable(AwaitablePipelineConfig pipelineConfig = null);
+        IAwaitablePipelineRunner<TInput, TOutput> CreateAwaitable(AwaitablePipelineCreationConfig pipelineCreationConfig = null);
 
-        IPipelineRunner<TInput, TOutput> Create(PipelineConfig pipelineConfig = null);
+        IPipelineRunner<TInput, TOutput> Create(PipelineCreationConfig pipelineCreationConfig = null);
     }
 }

@@ -28,7 +28,7 @@ namespace PipelineLauncher.PipelineStage
         protected override StageBaseConfiguration BaseConfiguration => Configuration;
         protected override Type StageType => _pipelineBulkStage.GetType();
 
-        protected override async Task<IEnumerable<PipelineStageItem<TOutput>>> InternalExecute(IEnumerable<PipelineStageItem<TInput>> input, PipelineStageContext context)
+        protected override async Task<IEnumerable<PipelineStageItem<TOutput>>> InternalExecute(IEnumerable<PipelineStageItem<TInput>> input, StageExecutionContext executionContext)
         {
             var inputArray = input as PipelineStageItem<TInput>[] ?? input.ToArray();
 
@@ -50,7 +50,7 @@ namespace PipelineLauncher.PipelineStage
 
             if (nonItemsToReturn.Any(x => x.GetType() != typeof(ExceptionStageItem<TOutput>)))
             {
-                context.ActionsSet?.DiagnosticHandler?.Invoke(
+                executionContext.ActionsSet?.DiagnosticHandler?.Invoke(
                     new DiagnosticItem(nonItemsToReturn.Where(x => x.GetType() != typeof(ExceptionStageItem<TOutput>)).Select(e=>e.OriginalItem).ToArray(), GetType(), DiagnosticState.Skip));
             }
 
@@ -58,13 +58,13 @@ namespace PipelineLauncher.PipelineStage
                 itemsToProcess.Select(x => x.Item)
                 .Concat(nonItemsToProcess.Select(x => (TInput)x.OriginalItem));
 
-            return (await ExecuteAsync(totalItemsToProcess.ToArray(), context.CancellationToken)).Select(x => new PipelineStageItem<TOutput>(x))
+            return (await ExecuteAsync(totalItemsToProcess.ToArray(), executionContext.CancellationToken)).Select(x => new PipelineStageItem<TOutput>(x))
                 .Concat(nonItemsToReturn).ToArray();
         }
 
-        protected override IEnumerable<PipelineStageItem<TOutput>> GetExceptionItem(IEnumerable<PipelineStageItem<TInput>> input, Exception ex, PipelineStageContext context)
+        protected override IEnumerable<PipelineStageItem<TOutput>> GetExceptionItem(IEnumerable<PipelineStageItem<TInput>> input, Exception ex, StageExecutionContext executionContext)
         {
-            return new[] { new ExceptionStageItem<TOutput>(ex, context.ActionsSet?.Retry, GetType(), GetOriginalItems(input)) };
+            return new[] { new ExceptionStageItem<TOutput>(ex, executionContext.ActionsSet?.Retry, GetType(), GetOriginalItems(input)) };
         }
 
         protected override object[] GetOriginalItems(IEnumerable<PipelineStageItem<TInput>> input)

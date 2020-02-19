@@ -6,6 +6,6 @@ namespace PipelineLauncher.StageSetup
 {
     public interface IStageSetupIn<TIn> : IStageSetup
     {
-        new ITargetBlock<PipelineStageItem<TIn>> RetrieveExecutionBlock(StageCreationOptions options, bool forceCreation = false);
+        new ITargetBlock<PipelineStageItem<TIn>> RetrieveExecutionBlock(StageCreationContext context);
     }
 }

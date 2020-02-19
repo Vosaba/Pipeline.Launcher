@@ -12,43 +12,39 @@ namespace PipelineLauncher.PipelineRunner
 {
     internal abstract class PipelineRunnerBase<TInput, TOutput> : IPipelineRunnerBase<TInput, TOutput>
     {
-        protected abstract StageCreationOptions CreationOptions { get; }
-
-        protected readonly PipelineSetupContext PipelineSetupContext;
-
-        protected Func<StageCreationOptions, bool, ITargetBlock<PipelineStageItem<TInput>>> RetrieveFirstBlock;
-        protected Func<StageCreationOptions, bool, ISourceBlock<PipelineStageItem<TOutput>>> RetrieveLastBlock;
-        protected Func<ISourceBlock<PipelineStageItem<TOutput>>, ActionBlock<PipelineStageItem<TOutput>>> GenerateSortingBlock;
-
         public event ItemReceivedEventHandler<TOutput> ItemReceivedEvent;
         public event ExceptionItemsReceivedEventHandler ExceptionItemsReceivedEvent;
         public event SkippedItemReceivedEventHandler SkippedItemReceivedEvent;
         public event DiagnosticEventHandler DiagnosticEvent
         {
-            add => PipelineSetupContext.DiagnosticEvent += value;
-            remove => PipelineSetupContext.DiagnosticEvent -= value;
+            add => StageCreationContext.DiagnosticEvent += value;
+            remove => StageCreationContext.DiagnosticEvent -= value;
         }
 
-        internal PipelineRunnerBase(
-            Func<StageCreationOptions, bool, ITargetBlock<PipelineStageItem<TInput>>> retrieveFirstBlock,
-            Func<StageCreationOptions, bool, ISourceBlock<PipelineStageItem<TOutput>>> retrieveLastBlock,
-            PipelineSetupContext pipelineSetupContext)
-        {
-            PipelineSetupContext = pipelineSetupContext;
+        protected StageCreationContext StageCreationContext { get; }
+        protected Func<StageCreationContext, ITargetBlock<PipelineStageItem<TInput>>> RetrieveFirstBlock { get; }
+        protected Func<StageCreationContext, ISourceBlock<PipelineStageItem<TOutput>>> RetrieveLastBlock { get; }
+        protected Func<ISourceBlock<PipelineStageItem<TOutput>>, ActionBlock<PipelineStageItem<TOutput>>> GenerateSortingBlock { get; }
 
+        internal PipelineRunnerBase(
+            Func<StageCreationContext, ITargetBlock<PipelineStageItem<TInput>>> retrieveFirstBlock,
+            Func<StageCreationContext, ISourceBlock<PipelineStageItem<TOutput>>> retrieveLastBlock,
+            StageCreationContext stageCreationContext)
+        {
             RetrieveFirstBlock = retrieveFirstBlock;
             RetrieveLastBlock = retrieveLastBlock;
+            StageCreationContext = stageCreationContext;
 
-            GenerateSortingBlock = block =>
+            GenerateSortingBlock = sourceBlock =>
             {
                 var sortingBlock = new ActionBlock<PipelineStageItem<TOutput>>(SortingMethod);
 
-                block.LinkTo(sortingBlock, new DataflowLinkOptions { PropagateCompletion = false });
+                sourceBlock.LinkTo(sortingBlock, new DataflowLinkOptions { PropagateCompletion = false });
 
-                block.Completion.ContinueWith(e =>
+                sourceBlock.Completion.ContinueWith(e =>
                 {
                     sortingBlock.Complete();
-                });//, PipelineSetupContext.CancellationToken);
+                });
 
                 return sortingBlock;
             };
@@ -56,7 +52,7 @@ namespace PipelineLauncher.PipelineRunner
 
         public IPipelineRunnerBase<TInput, TOutput> SetupCancellationToken(CancellationToken cancellationToken)
         {
-            PipelineSetupContext.SetupCancellationToken(cancellationToken);
+            StageCreationContext.SetupCancellationToken(cancellationToken);
             return this;
         }
 

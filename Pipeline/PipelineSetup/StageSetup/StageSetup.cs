@@ -11,28 +11,22 @@ namespace PipelineLauncher.StageSetup
     internal class StageSetup : IStageSetup
     {
         private IDataflowBlock _executionBlock;
-        private Func<StageCreationOptions, IDataflowBlock> CreateExecutionBlock { get; }
+        private Func<StageCreationContext, IDataflowBlock> CreateExecutionBlock { get; }
 
-        public IDataflowBlock RetrieveExecutionBlock(StageCreationOptions options, bool forceCreation = false)
+        public IDataflowBlock RetrieveExecutionBlock(StageCreationContext context)
         {
-            if (_executionBlock == null )
-            {
-                _executionBlock = CreateExecutionBlock(options);
-            }
-
-            return _executionBlock;
+            return _executionBlock ??= CreateExecutionBlock(context);
         }
 
-        public StageBaseConfiguration PipelineBaseConfiguration { get; set; }
         public IList<IStageSetup> Next { get; set; } = new List<IStageSetup>();
         public IStageSetup Previous { get; set; }
 
-        public StageSetup(Func<StageCreationOptions, IDataflowBlock> createTerra)
+        public StageSetup(Func<StageCreationContext, IDataflowBlock> createTerra)
         {
             CreateExecutionBlock = createTerra;
         }
 
-        public void DestroyBlock()
+        public void DestroyExecutionBlock()
         {
             _executionBlock = null;
         }
@@ -40,18 +34,18 @@ namespace PipelineLauncher.StageSetup
 
     internal class StageSetup<TIn, TOut> : StageSetupOut<TOut>, IStageSetup<TIn, TOut>
     {
-        public StageSetup(Func<StageCreationOptions, IPropagatorBlock<PipelineStageItem<TIn>, PipelineStageItem<TOut>>> createTerra)
+        public StageSetup(Func<StageCreationContext, IPropagatorBlock<PipelineStageItem<TIn>, PipelineStageItem<TOut>>> createTerra)
             : base(createTerra)
         { }
 
-        public new IPropagatorBlock<PipelineStageItem<TIn>, PipelineStageItem<TOut>> RetrieveExecutionBlock(StageCreationOptions options, bool forceCreation = false)
-            => (IPropagatorBlock<PipelineStageItem<TIn>, PipelineStageItem<TOut>>)base.RetrieveExecutionBlock(options, forceCreation);
+        public new IPropagatorBlock<PipelineStageItem<TIn>, PipelineStageItem<TOut>> RetrieveExecutionBlock(StageCreationContext context)
+            => (IPropagatorBlock<PipelineStageItem<TIn>, PipelineStageItem<TOut>>)base.RetrieveExecutionBlock(context);
 
-        ITargetBlock<PipelineStageItem<TIn>> IStageSetupIn<TIn>.RetrieveExecutionBlock(StageCreationOptions options, bool forceCreation = false) => RetrieveExecutionBlock(options, forceCreation);
+        ITargetBlock<PipelineStageItem<TIn>> IStageSetupIn<TIn>.RetrieveExecutionBlock(StageCreationContext context) => RetrieveExecutionBlock(context);
 
-        //Func<StageCreationOptions, IPropagatorBlock<PipelineItem<TIn>, PipelineItem<TOut>>> IStage<TIn, TOut>.CreateExecutionBlock => (Func<StageCreationOptions, IPropagatorBlock<PipelineItem<TIn>, PipelineItem<TOut>>>)CreateExecutionBlock;
+        //Func<StageCreationContext, IPropagatorBlock<PipelineItem<TIn>, PipelineItem<TOut>>> IStage<TIn, TOut>.CreateExecutionBlock => (Func<StageCreationContext, IPropagatorBlock<PipelineItem<TIn>, PipelineItem<TOut>>>)CreateExecutionBlock;
 
-        //Func<StageCreationOptions, ITargetBlock<PipelineItem<TIn>>> IStageIn<TIn>.CreateExecutionBlock => (Func<StageCreationOptions, ITargetBlock<PipelineItem<TIn>>>)CreateExecutionBlock;
+        //Func<StageCreationContext, ITargetBlock<PipelineItem<TIn>>> IStageIn<TIn>.CreateExecutionBlock => (Func<StageCreationContext, ITargetBlock<PipelineItem<TIn>>>)CreateExecutionBlock;
 
     }
 }

@@ -10,37 +10,32 @@ using System.Threading.Tasks.Dataflow;
 using PipelineLauncher.Abstractions.PipelineRunner;
 using PipelineLauncher.Abstractions.PipelineRunner.Configurations;
 using PipelineLauncher.Abstractions.PipelineStage;
-using PipelineLauncher.PipelineSetup;
 
 namespace PipelineLauncher.PipelineRunner
 {
     internal class AwaitablePipelineRunner<TInput, TOutput> : PipelineRunnerBase<TInput, TOutput>, IAwaitablePipelineRunner<TInput, TOutput>
     {
+        private readonly AwaitablePipelineCreationConfig _pipelineCreationConfig;
         private readonly Action _destroyTaskStages;
-        private readonly ConcurrentBag<TOutput> _processedItems = new ConcurrentBag<TOutput>();
-
-        protected sealed override StageCreationOptions CreationOptions => new StageCreationOptions(PipelineType.Awaitable, !PipelineConfig.IgnoreTimeOuts);
-        protected readonly AwaitablePipelineConfig PipelineConfig;
-
+        private readonly ConcurrentBag<TOutput> _processedItems = new ConcurrentBag<TOutput>(); //TODO remove
 
         internal AwaitablePipelineRunner(
-            Func<StageCreationOptions, bool, ITargetBlock<PipelineStageItem<TInput>>> retrieveFirstBlock,
-            Func<StageCreationOptions, bool, ISourceBlock<PipelineStageItem<TOutput>>> retrieveLastBlock,
-            PipelineSetupContext pipelineSetupContext,
+            Func<StageCreationContext, ITargetBlock<PipelineStageItem<TInput>>> retrieveFirstBlock,
+            Func<StageCreationContext, ISourceBlock<PipelineStageItem<TOutput>>> retrieveLastBlock,
             Action destroyTaskStages,
-            AwaitablePipelineConfig pipelineConfig)
-            : base(retrieveFirstBlock, retrieveLastBlock, pipelineSetupContext)
-        {
+            AwaitablePipelineCreationConfig pipelineCreationConfig)
+            : base(retrieveFirstBlock, retrieveLastBlock, new StageCreationContext(PipelineType.Awaitable, !pipelineCreationConfig.IgnoreTimeOuts))
+            {
             _destroyTaskStages = destroyTaskStages;
-            PipelineConfig = pipelineConfig ?? new AwaitablePipelineConfig();
+            _pipelineCreationConfig = pipelineCreationConfig;
 
             ItemReceivedEvent += AwaitablePipeline_ItemReceivedEvent;
 
-            if (PipelineConfig.ThrowExceptionOccured)
+            if (_pipelineCreationConfig.ThrowExceptionOccured)
             {
                 ExceptionItemsReceivedEvent += AwaitablePipelineRunner_ExceptionItemsReceivedEvent;
             }
-        }
+            }
 
         public IEnumerable<TOutput> Process(TInput input)
         {
@@ -52,17 +47,17 @@ namespace PipelineLauncher.PipelineRunner
             _processedItems.Clear();
             _destroyTaskStages();
 
-            var lastBlock = RetrieveLastBlock(CreationOptions, false);
+            var lastBlock = RetrieveLastBlock(StageCreationContext);
             var sortingBlock = GenerateSortingBlock(lastBlock);
 
-            var firstBlock = RetrieveFirstBlock(CreationOptions, false);
+            var firstBlock = RetrieveFirstBlock(StageCreationContext);
             var posted = input.Select(x => new PipelineStageItem<TInput>(x)).All(x => firstBlock.Post(x));
             firstBlock.Complete();
 
             lastBlock.Completion.ContinueWith(x =>
             {
                 sortingBlock.Complete();
-            });//, PipelineSetupContext.CancellationToken);
+            });//, PipelineCreationContext.CancellationToken);
 
             sortingBlock.Completion.Wait();
 
@@ -79,17 +74,17 @@ namespace PipelineLauncher.PipelineRunner
             _processedItems.Clear();
             _destroyTaskStages();
 
-            var lastBlock = RetrieveLastBlock(CreationOptions, false);
+            var lastBlock = RetrieveLastBlock(StageCreationContext);
             var sortingBlock = GenerateSortingBlock(lastBlock);
 
-            var firstBlock = RetrieveFirstBlock(CreationOptions, false);
+            var firstBlock = RetrieveFirstBlock(StageCreationContext);
             var posted = input.Select(x => new PipelineStageItem<TInput>(x)).All(x => firstBlock.Post(x));
             firstBlock.Complete();
 
             await lastBlock.Completion.ContinueWith(x =>
             {
                 sortingBlock.Complete();
-            });//, PipelineSetupContext.CancellationToken);
+            });//, PipelineCreationContext.CancellationToken);
 
             await sortingBlock.Completion;
 
@@ -106,9 +101,9 @@ namespace PipelineLauncher.PipelineRunner
             _processedItems.Clear();
             _destroyTaskStages();
 
-            var lastBlock = RetrieveLastBlock(CreationOptions, false);
+            var lastBlock = RetrieveLastBlock(StageCreationContext);
 
-            var firstBlock = RetrieveFirstBlock(CreationOptions, false);
+            var firstBlock = RetrieveFirstBlock(StageCreationContext);
             var posted = input.Select(x => new PipelineStageItem<TInput>(x)).All(x => firstBlock.Post(x));
             firstBlock.Complete();
 
@@ -134,10 +129,10 @@ namespace PipelineLauncher.PipelineRunner
             _processedItems.Clear();
             _destroyTaskStages();
 
-            var lastBlock = RetrieveLastBlock(CreationOptions, false);
+            var lastBlock = RetrieveLastBlock(StageCreationContext);
             var sortingBlock = GenerateSortingBlock(lastBlock);
 
-            var firstBlock = RetrieveFirstBlock(CreationOptions, false);
+            var firstBlock = RetrieveFirstBlock(StageCreationContext);
             var posted = input.Select(x => new PipelineStageItem<TInput>(x)).All(x => firstBlock.Post(x));
             firstBlock.Complete();
 
@@ -151,7 +146,7 @@ namespace PipelineLauncher.PipelineRunner
 
         public IAwaitablePipelineRunner<TInput, TOutput> SetupExceptionHandler(Action<ExceptionItemsEventArgs> exceptionHandler)
         {
-            PipelineSetupContext.SetupExceptionHandler(exceptionHandler);
+            StageCreationContext.SetupExceptionHandler(exceptionHandler);
             return this;
         }
 

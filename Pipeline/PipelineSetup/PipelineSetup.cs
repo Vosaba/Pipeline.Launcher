@@ -26,16 +26,15 @@ namespace PipelineLauncher.PipelineSetup
 {
     internal abstract class PipelineSetup<TFirstInput> : IPipelineSetup
     {
-        protected PipelineSetupContext Context;
-
-        protected IStageService StageService => Context.StageService;
+        protected PipelineCreationContext PipelineCreationContext;
+        protected IStageService StageService => PipelineCreationContext.StageService;
 
         public IStageSetup Current { get; }
 
-        internal PipelineSetup(IStageSetup stageSetup, PipelineSetupContext context)
+        internal PipelineSetup(IStageSetup stageSetup, PipelineCreationContext pipelineCreationContext)
         {
             Current = stageSetup;
-            Context = context;
+            PipelineCreationContext = pipelineCreationContext;
         }
     }
 
@@ -43,8 +42,8 @@ namespace PipelineLauncher.PipelineSetup
     {
         public new IStageSetupOut<TOutput> Current => (IStageSetupOut<TOutput>)base.Current;
 
-        internal PipelineSetup(IStageSetupOut<TOutput> stageSetup, PipelineSetupContext context)
-            : base(stageSetup, context)
+        internal PipelineSetup(IStageSetupOut<TOutput> stageSetup, PipelineCreationContext pipelineCreationContext)
+            : base(stageSetup, pipelineCreationContext)
         { }
 
         #region Generic
@@ -116,7 +115,7 @@ namespace PipelineLauncher.PipelineSetup
         public IPipelineSetup<TInput, TNextOutput> Broadcast<TNextOutput>(params (Predicate<TOutput> predicate,
             Func<IPipelineSetup<TInput, TOutput>, IPipelineSetup<TInput, TNextOutput>> branch)[] branches)
         {
-            BroadcastBlock<PipelineStageItem<TOutput>> MakeNextBlock(StageCreationOptions options)
+            BroadcastBlock<PipelineStageItem<TOutput>> MakeNextBlock(StageCreationContext options)
             {
                 var broadcastBlock = new BroadcastBlock<PipelineStageItem<TOutput>>(x => x);
 
@@ -126,14 +125,14 @@ namespace PipelineLauncher.PipelineSetup
                 currentBlock.Completion.ContinueWith(x =>
                 {
                     broadcastBlock.Complete();
-                });//, Context.CancellationToken);
+                });//, PipelineCreationContext.CancellationToken);
 
 
                 return broadcastBlock;
 
             }
 
-            var newCurrent = CreateNextBlock(MakeNextBlock, Current.PipelineBaseConfiguration);
+            var newCurrent = CreateNextBlock(MakeNextBlock);
 
             //return PipelineSetupExtensions.RemoveDuplicates(newCurrent.Branch(branches));
             return newCurrent.Branch(branches).RemoveDuplicates(branches.Length);
@@ -147,7 +146,7 @@ namespace PipelineLauncher.PipelineSetup
 
         public IPipelineSetup<TInput, TNextOutput> Branch<TNextOutput>(ConditionExceptionScenario conditionExceptionScenario, (Predicate<TOutput> predicate, Func<IPipelineSetup<TInput, TOutput>, IPipelineSetup<TInput, TNextOutput>> branch)[] branches)
         {
-            IPropagatorBlock<PipelineStageItem<TNextOutput>, PipelineStageItem<TNextOutput>> MakeNextBlock(StageCreationOptions options)
+            IPropagatorBlock<PipelineStageItem<TNextOutput>, PipelineStageItem<TNextOutput>> MakeNextBlock(StageCreationContext options)
             {
                 var mergeBlock = new TransformBlock<PipelineStageItem<TNextOutput>, PipelineStageItem<TNextOutput>>(x => x);
 
@@ -170,7 +169,7 @@ namespace PipelineLauncher.PipelineSetup
 
                     Current.Next.Add(newtBranchStageHead);
 
-                    var nextBlockAfterCurrent = new PipelineSetup<TInput, TOutput>(newtBranchStageHead, Context);
+                    var nextBlockAfterCurrent = new PipelineSetup<TInput, TOutput>(newtBranchStageHead, PipelineCreationContext);
 
                     var newBranch = branch.branch(nextBlockAfterCurrent);
 
@@ -220,7 +219,7 @@ namespace PipelineLauncher.PipelineSetup
                         {
                             mergeBlock.Complete();
                         }
-                    });//, Context.CancellationToken);
+                    });//, PipelineCreationContext.CancellationToken);
 
                     branchId++;
                 }
@@ -234,7 +233,7 @@ namespace PipelineLauncher.PipelineSetup
                     {
                         headBranch.Complete();
                     }
-                });//, Context.CancellationToken);
+                });//, PipelineCreationContext.CancellationToken);
 
                 return mergeBlock;
             };
@@ -245,19 +244,19 @@ namespace PipelineLauncher.PipelineSetup
             };
 
             Current.Next.Add(nextStage); // Hack with cross linking to destroy
-            return new PipelineSetup<TInput, TNextOutput>(nextStage, Context);
+            return new PipelineSetup<TInput, TNextOutput>(nextStage, PipelineCreationContext);
         }
 
         #endregion
 
         public IPipelineSetup<TInput, TOutput> RemoveDuplicates(int totalOccurrences)
         {
-            IPropagatorBlock<PipelineStageItem<TOutput>, PipelineStageItem<TOutput>> MakeNextBlock(StageCreationOptions options)
+            IPropagatorBlock<PipelineStageItem<TOutput>, PipelineStageItem<TOutput>> MakeNextBlock(StageCreationContext options)
             {
                 var processedHash = new ConcurrentDictionary<object, int>();
 
                 var buffer = new BatchBlock<PipelineStageItem<TOutput>>(1); //TODO
-                var context = Context.GetPipelineStageContext(null);
+                //var pipelineCreationContext = PipelineCreationContext.GetPipelineStageContext(null);
 
 
                 IEnumerable<PipelineStageItem<TOutput>> Filter(IEnumerable<PipelineStageItem<TOutput>> items)
@@ -302,20 +301,20 @@ namespace PipelineLauncher.PipelineSetup
 
                 currentBlock.LinkTo(next);
 
-                currentBlock.Completion.ContinueWith(x => next.Complete());//, Context.CancellationToken);
+                currentBlock.Completion.ContinueWith(x => next.Complete());//, PipelineCreationContext.CancellationToken);
 
 
                 return next;
             }
 
-            return CreateNextBlock(MakeNextBlock, Current.PipelineBaseConfiguration);
+            return CreateNextBlock(MakeNextBlock);
         }
 
         public IPipelineSetup<TInput, TNextOutput> MergeWith<TNextOutput>(IPipelineSetup<TOutput, TNextOutput> pipelineSetup)
         {
             var nextBlock = pipelineSetup.GetFirstStage<TOutput>();
 
-            ISourceBlock<PipelineStageItem<TNextOutput>> MakeNextBlock(StageCreationOptions options)
+            ISourceBlock<PipelineStageItem<TNextOutput>> MakeNextBlock(StageCreationContext options)
             {
                 Current.Next.Add(nextBlock);
                 nextBlock.Previous = Current;
@@ -325,12 +324,12 @@ namespace PipelineLauncher.PipelineSetup
                 currentBlock.Completion.ContinueWith(x =>
                 {
                     nextBlock.RetrieveExecutionBlock(options).Complete();
-                });//, Context.CancellationToken);
+                });//, PipelineCreationContext.CancellationToken);
 
                 //currentBlock.GetCompletionTaskFor.ContinueWith(x =>
                 //{
-                //    nextBlock.RetrieveExecutionBlock(options).Complete();
-                //});//, Context.CancellationToken);
+                //    nextBlock.RetrieveExecutionBlock(pipelineCreationContext).Complete();
+                //});//, PipelineCreationContext.CancellationToken);
 
                 return pipelineSetup.Current.RetrieveExecutionBlock(options);
             };
@@ -342,24 +341,34 @@ namespace PipelineLauncher.PipelineSetup
 
             Current.Next.Add(nextStage); // Hack with cross linking to destroy
 
-            return new PipelineSetup<TInput, TNextOutput>(nextStage, Context);
+            return new PipelineSetup<TInput, TNextOutput>(nextStage, PipelineCreationContext);
         }
 
-        public IAwaitablePipelineRunner<TInput, TOutput> CreateAwaitable(AwaitablePipelineConfig pipelineConfig = null)
+        public IAwaitablePipelineRunner<TInput, TOutput> CreateAwaitable(AwaitablePipelineCreationConfig pipelineCreationConfig = null)
         {
-            IStageSetupIn<TInput> firstStageSetup = this.GetFirstStage<TInput>();
-            return new AwaitablePipelineRunner<TInput, TOutput>(firstStageSetup.RetrieveExecutionBlock, Current.RetrieveExecutionBlock, Context, () => firstStageSetup.DestroyStageBlocks(), pipelineConfig);
+            if (pipelineCreationConfig == null)
+            {
+                pipelineCreationConfig = new AwaitablePipelineCreationConfig();
+            }
+
+            var firstStage = this.GetFirstStage<TInput>();
+            return new AwaitablePipelineRunner<TInput, TOutput>(firstStage.RetrieveExecutionBlock, Current.RetrieveExecutionBlock, () => firstStage.DestroyStageBlocks(), pipelineCreationConfig);
         }
 
-        public IPipelineRunner<TInput, TOutput> Create(PipelineConfig pipelineConfig = null)
+        public IPipelineRunner<TInput, TOutput> Create(PipelineCreationConfig pipelineCreationConfig = null)
         {
-            IStageSetupIn<TInput> firstStageSetup = this.GetFirstStage<TInput>();
-            return new PipelineRunner<TInput, TOutput>(firstStageSetup.RetrieveExecutionBlock, Current.RetrieveExecutionBlock, Context, pipelineConfig);
+            if (pipelineCreationConfig == null)
+            {
+                pipelineCreationConfig = new PipelineCreationConfig();
+            }
+
+            var firstStage = this.GetFirstStage<TInput>();
+            return new PipelineRunner<TInput, TOutput>(firstStage.RetrieveExecutionBlock, Current.RetrieveExecutionBlock, pipelineCreationConfig);
         }
 
         private PipelineSetup<TInput, TNextOutput> CreateNextStage<TNextOutput>(IPipelineStage<TOutput, TNextOutput> stageA, PipelinePredicate<TOutput> predicate)
         {
-            IPropagatorBlock<PipelineStageItem<TOutput>, PipelineStageItem<TNextOutput>> MakeNextBlock(StageCreationOptions options)
+            IPropagatorBlock<PipelineStageItem<TOutput>, PipelineStageItem<TNextOutput>> MakeNextBlock(StageCreationContext options)
             {
                 var stage = new PipelineStage<TOutput, TNextOutput>(stageA);
 
@@ -376,12 +385,12 @@ namespace PipelineLauncher.PipelineSetup
                 }
 
                 var nextBlock = new TransformBlock<PipelineStageItem<TOutput>, PipelineStageItem<TNextOutput>>(
-                    async x => await stage.BaseExecute(x, Context.GetPipelineStageContext(() => RePostMessage(x))),
+                    async x => await stage.BaseExecute(x, options.GetPipelineStageContext(() => RePostMessage(x))),
                     new ExecutionDataflowBlockOptions
                     {
                         MaxDegreeOfParallelism = stage.Configuration.MaxDegreeOfParallelism,
                         MaxMessagesPerTask = stage.Configuration.MaxMessagesPerTask,
-                        CancellationToken = Context.CancellationToken,
+                        CancellationToken = options.CancellationToken,
                         SingleProducerConstrained = stage.Configuration.SingleProducerConstrained,
                         EnsureOrdered = stage.Configuration.EnsureOrdered
                     });
@@ -411,17 +420,17 @@ namespace PipelineLauncher.PipelineSetup
 
                         nextBlock.Complete();
 
-                });//, Context.CancellationToken);
+                });//, PipelineCreationContext.CancellationToken);
 
                 return nextBlock;
             }
 
-            return CreateNextBlock(MakeNextBlock, stageA.Configuration);
+            return CreateNextBlock(MakeNextBlock);
         }
 
         private PipelineSetup<TInput, TNextOutput> CreateNextBulkStage<TNextOutput>(IPipelineBulkStage<TOutput, TNextOutput> stageA, PipelinePredicate<TOutput> predicate)
         {
-            IPropagatorBlock<PipelineStageItem<TOutput>, PipelineStageItem<TNextOutput>> MakeNextBlock(StageCreationOptions options)
+            IPropagatorBlock<PipelineStageItem<TOutput>, PipelineStageItem<TNextOutput>> MakeNextBlock(StageCreationContext options)
             {
                 var stage = new PipelineBulkStage<TOutput, TNextOutput>(stageA);
 
@@ -448,12 +457,12 @@ namespace PipelineLauncher.PipelineSetup
                 }
 
                 var nextBlock = new TransformManyBlock<IEnumerable<PipelineStageItem<TOutput>>, PipelineStageItem<TNextOutput>>(
-                    async x => await stage.BaseExecute(x, Context.GetPipelineStageContext(() => RePostMessages(x))),
+                    async x => await stage.BaseExecute(x, options.GetPipelineStageContext(() => RePostMessages(x))),
                     new ExecutionDataflowBlockOptions
                     {
                         MaxDegreeOfParallelism = stage.Configuration.MaxDegreeOfParallelism,
                         MaxMessagesPerTask = stage.Configuration.MaxMessagesPerTask,
-                        CancellationToken = Context.CancellationToken,
+                        CancellationToken = options.CancellationToken,
                         SingleProducerConstrained = stage.Configuration.SingleProducerConstrained,
                         EnsureOrdered = stage.Configuration.EnsureOrdered
                     });
@@ -464,7 +473,7 @@ namespace PipelineLauncher.PipelineSetup
                 buffer.Completion.ContinueWith(x =>
                 {
                     nextBlock.Complete();
-                });//, Context.CancellationToken);
+                });//, PipelineCreationContext.CancellationToken);
 
                 var next = DataflowBlock.Encapsulate(buffer, nextBlock);
                 var currentBlock = Current.RetrieveExecutionBlock(options);
@@ -490,25 +499,24 @@ namespace PipelineLauncher.PipelineSetup
                 currentBlock.Completion.ContinueWith(x =>
                 {
                     next.Complete();
-                });//, Context.CancellationToken);
+                });//, PipelineCreationContext.CancellationToken);
 
                 return next;
             }
 
-            return CreateNextBlock(MakeNextBlock, stageA.Configuration);
+            return CreateNextBlock(MakeNextBlock);
         }
 
-        private PipelineSetup<TInput, TNextOutput> CreateNextBlock<TNextOutput>(Func<StageCreationOptions, IPropagatorBlock<PipelineStageItem<TOutput>, PipelineStageItem<TNextOutput>>> nextBlock, StageBaseConfiguration stageConfiguration)
+        private PipelineSetup<TInput, TNextOutput> CreateNextBlock<TNextOutput>(Func<StageCreationContext, IPropagatorBlock<PipelineStageItem<TOutput>, PipelineStageItem<TNextOutput>>> nextBlock)
         {
             var nextStage = new StageSetupOut<TNextOutput>(nextBlock)
             {
                 Previous = Current,
-                PipelineBaseConfiguration = stageConfiguration
             };
 
             Current.Next.Add(nextStage);
 
-            return new PipelineSetup<TInput, TNextOutput>(nextStage, Context);
+            return new PipelineSetup<TInput, TNextOutput>(nextStage, PipelineCreationContext);
         }
 
     }

@@ -12,7 +12,7 @@ namespace PipelineLauncher.Demo.Tests.Stages.Single
 
             if (item.Index == 1)
             {
-                throw new AbandonedMutexException();
+                //throw new AbandonedMutexException();
             }
 
             return item;

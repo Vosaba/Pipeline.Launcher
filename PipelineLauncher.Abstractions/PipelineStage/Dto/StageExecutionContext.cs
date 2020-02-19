@@ -2,12 +2,12 @@ using System.Threading;
 
 namespace PipelineLauncher.Abstractions.PipelineStage.Dto
 {
-    public class PipelineStageContext
+    public class StageExecutionContext
     {
         public CancellationToken CancellationToken { get; }
         public ActionsSet ActionsSet { get; }
 
-        public PipelineStageContext(CancellationToken cancellationToken, ActionsSet actionsSet)
+        public StageExecutionContext(CancellationToken cancellationToken, ActionsSet actionsSet)
         {
             CancellationToken = cancellationToken;
             ActionsSet = actionsSet;

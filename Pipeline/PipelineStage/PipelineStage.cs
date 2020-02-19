@@ -27,7 +27,7 @@ namespace PipelineLauncher.PipelineStage
         protected Task<TOutput> ExecuteAsync(TInput input, CancellationToken cancellationToken) =>
             _pipelineStage.ExecuteAsync(input, cancellationToken);
 
-        protected override async Task<PipelineStageItem<TOutput>> InternalExecute(PipelineStageItem<TInput> input, PipelineStageContext context)
+        protected override async Task<PipelineStageItem<TOutput>> InternalExecute(PipelineStageItem<TInput> input, StageExecutionContext executionContext)
         {
             try
             {
@@ -36,26 +36,26 @@ namespace PipelineLauncher.PipelineStage
                     case ExceptionStageItem<TInput> exceptionItem:
                         return exceptionItem.Return<TOutput>();
                     case NonResultStageItem<TInput> noneItem when noneItem.ReadyToProcess<TInput>(StageType):
-                        return new PipelineStageItem<TOutput>(await ExecuteAsync((TInput)noneItem.OriginalItem, context.CancellationToken));
+                        return new PipelineStageItem<TOutput>(await ExecuteAsync((TInput)noneItem.OriginalItem, executionContext.CancellationToken));
 
                     case NonResultStageItem<TInput> nonItem:
-                        context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(new[] { nonItem.OriginalItem }, GetType(), DiagnosticState.Skip));
+                        executionContext.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(new[] { nonItem.OriginalItem }, GetType(), DiagnosticState.Skip));
                         return nonItem.Return<TOutput>();
 
                     default:
-                        return new PipelineStageItem<TOutput>(await ExecuteAsync(input.Item, context.CancellationToken));
+                        return new PipelineStageItem<TOutput>(await ExecuteAsync(input.Item, executionContext.CancellationToken));
                 }
             }
             catch (NoneParamException<TOutput> e)
             {
-                context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(new [] {e.StageItem.OriginalItem} , GetType(), DiagnosticState.Skip));
+                executionContext.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(new [] {e.StageItem.OriginalItem} , GetType(), DiagnosticState.Skip));
                 return e.StageItem;
             }
         }
 
-        protected override PipelineStageItem<TOutput> GetExceptionItem(PipelineStageItem<TInput> input, Exception ex, PipelineStageContext context)
+        protected override PipelineStageItem<TOutput> GetExceptionItem(PipelineStageItem<TInput> input, Exception ex, StageExecutionContext executionContext)
         {
-            return new ExceptionStageItem<TOutput>(ex, context.ActionsSet?.Retry, GetType(), GetOriginalItems(input));
+            return new ExceptionStageItem<TOutput>(ex, executionContext.ActionsSet?.Retry, GetType(), GetOriginalItems(input));
         }
 
         protected override object[] GetOriginalItems(PipelineStageItem<TInput> input)
