@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Threading.Tasks;
 using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.PipelineEvents;
@@ -15,7 +16,9 @@ namespace PipelineLauncher.PipelineStage
 
     public abstract class PipelineBaseStage<TInput, TOutput> : IPipelineBaseStage<TInput, TOutput>
     {
-        public abstract StageBaseConfiguration BaseConfiguration { get; }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        protected abstract StageBaseConfiguration BaseConfiguration { get; }
 
         protected abstract object[] GetOriginalItems(TInput input);
         protected abstract object[] GetOriginalItems(TOutput output);

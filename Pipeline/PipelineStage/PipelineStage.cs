@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
 using PipelineLauncher.Abstractions.Dto;
@@ -12,7 +13,10 @@ namespace PipelineLauncher.PipelineStage
     public abstract class PipelineStage<TInput, TOutput> : PipelineBaseStage<PipelineStageItem<TInput>, PipelineStageItem<TOutput>>, IPipelineStage<TInput, TOutput>
     {
         public abstract StageConfiguration Configuration { get; }
-        public override StageBaseConfiguration BaseConfiguration => Configuration;
+
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        protected override StageBaseConfiguration BaseConfiguration => Configuration;
 
         public abstract Task<TOutput> ExecuteAsync(TInput input, CancellationToken cancellationToken);
 
@@ -46,7 +50,7 @@ namespace PipelineLauncher.PipelineStage
             }
             catch (NoneParamException<TOutput> e)
             {
-                context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(GetOriginalItems(input), GetType(), DiagnosticState.Skip));
+                //context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(GetOriginalItems(input), GetType(), DiagnosticState.Skip));
                 return e.StageItem;
             }
         }
@@ -60,6 +64,8 @@ namespace PipelineLauncher.PipelineStage
         {
             switch (input)
             {
+                case ExceptionStageItem<TInput> exceptionItem:
+                    return exceptionItem.FailedItems;
                 case NoneResultStageItem<TInput> noneResultItem:
                     return  new [] { noneResultItem.OriginalItem }; ;
                 default:
@@ -71,6 +77,8 @@ namespace PipelineLauncher.PipelineStage
         {
             switch (output)
             {
+                case ExceptionStageItem<TOutput> exceptionItem:
+                    return exceptionItem.FailedItems;
                 case NoneResultStageItem<TOutput> noneResultItem:
                     return new[] { noneResultItem.OriginalItem }; ;
                 default:

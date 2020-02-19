@@ -4,6 +4,7 @@ using PipelineLauncher.Abstractions.PipelineStage.Configurations;
 using PipelineLauncher.Abstractions.PipelineStage.Dto;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,7 +15,7 @@ namespace PipelineLauncher.PipelineStage
     public abstract class PipelineBulkStage<TInput, TOutput> : PipelineBaseStage<IEnumerable<PipelineStageItem<TInput>>, IEnumerable<PipelineStageItem<TOutput>>>, IPipelineBulkStage<TInput, TOutput>
     {
         public abstract BulkStageConfiguration Configuration { get; }
-        public override StageBaseConfiguration BaseConfiguration => Configuration;
+        protected override StageBaseConfiguration BaseConfiguration => Configuration;
 
         public abstract Task<IEnumerable<TOutput>> ExecuteAsync(TInput[] input, CancellationToken cancellationToken);
 
@@ -66,10 +67,10 @@ namespace PipelineLauncher.PipelineStage
                 result.AddRange(skipTillWithoutProcess);
             }
 
-            if (result.Any())
-            {
-                context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(GetOriginalItems(result), GetType(), DiagnosticState.Skip));
-            }
+            //if (result.Any())
+            //{
+            //    context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(GetOriginalItems(result), GetType(), DiagnosticState.Skip));
+            //}
 
             itemsToProcess.AddRange(inputArray.Where(x => x.GetType() == typeof(PipelineStageItem<TInput>)).Select(x => x.Item));
 
