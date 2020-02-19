@@ -473,13 +473,15 @@ namespace PipelineLauncher.PipelineSetup
                         predicate = stageCondition.Predicate;
                     }
 
-                    currentBlock.LinkTo(next, new DataflowLinkOptions() { PropagateCompletion = false }, predicate.GetPredicate(next));
+                    currentBlock.LinkTo(next, new DataflowLinkOptions() { PropagateCompletion = false }, predicate.GetPredicate(nextBlock, stage.GetType()));
                     currentBlock.LinkTo(DataflowBlock.NullTarget<PipelineStageItem<TOutput>>(), new DataflowLinkOptions() { PropagateCompletion = false });
 
                 }
                 else
                 {
-                    currentBlock.LinkTo(next, new DataflowLinkOptions() { PropagateCompletion = false });
+                    predicate = x => PredicateResult.Keep;
+                    currentBlock.LinkTo(next, new DataflowLinkOptions() { PropagateCompletion = false }, predicate.GetPredicate(nextBlock, stage.GetType()));
+                    currentBlock.LinkTo(DataflowBlock.NullTarget<PipelineStageItem<TOutput>>(), new DataflowLinkOptions() { PropagateCompletion = false });
                 }
 
                 currentBlock.Completion.ContinueWith(x =>

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Linq;
 using System.Threading.Tasks;
 using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.PipelineEvents;
@@ -30,20 +31,43 @@ namespace PipelineLauncher.PipelineStage
         {
             try
             {
-                context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(GetOriginalItems(input), GetType(), DiagnosticState.Input));
+                if (context.ActionsSet?.DiagnosticHandler != null)
+                {
+                    var itemsToLog = GetOriginalItems(input);
+                    if (itemsToLog.Any())
+                    {
+                        context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(itemsToLog, GetType(), DiagnosticState.Input));
+                    }
+                }
+
                 var result = await InternalExecute(input, context);
 
-                context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(GetOriginalItems(result), GetType(), DiagnosticState.Output));
+                if (context.ActionsSet?.DiagnosticHandler != null)
+                {
+                    var itemsToLog = GetOriginalItems(result);
+                    if (itemsToLog.Any())
+                    {
+                        context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(itemsToLog, GetType(), DiagnosticState.Output));
+                    }
+                }
+
                 return result;
             }
             catch (Exception ex)
             {
+                object[] itemsToLog = null;
+
+                if (context.ActionsSet?.DiagnosticHandler != null)
+                {
+                    itemsToLog = GetOriginalItems(input);
+                }
+
                 if (context.ActionsSet?.ExceptionHandler != null)
                 {
                     var shouldBeReExecuted = false;
                     void Retry() => shouldBeReExecuted = true;
 
-                    context.ActionsSet?.ExceptionHandler(new ExceptionItemsEventArgs(GetOriginalItems(input), GetType(), ex, Retry));
+                    context.ActionsSet?.ExceptionHandler(new ExceptionItemsEventArgs(itemsToLog, GetType(), ex, Retry));
 
                     if (shouldBeReExecuted)
                     {
@@ -51,16 +75,16 @@ namespace PipelineLauncher.PipelineStage
                         {
                             var retryException = new StageRetryCountException(BaseConfiguration.MaxRetriesCount);
 
-                            context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(GetOriginalItems(input), GetType(), DiagnosticState.ExceptionOccured, retryException.Message));
+                            context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(itemsToLog, GetType(), DiagnosticState.ExceptionOccured, retryException.Message));
                             return GetExceptionItem(input, retryException, context);
                         }
 
-                        context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(GetOriginalItems(input), GetType(), DiagnosticState.Retry, ex.Message));
+                        context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(itemsToLog, GetType(), DiagnosticState.Retry, ex.Message));
                         return await BaseExecute(input, context, ++tryCount);
                     }
                 }
 
-                context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(GetOriginalItems(input), GetType(), DiagnosticState.ExceptionOccured, ex.Message));
+                context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(itemsToLog, GetType(), DiagnosticState.ExceptionOccured, ex.Message));
                 return GetExceptionItem(input, ex, context);
             }
         }

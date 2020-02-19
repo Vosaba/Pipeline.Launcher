@@ -20,6 +20,8 @@ namespace PipelineLauncher.PipelineStage
 
         public abstract Task<TOutput> ExecuteAsync(TInput input, CancellationToken cancellationToken);
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         protected override async Task<PipelineStageItem<TOutput>> InternalExecute(PipelineStageItem<TInput> input, PipelineStageContext context)
         {
             try
@@ -35,6 +37,7 @@ namespace PipelineLauncher.PipelineStage
                     case SkipStageItem<TInput> skipItem when typeof(TInput) == skipItem.OriginalItem.GetType() && skipItem.ReadyToProcess:
                         return new PipelineStageItem<TOutput>(await ExecuteAsync((TInput)skipItem.OriginalItem, context.CancellationToken));
                     case SkipStageItem<TInput> skipItem:
+                        context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(new[] { skipItem.OriginalItem }, GetType(), DiagnosticState.Skip));
                         return skipItem.Return<TOutput>();
 
                     case SkipStageItemTill<TInput> skipItemTill
@@ -42,6 +45,7 @@ namespace PipelineLauncher.PipelineStage
                         return new PipelineStageItem<TOutput>(await ExecuteAsync((TInput)skipItemTill.OriginalItem, context.CancellationToken));
                     case SkipStageItemTill<TInput> skipItemTill
                         when GetType() != skipItemTill.SkipTillType:
+                        context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(new[] { skipItemTill.OriginalItem }, GetType(), DiagnosticState.Skip));
                         return skipItemTill.Return<TOutput>();
 
                     default:
@@ -50,37 +54,50 @@ namespace PipelineLauncher.PipelineStage
             }
             catch (NoneParamException<TOutput> e)
             {
-                //context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(GetOriginalItems(input), GetType(), DiagnosticState.Skip));
+                context.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(new [] {e.StageItem.OriginalItem} , GetType(), DiagnosticState.Skip));
                 return e.StageItem;
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         protected override PipelineStageItem<TOutput> GetExceptionItem(PipelineStageItem<TInput> input, Exception ex, PipelineStageContext context)
         {
             return new ExceptionStageItem<TOutput>(ex, context.ActionsSet?.Retry, GetType(), GetOriginalItems(input));
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         protected override object[] GetOriginalItems(PipelineStageItem<TInput> input)
         {
             switch (input)
             {
                 case ExceptionStageItem<TInput> exceptionItem:
-                    return exceptionItem.FailedItems;
-                case NoneResultStageItem<TInput> noneResultItem:
-                    return  new [] { noneResultItem.OriginalItem }; ;
+                    return new object[] { }; 
+                case SkipStageItemTill<TInput> skipItemTill when GetType() == skipItemTill.SkipTillType:
+                    return new object[] { skipItemTill.OriginalItem };
+                case SkipStageItemTill<TInput> skipItemTill:
+                    return new object[] {  };
+                case SkipStageItem<TInput> skipItem when typeof(TInput) == skipItem.OriginalItem.GetType() && skipItem.ReadyToProcess:
+                    return new object[] { skipItem.OriginalItem };
+                case SkipStageItem<TInput> skipItem:
+                    return new object[] { };
                 default:
                     return new object[] { input.Item };
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         protected override object[] GetOriginalItems(PipelineStageItem<TOutput> output)
         {
             switch (output)
             {
+                case SkipStageItemTill<TOutput> skipItemTill:
                 case ExceptionStageItem<TOutput> exceptionItem:
-                    return exceptionItem.FailedItems;
+                case SkipStageItem<TOutput> skipItem:
                 case NoneResultStageItem<TOutput> noneResultItem:
-                    return new[] { noneResultItem.OriginalItem }; ;
+                    return new object[] { }; 
                 default:
                     return new object[] { output.Item };
             }

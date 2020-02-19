@@ -14,7 +14,7 @@ namespace PipelineLauncher.Stages
 
         public TOutput Skip(TInput input)
         {
-            throw new NoneParamException<TOutput>(new SkipStageItem<TOutput>(input, GetType()));
+            throw new NoneParamException<TOutput>(new SkipStageItem<TOutput>(input, GetType(), true));
         }
 
         public TOutput SkipTo<TSkipToStage>(TInput input) where TSkipToStage : IStageIn<TInput>

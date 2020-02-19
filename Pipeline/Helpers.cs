@@ -44,7 +44,7 @@ namespace PipelineLauncher
         }
 
         public static Predicate<PipelineStageItem<TOutput>> GetPredicate<TOutput>(
-            this PipelinePredicate<TOutput> predicate, 
+            this PipelinePredicate<TOutput> predicate,
             ITargetBlock<PipelineStageItem<TOutput>> target)
         {
             return x =>
@@ -85,13 +85,96 @@ namespace PipelineLauncher
                 }
             };
         }
+
+        public static Predicate<PipelineStageItem<TOutput>> GetPredicate<TOutput>(
+            this PipelinePredicate<TOutput> predicate,
+            ITargetBlock<IEnumerable<PipelineStageItem<TOutput>>> target,
+            Type stageType)
+        {
+            return x =>
+            {
+                if (x == null)
+                {
+                    return false;
+                }
+
+                if (x.Item == null)
+                {
+                    switch (x)
+                    {
+                        case SkipStageItem<TOutput> skipItem when typeof(TOutput) == skipItem.OriginalItem.GetType() && skipItem.ReadyToProcess:
+                            return predicate.ExecutePredicate((TOutput)skipItem.OriginalItem, target);
+                        case SkipStageItemTill<TOutput> skipItemTill when stageType == skipItemTill.SkipTillType:
+                            return predicate.ExecutePredicate((TOutput)skipItemTill.OriginalItem, target);
+                        default:
+                            target.Post(new[] { x });
+                            return false;
+                    }
+                }
+
+                return predicate.ExecutePredicate(x.Item, target);
+                try
+                {
+                    var result = predicate(x.Item);
+
+                    switch (result)
+                    {
+                        case PredicateResult.Keep:
+                            return true;
+                        case PredicateResult.Skip:
+                            target.Post(new[] { new SkipStageItem<TOutput>(x.Item, predicate.GetType()) });
+                            return false;
+                        case PredicateResult.Remove:
+                            target.Post(new[] { new RemoveStageItem<TOutput>(x.Item, predicate.GetType()) });
+                            return false;
+                        default:
+                            target.Post(new[] { new ExceptionStageItem<TOutput>(new ArgumentOutOfRangeException(), null, predicate.GetType(), x.Item) });
+                            return false;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    target.Post(new[] { new ExceptionStageItem<TOutput>(ex, null, predicate.GetType(), x.Item) });
+                    return false;
+                }
+            };
+        }
+
+        private static bool ExecutePredicate<TItem>(this PipelinePredicate<TItem> predicate, TItem item, ITargetBlock<IEnumerable<PipelineStageItem<TItem>>> target)
+        {
+            try
+            {
+                var result = predicate(item);
+
+                switch (result)
+                {
+                    case PredicateResult.Keep:
+                        return true;
+                    case PredicateResult.Skip:
+                        target.Post(new[] { new SkipStageItem<TItem>(item, predicate.GetType()) });
+                        return false;
+                    case PredicateResult.Remove:
+                        target.Post(new[] { new RemoveStageItem<TItem>(item, predicate.GetType()) });
+                        return false;
+                    default:
+                        target.Post(new[] { new ExceptionStageItem<TItem>(new ArgumentOutOfRangeException(), null, predicate.GetType(), item) });
+                        return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                target.Post(new[] { new ExceptionStageItem<TItem>(ex, null, predicate.GetType(), item) });
+                return false;
+            }
+        }
     }
+
 
     internal static partial class Helpers
     {
         internal static class Strings
         {
-            public static string RetryOnAwaitable = 
+            public static string RetryOnAwaitable =
                 $"{nameof(ActionsSet.Retry)} action cannot be used on '{nameof(IAwaitablePipelineRunner<object, object>)}', " +
                 $"try use '{nameof(IAwaitablePipelineRunner<object, object>.SetupExceptionHandler)}' " +
                 $"on one of '{nameof(IAwaitablePipelineRunner<object, object>)}' or '{nameof(IPipelineCreator)}' to perform that action.";
