@@ -48,4 +48,24 @@ namespace PipelineLauncher.Demo.Tests.Stages.Single
             return item;
         }
     }
+
+    public class Stage_4 : Stage<Item>
+    {
+        public override Item Execute(Item item)
+        {
+            item.Process(GetType());
+
+            return item;
+        }
+    }
+
+    public class Stage_5 : Stage<Item>
+    {
+        public override Item Execute(Item item)
+        {
+            item.Process(GetType());
+
+            return item;
+        }
+    }
 }

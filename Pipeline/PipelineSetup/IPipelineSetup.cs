@@ -68,14 +68,14 @@ namespace PipelineLauncher.PipelineSetup
         #region Branches
 
         IPipelineSetup<TPipelineInput, TNextStageOutput> Broadcast<TNextStageOutput>(params (Predicate<TStageOutput> predicate,
-            Func<IPipelineSetup<TPipelineInput, TStageOutput>, IPipelineSetup<TPipelineInput, TNextStageOutput>> branchSetup)[] branches);
+            Func<IPipelineSetup<TPipelineInput, TStageOutput>, IPipelineSetup<TPipelineInput, TNextStageOutput>> branch)[] branches);
 
         IPipelineSetup<TPipelineInput, TNextStageOutput> Branch<TNextStageOutput>(params (Predicate<TStageOutput> predicate,
-            Func<IPipelineSetup<TPipelineInput, TStageOutput>, IPipelineSetup<TPipelineInput, TNextStageOutput>> branchSetup)[] branches);
+            Func<IPipelineSetup<TPipelineInput, TStageOutput>, IPipelineSetup<TPipelineInput, TNextStageOutput>> branch)[] branches);
 
         IPipelineSetup<TPipelineInput, TNextStageOutput> Branch<TNextStageOutput>(ConditionExceptionScenario conditionExceptionScenario,
             params (Predicate<TStageOutput> predicate,
-            Func<IPipelineSetup<TPipelineInput, TStageOutput>, IPipelineSetup<TPipelineInput, TNextStageOutput>> branchSetup)[] branches);
+            Func<IPipelineSetup<TPipelineInput, TStageOutput>, IPipelineSetup<TPipelineInput, TNextStageOutput>> branch)[] branches);
 
         #endregion
 
