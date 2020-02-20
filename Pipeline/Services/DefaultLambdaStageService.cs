@@ -6,14 +6,14 @@ namespace PipelineLauncher.Services
 {
     public class DefaultLambdaStageService : IStageService
     {
-        private readonly Func<Type, IStage> _stageResolver;
+        private readonly Func<Type, IPipelineStage> _stageResolver;
 
-        public DefaultLambdaStageService(Func<Type, IStage> stageResolver)
+        public DefaultLambdaStageService(Func<Type, IPipelineStage> stageResolver)
         {
             _stageResolver = stageResolver;
         }
 
-        public TPipelineStage GetStageInstance<TPipelineStage>() where TPipelineStage : class, IStage
+        public TPipelineStage GetStageInstance<TPipelineStage>() where TPipelineStage : class, IPipelineStage
         {
             return (TPipelineStage) _stageResolver(typeof(TPipelineStage));
         }

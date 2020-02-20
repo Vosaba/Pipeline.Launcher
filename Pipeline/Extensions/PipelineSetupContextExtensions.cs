@@ -6,9 +6,9 @@ namespace PipelineLauncher.Extensions
 {
     public static class PipelineSetupContextExtensions
     {
-        public static IPipelineSetup<TInput, TNextOutput> ExtensionContext<TInput, TOutput, TNextOutput>(this IPipelineSetup<TInput, TOutput> pipelineSetup, Func<IPipelineSetupOut<TOutput>, IPipelineSetupOut<TNextOutput>> extension)
+        public static IPipelineSetup<TInput, TNextStageOutput> ExtensionContext<TInput, TOutput, TNextStageOutput>(this IPipelineSetup<TInput, TOutput> pipelineSetup, Func<IPipelineSetupOut<TOutput>, IPipelineSetupOut<TNextStageOutput>> extension)
         {
-            return (IPipelineSetup<TInput, TNextOutput>)extension(pipelineSetup);
+            return (IPipelineSetup<TInput, TNextStageOutput>)extension(pipelineSetup);
         }
 
         public static IPipelineSetupOut<TCast> Cast<TOutput, TCast>(this IPipelineSetupOut<TOutput> pipelineSetup)

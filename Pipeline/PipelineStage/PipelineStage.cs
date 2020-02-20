@@ -11,21 +11,21 @@ namespace PipelineLauncher.PipelineStage
 {
     internal class PipelineStage<TInput, TOutput> : PipelineBaseStage<PipelineStageItem<TInput>, PipelineStageItem<TOutput>>
     {
-        private readonly IPipelineStage<TInput, TOutput> _pipelineStage;
+        private readonly IStage<TInput, TOutput> _stage;
 
-        public PipelineStage(IPipelineStage<TInput, TOutput> pipelineStage)
+        public PipelineStage(IStage<TInput, TOutput> stage)
         {
-            _pipelineStage = pipelineStage;
+            _stage = stage;
         }
 
-        public StageConfiguration Configuration => _pipelineStage.Configuration;
+        public StageConfiguration Configuration => _stage.Configuration;
 
         protected override StageBaseConfiguration BaseConfiguration => Configuration;
 
-        protected override Type StageType => _pipelineStage.GetType();
+        protected override Type StageType => _stage.GetType();
 
         protected Task<TOutput> ExecuteAsync(TInput input, CancellationToken cancellationToken) =>
-            _pipelineStage.ExecuteAsync(input, cancellationToken);
+            _stage.ExecuteAsync(input, cancellationToken);
 
         protected override async Task<PipelineStageItem<TOutput>> InternalExecute(PipelineStageItem<TInput> input, StageExecutionContext executionContext)
         {

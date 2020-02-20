@@ -32,7 +32,7 @@ namespace PipelineLauncher
             _pipelineCreationContext = new PipelineCreationContext(stageService);
         }
 
-        public PipelineCreator(Func<Type, IStage> stageResolveFunc)
+        public PipelineCreator(Func<Type, IPipelineStage> stageResolveFunc)
         {
             _pipelineCreationContext = new PipelineCreationContext(stageResolveFunc);
         }
@@ -49,7 +49,7 @@ namespace PipelineLauncher
             return this;
         }
 
-        public IPipelineCreator WithStageService(Func<Type, IStage> stageService)
+        public IPipelineCreator WithStageService(Func<Type, IPipelineStage> stageService)
         {
             _pipelineCreationContext.SetupStageService(stageService);
             return this;
@@ -143,7 +143,7 @@ namespace PipelineLauncher
 
         #endregion
 
-        private PipelineSetup<TInput, TOutput> CreateNextBulkStage<TInput, TOutput>(IPipelineBulkStage<TInput, TOutput> bulkStageA)
+        private PipelineSetup<TInput, TOutput> CreateNextBulkStage<TInput, TOutput>(IBulkStage<TInput, TOutput> bulkStageA)
         {
             IPropagatorBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>> MakeNextBlock(StageCreationContext options)
             {
@@ -199,7 +199,7 @@ namespace PipelineLauncher
             return CreateNextBlock(MakeNextBlock);
         }
 
-        private PipelineSetup<TInput, TOutput> CreateNextStage<TInput, TOutput>(IPipelineStage<TInput, TOutput> stageA)
+        private PipelineSetup<TInput, TOutput> CreateNextStage<TInput, TOutput>(IStage<TInput, TOutput> stageA)
         {
             IPropagatorBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>> MakeNextBlock(StageCreationContext options)
             {
@@ -244,7 +244,7 @@ namespace PipelineLauncher
         {
             return AppendStage(new StageSetup<TInput, TOutput>(executionBlock)
             {
-                Previous = null,
+                PreviousStageSetup = null,
             });
         }
 

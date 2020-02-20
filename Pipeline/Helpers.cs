@@ -17,11 +17,11 @@ namespace PipelineLauncher
     {
         public static IStageSetupIn<TInput> GetFirstStage<TInput>(this IPipelineSetup pipelineSetup)
         {
-            IStageSetup stageSetup = pipelineSetup.Current;
+            IStageSetup stageSetup = pipelineSetup.StageSetup;
 
-            while (stageSetup.Previous != null)
+            while (stageSetup.PreviousStageSetup != null)
             {
-                stageSetup = stageSetup.Previous;
+                stageSetup = stageSetup.PreviousStageSetup;
             }
 
             return (IStageSetupIn<TInput>)stageSetup;
@@ -36,8 +36,8 @@ namespace PipelineLauncher
 
             stageSetup.DestroyExecutionBlock();
 
-            if (stageSetup.Next == null || !stageSetup.Next.Any()) return;
-            foreach (var nextStage in stageSetup.Next)
+            if (stageSetup.NextStageSetup == null || !stageSetup.NextStageSetup.Any()) return;
+            foreach (var nextStage in stageSetup.NextStageSetup)
             {
                 DestroyStageBlocks(nextStage);
             }

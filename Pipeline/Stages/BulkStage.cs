@@ -1,18 +1,16 @@
-﻿using System;
+﻿using PipelineLauncher.Abstractions.Dto;
+using PipelineLauncher.Abstractions.PipelineStage;
+using PipelineLauncher.Abstractions.PipelineStage.Configurations;
+using PipelineLauncher.Abstractions.Stages;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using PipelineLauncher.Abstractions.Dto;
-using PipelineLauncher.Abstractions.PipelineStage;
-using PipelineLauncher.Abstractions.PipelineStage.Configurations;
-using PipelineLauncher.Abstractions.PipelineStage.Dto;
-using PipelineLauncher.Abstractions.Stages;
-using PipelineLauncher.PipelineStage;
 
 namespace PipelineLauncher.Stages
 {
-    public abstract class BulkStage<TInput, TOutput> : IPipelineBulkStage<TInput, TOutput>
+    public abstract class BulkStage<TInput, TOutput> : IBulkStage<TInput, TOutput>
     {
         public virtual BulkStageConfiguration Configuration => new BulkStageConfiguration();
 

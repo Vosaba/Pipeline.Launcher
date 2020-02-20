@@ -14,19 +14,19 @@ namespace PipelineLauncher.PipelineStage
 {
     internal class PipelineBulkStage<TInput, TOutput> : PipelineBaseStage<IEnumerable<PipelineStageItem<TInput>>, IEnumerable<PipelineStageItem<TOutput>>>
     {
-        private readonly IPipelineBulkStage<TInput, TOutput> _pipelineBulkStage;
-        public PipelineBulkStage(IPipelineBulkStage<TInput, TOutput> pipelineBulkStage)
+        private readonly IBulkStage<TInput, TOutput> _bulkStage;
+        public PipelineBulkStage(IBulkStage<TInput, TOutput> bulkStage)
         {
-            _pipelineBulkStage = pipelineBulkStage;
+            _bulkStage = bulkStage;
         }
 
-        public BulkStageConfiguration Configuration => _pipelineBulkStage.Configuration;
+        public BulkStageConfiguration Configuration => _bulkStage.Configuration;
 
         protected Task<IEnumerable<TOutput>> ExecuteAsync(TInput[] input, CancellationToken cancellationToken)
-            => _pipelineBulkStage.ExecuteAsync(input, cancellationToken);
+            => _bulkStage.ExecuteAsync(input, cancellationToken);
 
         protected override StageBaseConfiguration BaseConfiguration => Configuration;
-        protected override Type StageType => _pipelineBulkStage.GetType();
+        protected override Type StageType => _bulkStage.GetType();
 
         protected override async Task<IEnumerable<PipelineStageItem<TOutput>>> InternalExecute(IEnumerable<PipelineStageItem<TInput>> input, StageExecutionContext executionContext)
         {

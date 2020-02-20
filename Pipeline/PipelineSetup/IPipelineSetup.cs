@@ -1,45 +1,37 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using PipelineLauncher.Abstractions.Dto;
-using PipelineLauncher.Abstractions.PipelineEvents;
+﻿using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.PipelineRunner;
 using PipelineLauncher.Abstractions.PipelineRunner.Configurations;
 using PipelineLauncher.Abstractions.PipelineStage.Configurations;
-using PipelineLauncher.Abstractions.PipelineStage.Dto;
-using PipelineLauncher.PipelineRunner;
 using PipelineLauncher.Stages;
 using PipelineLauncher.StageSetup;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace PipelineLauncher.PipelineSetup
 {
-    public interface IPipelineSetup
-    {
-        //Action<DiagnosticItem> DiagnosticHandler { get; }
-        IStageSetup Current { get; }
-    }
 
-    public interface IPipelineSetup<TInput, TOutput> : IPipelineSetupOut<TOutput>
+    public interface IPipelineSetup<TPipelineInput, TStageOutput> : IPipelineSetupOut<TStageOutput>
     {
         #region Generic
 
         #region BulkStages
 
-        new IPipelineSetup<TInput, TNextOutput> BulkStage<TBulkStage, TNextOutput>(PipelinePredicate<TOutput> predicate = null)
-            where TBulkStage : BulkStage<TOutput, TNextOutput>;
+        new IPipelineSetup<TPipelineInput, TNextStageOutput> BulkStage<TBulkStage, TNextStageOutput>(PipelinePredicate<TStageOutput> predicate = null)
+            where TBulkStage : BulkStage<TStageOutput, TNextStageOutput>;
 
-        new IPipelineSetup<TInput, TOutput> BulkStage<TBulkStage>(PipelinePredicate<TOutput> predicate = null)
-            where TBulkStage : BulkStage<TOutput, TOutput>;
+        new IPipelineSetup<TPipelineInput, TStageOutput> BulkStage<TBulkStage>(PipelinePredicate<TStageOutput> predicate = null)
+            where TBulkStage : BulkStage<TStageOutput, TStageOutput>;
 
         #endregion
 
         #region Stages
 
-        new IPipelineSetup<TInput, TOutput> Stage<TStage>(PipelinePredicate<TOutput> predicate = null)
-           where TStage : Stages.Stage<TOutput, TOutput>;
+        new IPipelineSetup<TPipelineInput, TStageOutput> Stage<TStage>(PipelinePredicate<TStageOutput> predicate = null)
+           where TStage : Stages.Stage<TStageOutput, TStageOutput>;
 
-        new IPipelineSetup<TInput, TNextOutput> Stage<TStage, TNextOutput>(PipelinePredicate<TOutput> predicate = null)
-           where TStage : Stages.Stage<TOutput, TNextOutput>;
+        new IPipelineSetup<TPipelineInput, TNextStageOutput> Stage<TStage, TNextStageOutput>(PipelinePredicate<TStageOutput> predicate = null)
+           where TStage : Stages.Stage<TStageOutput, TNextStageOutput>;
 
         #endregion
 
@@ -49,25 +41,25 @@ namespace PipelineLauncher.PipelineSetup
 
         #region BulkStages
 
-        new IPipelineSetup<TInput, TNextOutput> BulkStage<TNextOutput>(BulkStage<TOutput, TNextOutput> bulkStage, PipelinePredicate<TOutput> predicate = null);
+        new IPipelineSetup<TPipelineInput, TNextStageOutput> BulkStage<TNextStageOutput>(BulkStage<TStageOutput, TNextStageOutput> bulkStage, PipelinePredicate<TStageOutput> predicate = null);
 
-        new IPipelineSetup<TInput, TNextOutput> BulkStage<TNextOutput>(Func<TOutput[], IEnumerable<TNextOutput>> bulkFunc, BulkStageConfiguration bulkStageConfiguration = null);
+        new IPipelineSetup<TPipelineInput, TNextStageOutput> BulkStage<TNextStageOutput>(Func<TStageOutput[], IEnumerable<TNextStageOutput>> func, BulkStageConfiguration bulkStageConfiguration = null);
 
-        new IPipelineSetup<TInput, TNextOutput> BulkStage<TNextOutput>(Func<TOutput[], Task<IEnumerable<TNextOutput>>> bulkFunc, BulkStageConfiguration bulkStageConfiguration = null);
+        new IPipelineSetup<TPipelineInput, TNextStageOutput> BulkStage<TNextStageOutput>(Func<TStageOutput[], Task<IEnumerable<TNextStageOutput>>> func, BulkStageConfiguration bulkStageConfiguration = null);
 
         #endregion
 
         #region Stages
 
-        new IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(Stage<TOutput, TNextOutput> stage, PipelinePredicate<TOutput> predicate = null);
+        new IPipelineSetup<TPipelineInput, TNextStageOutput> Stage<TNextStageOutput>(Stage<TStageOutput, TNextStageOutput> stage, PipelinePredicate<TStageOutput> predicate = null);
 
-        new IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(Func<TOutput, TNextOutput> func);
+        new IPipelineSetup<TPipelineInput, TNextStageOutput> Stage<TNextStageOutput>(Func<TStageOutput, TNextStageOutput> func);
 
-        new IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(Func<TOutput, StageOption<TOutput, TNextOutput>, TNextOutput> funcWithOption);
+        new IPipelineSetup<TPipelineInput, TNextStageOutput> Stage<TNextStageOutput>(Func<TStageOutput, StageOption<TStageOutput, TNextStageOutput>, TNextStageOutput> func);
 
-        new IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(Func<TOutput, Task<TNextOutput>> func);
+        new IPipelineSetup<TPipelineInput, TNextStageOutput> Stage<TNextStageOutput>(Func<TStageOutput, Task<TNextStageOutput>> func);
 
-        new IPipelineSetup<TInput, TNextOutput> Stage<TNextOutput>(Func<TOutput, StageOption<TOutput, TNextOutput>, Task<TNextOutput>> funcWithOption);
+        new IPipelineSetup<TPipelineInput, TNextStageOutput> Stage<TNextStageOutput>(Func<TStageOutput, StageOption<TStageOutput, TNextStageOutput>, Task<TNextStageOutput>> func);
 
         #endregion
 
@@ -75,19 +67,19 @@ namespace PipelineLauncher.PipelineSetup
 
         #region Branches
 
-        IPipelineSetup<TInput, TNextOutput> Broadcast<TNextOutput>(params (Predicate<TOutput> predicate,
-            Func<IPipelineSetup<TInput, TOutput>, IPipelineSetup<TInput, TNextOutput>> branch)[] branches);
+        IPipelineSetup<TPipelineInput, TNextStageOutput> Broadcast<TNextStageOutput>(params (Predicate<TStageOutput> predicate,
+            Func<IPipelineSetup<TPipelineInput, TStageOutput>, IPipelineSetup<TPipelineInput, TNextStageOutput>> branchSetup)[] branches);
 
-        IPipelineSetup<TInput, TNextOutput> Branch<TNextOutput>(params (Predicate<TOutput> predicate,
-            Func<IPipelineSetup<TInput, TOutput>, IPipelineSetup<TInput, TNextOutput>> branch)[] branches);
+        IPipelineSetup<TPipelineInput, TNextStageOutput> Branch<TNextStageOutput>(params (Predicate<TStageOutput> predicate,
+            Func<IPipelineSetup<TPipelineInput, TStageOutput>, IPipelineSetup<TPipelineInput, TNextStageOutput>> branchSetup)[] branches);
 
-        IPipelineSetup<TInput, TNextOutput> Branch<TNextOutput>(ConditionExceptionScenario conditionExceptionScenario,
-            params (Predicate<TOutput> predicate,
-            Func<IPipelineSetup<TInput, TOutput>, IPipelineSetup<TInput, TNextOutput>> branch)[] branches);
+        IPipelineSetup<TPipelineInput, TNextStageOutput> Branch<TNextStageOutput>(ConditionExceptionScenario conditionExceptionScenario,
+            params (Predicate<TStageOutput> predicate,
+            Func<IPipelineSetup<TPipelineInput, TStageOutput>, IPipelineSetup<TPipelineInput, TNextStageOutput>> branchSetup)[] branches);
 
         #endregion
 
-        IPipelineSetup<TInput, TOutput> RemoveDuplicates(int totalOccurrences = 0);
+        IPipelineSetup<TPipelineInput, TStageOutput> RemoveDuplicates(int totalOccurrences = 0);
 
         #region Native
 
@@ -95,10 +87,10 @@ namespace PipelineLauncher.PipelineSetup
 
         #endregion
 
-        IPipelineSetup<TInput, TNextOutput> MergeWith<TNextOutput>(IPipelineSetup<TOutput, TNextOutput> pipelineSetup);
+        IPipelineSetup<TPipelineInput, TNextStageOutput> MergeWith<TNextStageOutput>(IPipelineSetup<TStageOutput, TNextStageOutput> pipelineSetup);
 
-        IAwaitablePipelineRunner<TInput, TOutput> CreateAwaitable(AwaitablePipelineCreationConfig pipelineCreationConfig = null);
+        IAwaitablePipelineRunner<TPipelineInput, TStageOutput> CreateAwaitable(AwaitablePipelineCreationConfig pipelineCreationConfig = null);
 
-        IPipelineRunner<TInput, TOutput> Create(PipelineCreationConfig pipelineCreationConfig = null);
+        IPipelineRunner<TPipelineInput, TStageOutput> Create(PipelineCreationConfig pipelineCreationConfig = null);
     }
 }

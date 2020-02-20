@@ -51,7 +51,7 @@ namespace PipelineLauncher.PipelineSetup
             _stageService = stageService;
         }
 
-        public PipelineCreationContext(Func<Type, IStage> stageResolveFunc)
+        public PipelineCreationContext(Func<Type, IPipelineStage> stageResolveFunc)
         {
             _stageService = new DefaultLambdaStageService(stageResolveFunc);
         }
@@ -62,7 +62,7 @@ namespace PipelineLauncher.PipelineSetup
             return this;
         }
 
-        public PipelineCreationContext SetupStageService(Func<Type, IStage> stageResolveFunc)
+        public PipelineCreationContext SetupStageService(Func<Type, IPipelineStage> stageResolveFunc)
         {
             _stageService = new DefaultLambdaStageService(stageResolveFunc);
             return this;

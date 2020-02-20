@@ -5,15 +5,13 @@ using PipelineLauncher.Abstractions.PipelineStage;
 
 namespace PipelineLauncher.StageSetup
 {
-    internal class StageSetupOut<TOut> : StageSetup, IStageSetupOut<TOut>
+    internal class StageSetupOut<TOutput> : StageSetup, IStageSetupOut<TOutput>
     {
-        public StageSetupOut(Func<StageCreationContext, ISourceBlock<PipelineStageItem<TOut>>> createTerra)
-            : base(createTerra)
+        public StageSetupOut(Func<StageCreationContext, ISourceBlock<PipelineStageItem<TOutput>>> executionBlockCreator)
+            : base(executionBlockCreator)
         { }
 
-        public new ISourceBlock<PipelineStageItem<TOut>> RetrieveExecutionBlock(StageCreationContext context)
-            => (ISourceBlock<PipelineStageItem<TOut>>) base.RetrieveExecutionBlock(context);
-
-        //public new Func<StageCreationContext, ISourceBlock<PipelineItem<TOut>>> CreateExecutionBlock => (Func<StageCreationContext, ISourceBlock<PipelineItem<TOut>>>)base.CreateExecutionBlock;
+        public new ISourceBlock<PipelineStageItem<TOutput>> RetrieveExecutionBlock(StageCreationContext context)
+            => (ISourceBlock<PipelineStageItem<TOutput>>)base.RetrieveExecutionBlock(context);
     }
 }

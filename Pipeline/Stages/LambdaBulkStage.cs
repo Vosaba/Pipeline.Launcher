@@ -1,8 +1,7 @@
-﻿using System;
+﻿using PipelineLauncher.Abstractions.PipelineStage.Configurations;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using PipelineLauncher.Abstractions.PipelineStage.Configurations;
-using PipelineLauncher.Abstractions.PipelineStage.Dto;
 
 namespace PipelineLauncher.Stages
 {

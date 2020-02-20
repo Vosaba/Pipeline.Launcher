@@ -18,7 +18,7 @@ namespace PipelineLauncher
 
         IPipelineCreator WithStageService(IStageService stageService);
 
-        IPipelineCreator WithStageService(Func<Type, IStage> stageService);
+        IPipelineCreator WithStageService(Func<Type, IPipelineStage> stageService);
         
         //IPipelineCreator WithDiagnostic(Action<DiagnosticItem> diagnosticHandler);
 

@@ -5,19 +5,19 @@ using System.Threading.Tasks.Dataflow;
 
 namespace PipelineLauncher.StageSetup
 {
-    public interface IStageSetup<TIn, TOut> : IStageSetupIn<TIn>, IStageSetupOut<TOut>
-    {
-        new IPropagatorBlock<PipelineStageItem<TIn>, PipelineStageItem<TOut>> RetrieveExecutionBlock(StageCreationContext context);
-    }
-
     public interface IStageSetup
     {
         IDataflowBlock RetrieveExecutionBlock(StageCreationContext context);
 
         void DestroyExecutionBlock();
 
-        IList<IStageSetup> Next { get; set; }
+        IList<IStageSetup> NextStageSetup { get; set; }
 
-        IStageSetup Previous { get; set; }
+        IStageSetup PreviousStageSetup { get; set; }
+    }
+
+    public interface IStageSetup<TInput, TOutput> : IStageSetupIn<TInput>, IStageSetupOut<TOutput>
+    {
+        new IPropagatorBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>> RetrieveExecutionBlock(StageCreationContext context);
     }
 }

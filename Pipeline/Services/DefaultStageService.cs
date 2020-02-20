@@ -12,7 +12,7 @@ namespace PipelineLauncher.Services
         private readonly ServiceContainer _container = new ServiceContainer();
         private readonly List<string> _registeredAssemblies = new List<string>();
 
-        public TPipelineStage GetStageInstance<TPipelineStage>() where TPipelineStage : class, IStage
+        public TPipelineStage GetStageInstance<TPipelineStage>() where TPipelineStage : class, IPipelineStage
         {
             try
             {

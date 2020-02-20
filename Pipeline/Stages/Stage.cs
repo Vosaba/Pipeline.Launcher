@@ -15,7 +15,7 @@ namespace PipelineLauncher.Stages
     /// </summary>
     /// <typeparam name="TInput">The type of the param.</typeparam>
     /// <typeparam name="TOutput">The type of the result.</typeparam>
-    public abstract class Stage<TInput, TOutput> : IPipelineStage<TInput, TOutput>
+    public abstract class Stage<TInput, TOutput> : IStage<TInput, TOutput>
     {
         public virtual StageConfiguration Configuration => new StageConfiguration();
 
@@ -50,7 +50,7 @@ namespace PipelineLauncher.Stages
             return new StageOption<TInput, TOutput>().Skip(input);
         }
 
-        protected TOutput SkipTo<TSkipToStage>(TInput input) where TSkipToStage : IStageIn<TInput>
+        protected TOutput SkipTo<TSkipToStage>(TInput input) where TSkipToStage : IPipelineStageIn<TInput>
         {
             return new StageOption<TInput, TOutput>().SkipTo<TSkipToStage>(input);
         }

@@ -9,11 +9,11 @@ namespace PipelineLauncher.Demo.Tests.PipelineSetup
     public class PipelineCreationTests 
     {
         private IPipelineCreator _pipelineCreator;
-        private readonly Func<Type, IStage> _stageResolveFunc;
+        private readonly Func<Type, IPipelineStage> _stageResolveFunc;
 
         public PipelineCreationTests()
         {
-            _stageResolveFunc = x => (IStage) Activator.CreateInstance(x);
+            _stageResolveFunc = x => (IPipelineStage) Activator.CreateInstance(x);
         }
 
         [Fact]
