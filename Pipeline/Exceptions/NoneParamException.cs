@@ -1,5 +1,4 @@
 ﻿using System;
-using PipelineLauncher.Abstractions.PipelineStage;
 using PipelineLauncher.PipelineStage;
 
 namespace PipelineLauncher.Exceptions

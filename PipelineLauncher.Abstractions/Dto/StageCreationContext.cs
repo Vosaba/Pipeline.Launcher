@@ -9,21 +9,21 @@ namespace PipelineLauncher.Abstractions.Dto
     {
         public event DiagnosticEventHandler DiagnosticEvent;
 
-        private Action<ExceptionItemsEventArgs> _exceptionHandler;
+        private Action<ExceptionItemsEventArgs> _instantExceptionHandler;
 
         public CancellationToken CancellationToken { get; private set; }
         public PipelineType PipelineType { get; }
-        public bool UseTimeOuts { get; }
+        public bool UseTimeOut { get; }
 
-        public StageCreationContext(PipelineType pipelineType, bool useTimeOuts)
+        public StageCreationContext(PipelineType pipelineType, bool useTimeOut)
         {
             PipelineType = pipelineType;
-            UseTimeOuts = useTimeOuts;
+            UseTimeOut = useTimeOut;
         }
 
-        public void SetupExceptionHandler(Action<ExceptionItemsEventArgs> exceptionHandler)
+        public void SetupInstantExceptionHandler(Action<ExceptionItemsEventArgs> exceptionHandler)
         {
-            _exceptionHandler = exceptionHandler;
+            _instantExceptionHandler = exceptionHandler;
         }
 
         public void SetupCancellationToken(CancellationToken cancellationToken)
@@ -33,7 +33,7 @@ namespace PipelineLauncher.Abstractions.Dto
 
         public StageExecutionContext GetPipelineStageContext(Action retry)
         {
-            return new StageExecutionContext(CancellationToken, new ActionsSet(retry, _exceptionHandler, DiagnosticEvent));
+            return new StageExecutionContext(CancellationToken, new ActionsSet(retry, _instantExceptionHandler, DiagnosticEvent));
         }
     }
 }

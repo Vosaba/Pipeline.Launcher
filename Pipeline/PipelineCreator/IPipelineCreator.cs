@@ -1,29 +1,20 @@
-﻿using PipelineLauncher.Abstractions.PipelineEvents;
-using PipelineLauncher.Abstractions.PipelineStage.Configurations;
+﻿using PipelineLauncher.Abstractions.PipelineStage.Configurations;
 using PipelineLauncher.Abstractions.Services;
 using PipelineLauncher.Abstractions.Stages;
 using PipelineLauncher.PipelineSetup;
 using PipelineLauncher.Stages;
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
-using PipelineLauncher.Abstractions.Dto;
 
 namespace PipelineLauncher
 {
     public interface IPipelineCreator
     {
-        //IPipelineCreator WithCancellationToken(CancellationToken cancellationToken);
-
         IPipelineCreator WithStageService(IStageService stageService);
 
         IPipelineCreator WithStageService(Func<Type, IPipelineStage> stageService);
         
-        //IPipelineCreator WithDiagnostic(Action<DiagnosticItem> diagnosticHandler);
-
-        //IPipelineCreator WithExceptionHandler(Action<ExceptionItemsEventArgs> exceptionHandler);
-
         IPipelineCreator UseDefaultServiceResolver(bool useDefaultServiceResolver);
 
         IPipelineSetup<TInput, TInput> Prepare<TInput>();

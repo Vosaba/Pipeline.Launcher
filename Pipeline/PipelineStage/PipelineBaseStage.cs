@@ -21,8 +21,8 @@ namespace PipelineLauncher.PipelineStage
 
         protected abstract Type StageType { get; }
 
-        protected abstract object[] GetOriginalItems(TInput input);
-        protected abstract object[] GetOriginalItems(TOutput output);
+        protected abstract object[] GetItemsToBeProcessed(TInput input);
+        protected abstract object[] GetProcessedItems(TOutput output);
         protected abstract TOutput GetExceptionItem(TInput input, Exception ex, StageExecutionContext executionContext);
 
         protected abstract Task<TOutput> InternalExecute(TInput input, StageExecutionContext executionContext);
@@ -33,25 +33,25 @@ namespace PipelineLauncher.PipelineStage
             {
                 if (executionContext.ActionsSet?.DiagnosticHandler != null)
                 {
-                    var itemsToLog = GetOriginalItems(input);
+                    var itemsToLog = GetItemsToBeProcessed(input);
                     if (itemsToLog.Any())
                     {
                         executionContext.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(itemsToLog, GetType(), DiagnosticState.Input));
                     }
                 }
 
-                var result = await InternalExecute(input, executionContext);
+                var output = await InternalExecute(input, executionContext);
 
                 if (executionContext.ActionsSet?.DiagnosticHandler != null)
                 {
-                    var itemsToLog = GetOriginalItems(result);
+                    var itemsToLog = GetProcessedItems(output);
                     if (itemsToLog.Any())
                     {
                         executionContext.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(itemsToLog, GetType(), DiagnosticState.Output));
                     }
                 }
 
-                return result;
+                return output;
             }
             catch (Exception ex)
             {
@@ -59,15 +59,15 @@ namespace PipelineLauncher.PipelineStage
 
                 if (executionContext.ActionsSet?.DiagnosticHandler != null)
                 {
-                    itemsToLog = GetOriginalItems(input);
+                    itemsToLog = GetItemsToBeProcessed(input);
                 }
 
-                if (executionContext.ActionsSet?.ExceptionHandler != null)
+                if (executionContext.ActionsSet?.InstantExceptionHandler != null)
                 {
                     var shouldBeReExecuted = false;
                     void Retry() => shouldBeReExecuted = true;
 
-                    executionContext.ActionsSet?.ExceptionHandler(new ExceptionItemsEventArgs(itemsToLog, GetType(), ex, Retry));
+                    executionContext.ActionsSet?.InstantExceptionHandler(new ExceptionItemsEventArgs(itemsToLog, GetType(), ex, Retry));
 
                     if (shouldBeReExecuted)
                     {

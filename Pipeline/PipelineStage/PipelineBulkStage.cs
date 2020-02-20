@@ -64,10 +64,10 @@ namespace PipelineLauncher.PipelineStage
 
         protected override IEnumerable<PipelineStageItem<TOutput>> GetExceptionItem(IEnumerable<PipelineStageItem<TInput>> input, Exception ex, StageExecutionContext executionContext)
         {
-            return new[] { new ExceptionStageItem<TOutput>(ex, executionContext.ActionsSet?.Retry, GetType(), GetOriginalItems(input)) };
+            return new[] { new ExceptionStageItem<TOutput>(ex, executionContext.ActionsSet?.Retry, GetType(), GetItemsToBeProcessed(input)) };
         }
 
-        protected override object[] GetOriginalItems(IEnumerable<PipelineStageItem<TInput>> input)
+        protected override object[] GetItemsToBeProcessed(IEnumerable<PipelineStageItem<TInput>> input)
         {
             var pipelineStageItems = input as PipelineStageItem<TInput>[] ?? input.ToArray();
             
@@ -87,7 +87,7 @@ namespace PipelineLauncher.PipelineStage
                     .ToArray();
         }
 
-        protected override object[] GetOriginalItems(IEnumerable<PipelineStageItem<TOutput>> output)
+        protected override object[] GetProcessedItems(IEnumerable<PipelineStageItem<TOutput>> output)
         {
             var pipelineStageItems = output as PipelineStageItem<TOutput>[] ?? output.ToArray();
 

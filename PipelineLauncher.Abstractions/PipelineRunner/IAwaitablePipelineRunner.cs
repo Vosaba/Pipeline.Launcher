@@ -20,7 +20,7 @@ namespace PipelineLauncher.Abstractions.PipelineRunner
         Task GetCompletionTaskFor(TInput input);
         Task GetCompletionTaskFor(IEnumerable<TInput> input);
 
-        IAwaitablePipelineRunner<TInput, TOutput> SetupExceptionHandler(Action<ExceptionItemsEventArgs> exceptionHandler);
+        IAwaitablePipelineRunner<TInput, TOutput> SetupInstantExceptionHandler(Action<ExceptionItemsEventArgs> exceptionHandler);
 
         new IAwaitablePipelineRunner<TInput, TOutput> SetupCancellationToken(CancellationToken cancellationToken);
     }

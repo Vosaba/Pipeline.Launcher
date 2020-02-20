@@ -2,7 +2,7 @@
 {
     public class BulkStageConfiguration : StageBaseConfiguration
     {
-        public int BatchItemsCount { get; set; } = 10;
-        public int BatchItemsTimeOut { get; set; } = 100;
+        public int BatchSize { get; set; } = 10;
+        public int BatchTimeOut { get; set; } = 100;
     }
 }

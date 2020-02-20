@@ -20,8 +20,8 @@ namespace PipelineLauncher.Demo.Tests.Stages.Bulk
         public override BulkStageConfiguration Configuration 
             => new BulkStageConfiguration 
             {
-                BatchItemsCount = 5,
-                BatchItemsTimeOut = 1000
+                BatchSize = 5,
+                BatchTimeOut = 1000
             };
     }
 }

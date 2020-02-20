@@ -10,10 +10,8 @@ using PipelineLauncher.Stages;
 using PipelineLauncher.StageSetup;
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
-using PipelineLauncher.Abstractions.PipelineEvents;
 using PipelineLauncher.Exceptions;
 
 namespace PipelineLauncher
@@ -37,12 +35,6 @@ namespace PipelineLauncher
             _pipelineCreationContext = new PipelineCreationContext(stageResolveFunc);
         }
 
-        //public IPipelineCreator WithCancellationToken(CancellationToken cancellationToken)
-        //{
-        //    _pipelineCreationContext.SetupCancellationToken(cancellationToken);
-        //    return this;
-        //}
-
         public IPipelineCreator WithStageService(IStageService stageService)
         {
             _pipelineCreationContext.SetupStageService(stageService);
@@ -54,18 +46,6 @@ namespace PipelineLauncher
             _pipelineCreationContext.SetupStageService(stageService);
             return this;
         }
-
-        //public IPipelineCreator WithDiagnostic(Action<DiagnosticItem> diagnosticHandler)
-        //{
-        //    _pipelineCreationContext.SetupDiagnosticAction(diagnosticHandler);
-        //    return this;
-        //}
-
-        //public IPipelineCreator WithExceptionHandler(Action<ExceptionItemsEventArgs> exceptionHandler)
-        //{
-        //    _pipelineCreationContext.SetupExceptionHandler(exceptionHandler);
-        //    return this;
-        //}
 
         public IPipelineCreator UseDefaultServiceResolver(bool useDefaultServiceResolver)
         {
@@ -85,11 +65,11 @@ namespace PipelineLauncher
 
         public IPipelineSetup<TInput, TOutput> BulkStage<TBulkStage, TInput, TOutput>()
             where TBulkStage : BulkStage<TInput, TOutput>
-            => CreateNextBulkStage<TInput, TOutput>(_pipelineCreationContext.StageService.GetStageInstance<TBulkStage>());
+            => CreateBulkStage<TInput, TOutput>(_pipelineCreationContext.StageService.GetStageInstance<TBulkStage>());
 
         public IPipelineSetup<TInput, TInput> BulkStage<TBulkStage, TInput>()
             where TBulkStage : BulkStage<TInput, TInput>
-            => CreateNextBulkStage<TInput, TInput>(_pipelineCreationContext.StageService.GetStageInstance<TBulkStage>());
+            => CreateBulkStage<TInput, TInput>(_pipelineCreationContext.StageService.GetStageInstance<TBulkStage>());
 
         #endregion
 
@@ -97,11 +77,11 @@ namespace PipelineLauncher
 
         public IPipelineSetup<TInput, TOutput> Stage<TStage, TInput, TOutput>()
             where TStage : Stages.Stage<TInput, TOutput>
-            => CreateNextStage<TInput, TOutput>(_pipelineCreationContext.StageService.GetStageInstance<TStage>());
+            => CreateStage<TInput, TOutput>(_pipelineCreationContext.StageService.GetStageInstance<TStage>());
 
         public IPipelineSetup<TInput, TInput> Stage<TStage, TInput>()
             where TStage : Stages.Stage<TInput, TInput>
-            => CreateNextStage<TInput, TInput>(_pipelineCreationContext.StageService.GetStageInstance<TStage>());
+            => CreateStage<TInput, TInput>(_pipelineCreationContext.StageService.GetStageInstance<TStage>());
 
         #endregion
 
@@ -112,7 +92,7 @@ namespace PipelineLauncher
         #region BulkStages
 
         public IPipelineSetup<TInput, TOutput> BulkStage<TInput, TOutput>(BulkStage<TInput, TOutput> bulkStage)
-            => CreateNextBulkStage<TInput, TOutput>(bulkStage);
+            => CreateBulkStage<TInput, TOutput>(bulkStage);
 
         public IPipelineSetup<TInput, TOutput> BulkStage<TInput, TOutput>(Func<TInput[], IEnumerable<TOutput>> bulkFunc, BulkStageConfiguration bulkStageConfiguration)
             => BulkStage(new LambdaBulkStage<TInput, TOutput>(bulkFunc, bulkStageConfiguration));
@@ -125,7 +105,7 @@ namespace PipelineLauncher
         #region Stages
 
         public IPipelineSetup<TInput, TOutput> Stage<TInput, TOutput>(Stages.Stage<TInput, TOutput> stage)
-            => CreateNextStage<TInput, TOutput>(stage);
+            => CreateStage<TInput, TOutput>(stage);
 
         public IPipelineSetup<TInput, TOutput> Stage<TInput, TOutput>(Func<TInput, TOutput> func)
             => Stage(new LambdaStage<TInput, TOutput>(func));
@@ -143,114 +123,97 @@ namespace PipelineLauncher
 
         #endregion
 
-        private PipelineSetup<TInput, TOutput> CreateNextBulkStage<TInput, TOutput>(IBulkStage<TInput, TOutput> bulkStageA)
+        private PipelineSetup<TInput, TOutput> CreateBulkStage<TInput, TOutput>(IBulkStage<TInput, TOutput> bulkStage)
         {
-            IPropagatorBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>> MakeNextBlock(StageCreationContext options)
+            IPropagatorBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>> CreateExecutionBlock(StageCreationContext stageCreationContext)
             {
-                var bulkStage = new PipelineBulkStage<TInput, TOutput>(bulkStageA);
+                var pipelineBulkStage = new PipelineBulkStage<TInput, TOutput>(bulkStage);
+                TransformManyBlock<IEnumerable<PipelineStageItem<TInput>>, PipelineStageItem<TOutput>> nextBlock = null;
 
-                IPropagatorBlock<PipelineStageItem<TInput>, PipelineStageItem<TInput>[]> buffer;
-                if (options.UseTimeOuts)
+                IPropagatorBlock<PipelineStageItem<TInput>, PipelineStageItem<TInput>[]> batchPrepareBlock;
+                if (stageCreationContext.UseTimeOut)
                 {
-                    buffer = new BatchBlockEx<PipelineStageItem<TInput>>(bulkStage.Configuration.BatchItemsCount, bulkStage.Configuration.BatchItemsTimeOut); //TODO
+                    batchPrepareBlock = new BatchBlockWithTimeOut<PipelineStageItem<TInput>>(pipelineBulkStage.Configuration.BatchSize, pipelineBulkStage.Configuration.BatchTimeOut);
                 }
                 else
                 {
-                    buffer = new BatchBlock<PipelineStageItem<TInput>>(bulkStage.Configuration.BatchItemsCount); //TODO
+                    batchPrepareBlock = new BatchBlock<PipelineStageItem<TInput>>(pipelineBulkStage.Configuration.BatchSize);
                 }
 
-                TransformManyBlock<IEnumerable<PipelineStageItem<TInput>>, PipelineStageItem<TOutput>> rePostBlock = null;
-
-                Action<IEnumerable<PipelineStageItem<TInput>>> RePostMessages;
-                if (options.PipelineType == PipelineType.Normal)
+                Action<IEnumerable<PipelineStageItem<TInput>>> postItem;
+                if (stageCreationContext.PipelineType == PipelineType.Normal)
                 {
-                    RePostMessages = items => rePostBlock?.Post(items);
+                    postItem = items => nextBlock?.Post(items);
                 }
                 else
                 {
-                    RePostMessages = items => throw new PipelineUsageException(Helpers.Strings.RetryOnAwaitable);
+                    postItem = items => throw new PipelineUsageException(Helpers.Strings.RetryOnAwaitable);
                 }
 
-                var nextBlock = new TransformManyBlock<IEnumerable<PipelineStageItem<TInput>>, PipelineStageItem<TOutput>>(
-                    async delegate (IEnumerable<PipelineStageItem<TInput>> items)
-                    {
-                        return await bulkStage.BaseExecute(items, options.GetPipelineStageContext(() => RePostMessages(items)));
-                    },
+                nextBlock = new TransformManyBlock<IEnumerable<PipelineStageItem<TInput>>, PipelineStageItem<TOutput>>(
+                    async items => await pipelineBulkStage.BaseExecute(items, stageCreationContext.GetPipelineStageContext(() => postItem(items))),
                     new ExecutionDataflowBlockOptions
                     {
-                        MaxDegreeOfParallelism = bulkStage.Configuration.MaxDegreeOfParallelism,
-                        MaxMessagesPerTask = bulkStage.Configuration.MaxMessagesPerTask,
-                        CancellationToken = options.CancellationToken,
-                        SingleProducerConstrained = bulkStage.Configuration.SingleProducerConstrained,
-                        EnsureOrdered = bulkStage.Configuration.EnsureOrdered
+                        MaxDegreeOfParallelism = pipelineBulkStage.Configuration.MaxDegreeOfParallelism,
+                        MaxMessagesPerTask = pipelineBulkStage.Configuration.MaxMessagesPerTask,
+                        CancellationToken = stageCreationContext.CancellationToken,
+                        SingleProducerConstrained = pipelineBulkStage.Configuration.SingleProducerConstrained,
+                        EnsureOrdered = pipelineBulkStage.Configuration.EnsureOrdered
                     });
 
-                buffer.LinkTo(nextBlock, new DataflowLinkOptions() { PropagateCompletion = false });
-                rePostBlock = nextBlock;
+                batchPrepareBlock.LinkTo(nextBlock, new DataflowLinkOptions { PropagateCompletion = false });
 
-                buffer.Completion.ContinueWith(x =>
-                {
-                    nextBlock.Complete();
-                });//, _pipelineCreationContext.CancellationToken);
+                batchPrepareBlock.Completion.ContinueWith(x => nextBlock.Complete());
 
-                return DataflowBlock.Encapsulate(buffer, nextBlock);
+                return DataflowBlock.Encapsulate(batchPrepareBlock, nextBlock);
             }
 
-            return CreateNextBlock(MakeNextBlock);
+            return CreatePipelineSetup(CreateExecutionBlock);
         }
 
-        private PipelineSetup<TInput, TOutput> CreateNextStage<TInput, TOutput>(IStage<TInput, TOutput> stageA)
+        private PipelineSetup<TInput, TOutput> CreateStage<TInput, TOutput>(IStage<TInput, TOutput> stage)
         {
-            IPropagatorBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>> MakeNextBlock(StageCreationContext options)
+            IPropagatorBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>> CreateExecutionBlock(StageCreationContext stageCreationContext)
             {
-                var stage = new PipelineStage<TInput, TOutput>(stageA);
+                var pipelineStage = new PipelineStage<TInput, TOutput>(stage);
 
-                TransformBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>> rePostBlock = null;
+                TransformBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>> nextExecutionBlock = null;
 
-                Action<PipelineStageItem<TInput>> RePostMessage;
-                if (options.PipelineType == PipelineType.Normal)
+                Action<PipelineStageItem<TInput>> postItem;
+
+                if (stageCreationContext.PipelineType == PipelineType.Normal)
                 {
-                    RePostMessage = item => rePostBlock?.Post(item);
+                    postItem = item => nextExecutionBlock?.Post(item);
                 }
                 else
                 {
-                    RePostMessage = item => throw new PipelineUsageException(Helpers.Strings.RetryOnAwaitable);
+                    postItem = item => throw new PipelineUsageException(Helpers.Strings.RetryOnAwaitable);
                 }
 
-                var nextBlock = new TransformBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>>(
+                nextExecutionBlock = new TransformBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>>(
                     async item =>
                     {
-                        return await stage.BaseExecute(item, options.GetPipelineStageContext(() => RePostMessage(item)));
+                        return await pipelineStage.BaseExecute(item, stageCreationContext.GetPipelineStageContext(() => postItem(item)));
                     },
                     new ExecutionDataflowBlockOptions
                     {
-                        MaxDegreeOfParallelism = stage.Configuration.MaxDegreeOfParallelism,
-                        MaxMessagesPerTask = stage.Configuration.MaxMessagesPerTask,
-                        CancellationToken = options.CancellationToken,
-                        SingleProducerConstrained = stage.Configuration.SingleProducerConstrained,
-                        EnsureOrdered = stage.Configuration.EnsureOrdered
+                        MaxDegreeOfParallelism = pipelineStage.Configuration.MaxDegreeOfParallelism,
+                        MaxMessagesPerTask = pipelineStage.Configuration.MaxMessagesPerTask,
+                        CancellationToken = stageCreationContext.CancellationToken,
+                        SingleProducerConstrained = pipelineStage.Configuration.SingleProducerConstrained,
+                        EnsureOrdered = pipelineStage.Configuration.EnsureOrdered
                     });
 
-                rePostBlock = nextBlock;
-
-                return nextBlock;
+                return nextExecutionBlock;
             }
 
-            return CreateNextBlock(MakeNextBlock);
+            return CreatePipelineSetup(CreateExecutionBlock);
         }
 
-        private PipelineSetup<TInput, TOutput> CreateNextBlock<TInput, TOutput>(
-            Func<StageCreationContext, IPropagatorBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>>> executionBlock)
-        {
-            return AppendStage(new StageSetup<TInput, TOutput>(executionBlock)
-            {
-                PreviousStageSetup = null,
-            });
-        }
+        private PipelineSetup<TInput, TOutput> CreatePipelineSetup<TInput, TOutput>(Func<StageCreationContext, IPropagatorBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>>> executionBlock)
+            => AppendStage(new StageSetup<TInput, TOutput>(executionBlock) { PreviousStageSetup = null });
 
         private PipelineSetup<TInput, TOutput> AppendStage<TInput, TOutput>(IStageSetup<TInput, TOutput> stageSetup)
-        {
-            return new PipelineSetup<TInput, TOutput>(stageSetup, _pipelineCreationContext);
-        }
+            => new PipelineSetup<TInput, TOutput>(stageSetup, _pipelineCreationContext);
     }
 }

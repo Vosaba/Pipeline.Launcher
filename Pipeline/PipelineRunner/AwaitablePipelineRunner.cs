@@ -144,9 +144,9 @@ namespace PipelineLauncher.PipelineRunner
             return sortingBlock.Completion;
         }
 
-        public IAwaitablePipelineRunner<TInput, TOutput> SetupExceptionHandler(Action<ExceptionItemsEventArgs> exceptionHandler)
+        public IAwaitablePipelineRunner<TInput, TOutput> SetupInstantExceptionHandler(Action<ExceptionItemsEventArgs> exceptionHandler)
         {
-            StageCreationContext.SetupExceptionHandler(exceptionHandler);
+            StageCreationContext.SetupInstantExceptionHandler(exceptionHandler);
             return this;
         }
 

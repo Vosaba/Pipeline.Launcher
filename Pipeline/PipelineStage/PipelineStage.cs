@@ -35,6 +35,7 @@ namespace PipelineLauncher.PipelineStage
                 {
                     case ExceptionStageItem<TInput> exceptionItem:
                         return exceptionItem.Return<TOutput>();
+
                     case NonResultStageItem<TInput> noneItem when noneItem.ReadyToProcess<TInput>(StageType):
                         return new PipelineStageItem<TOutput>(await ExecuteAsync((TInput)noneItem.OriginalItem, executionContext.CancellationToken));
 
@@ -55,10 +56,10 @@ namespace PipelineLauncher.PipelineStage
 
         protected override PipelineStageItem<TOutput> GetExceptionItem(PipelineStageItem<TInput> input, Exception ex, StageExecutionContext executionContext)
         {
-            return new ExceptionStageItem<TOutput>(ex, executionContext.ActionsSet?.Retry, GetType(), GetOriginalItems(input));
+            return new ExceptionStageItem<TOutput>(ex, executionContext.ActionsSet?.Retry, GetType(), GetItemsToBeProcessed(input));
         }
 
-        protected override object[] GetOriginalItems(PipelineStageItem<TInput> input)
+        protected override object[] GetItemsToBeProcessed(PipelineStageItem<TInput> input)
         {
             switch (input)
             {
@@ -73,7 +74,7 @@ namespace PipelineLauncher.PipelineStage
             }
         }
 
-        protected override object[] GetOriginalItems(PipelineStageItem<TOutput> output)
+        protected override object[] GetProcessedItems(PipelineStageItem<TOutput> output)
         {
             switch (output)
             {

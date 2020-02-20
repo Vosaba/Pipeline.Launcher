@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 
 namespace PipelineLauncher.Blocks
 {
-    public sealed class BatchBlockEx<T> : IDataflowBlock, IPropagatorBlock<T, T[]>, ISourceBlock<T[]>, ITargetBlock<T>, IReceivableSourceBlock<T[]>
+    public sealed class BatchBlockWithTimeOut<T> : IDataflowBlock, IPropagatorBlock<T, T[]>, ISourceBlock<T[]>, ITargetBlock<T>, IReceivableSourceBlock<T[]>
     {
         private readonly AsyncAutoResetEvent _asyncAutoResetEvent = new AsyncAutoResetEvent();
 
@@ -17,14 +16,14 @@ namespace PipelineLauncher.Blocks
 
         private readonly int _triggerTimeMs;
 
-        public BatchBlockEx(int batchSize, int triggerTimeMs)
+        public BatchBlockWithTimeOut(int batchSize, int triggerTimeMs)
         {
             _triggerTimeMs = triggerTimeMs;
             _base = new BatchBlock<T>(batchSize);
             PollReTrigger();
         }
 
-        public BatchBlockEx(int batchSize, int triggerTimeMs, GroupingDataflowBlockOptions dataflowBlockOptions)
+        public BatchBlockWithTimeOut(int batchSize, int triggerTimeMs, GroupingDataflowBlockOptions dataflowBlockOptions)
         {
             _triggerTimeMs = triggerTimeMs;
             _cancellationToken = dataflowBlockOptions.CancellationToken;

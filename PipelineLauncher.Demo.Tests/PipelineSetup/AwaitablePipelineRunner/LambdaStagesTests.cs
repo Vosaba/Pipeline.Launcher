@@ -135,7 +135,7 @@ namespace PipelineLauncher.Demo.Tests.PipelineSetup.AwaitablePipelineRunner
                 },
                 new BulkStageConfiguration
                 {
-                    BatchItemsCount = 3
+                    BatchSize = 3
                 })
                 .Stage<Stage_1>();
 

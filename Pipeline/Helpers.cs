@@ -174,7 +174,7 @@ namespace PipelineLauncher
         {
             public static string RetryOnAwaitable =
                 $"{nameof(ActionsSet.Retry)} action cannot be used on '{nameof(IAwaitablePipelineRunner<object, object>)}', " +
-                $"try use '{nameof(IAwaitablePipelineRunner<object, object>.SetupExceptionHandler)}' " +
+                $"try use '{nameof(IAwaitablePipelineRunner<object, object>.SetupInstantExceptionHandler)}' " +
                 $"on '{nameof(IAwaitablePipelineRunner<object, object>)}' to perform that action.";
 
             public static string RetriesMaxCountReached =

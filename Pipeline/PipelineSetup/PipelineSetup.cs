@@ -441,13 +441,13 @@ namespace PipelineLauncher.PipelineSetup
                 var pipelineBulkStage = new PipelineBulkStage<TStageOutput, TNextStageOutput>(bulkStage);
 
                 IPropagatorBlock<PipelineStageItem<TStageOutput>, PipelineStageItem<TStageOutput>[]> buffer;
-                if (stageCreationContext.UseTimeOuts)
+                if (stageCreationContext.UseTimeOut)
                 {
-                    buffer = new BatchBlockEx<PipelineStageItem<TStageOutput>>(pipelineBulkStage.Configuration.BatchItemsCount, pipelineBulkStage.Configuration.BatchItemsTimeOut); //TODO
+                    buffer = new BatchBlockWithTimeOut<PipelineStageItem<TStageOutput>>(pipelineBulkStage.Configuration.BatchSize, pipelineBulkStage.Configuration.BatchTimeOut); //TODO
                 }
                 else
                 {
-                    buffer = new BatchBlock<PipelineStageItem<TStageOutput>>(pipelineBulkStage.Configuration.BatchItemsCount); //TODO
+                    buffer = new BatchBlock<PipelineStageItem<TStageOutput>>(pipelineBulkStage.Configuration.BatchSize); //TODO
                 }
 
                 TransformManyBlock<IEnumerable<PipelineStageItem<TStageOutput>>, PipelineStageItem<TNextStageOutput>> rePostBlock = null;
