@@ -162,7 +162,6 @@ namespace PipelineLauncher
                     });
 
                 batchPrepareBlock.LinkTo(nextBlock, new DataflowLinkOptions { PropagateCompletion = false });
-
                 batchPrepareBlock.Completion.ContinueWith(x => nextBlock.Complete());
 
                 return DataflowBlock.Encapsulate(batchPrepareBlock, nextBlock);
@@ -210,8 +209,8 @@ namespace PipelineLauncher
             return CreatePipelineSetup(CreateExecutionBlock);
         }
 
-        private PipelineSetup<TInput, TOutput> CreatePipelineSetup<TInput, TOutput>(Func<StageCreationContext, IPropagatorBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>>> executionBlock)
-            => AppendStage(new StageSetup<TInput, TOutput>(executionBlock) { PreviousStageSetup = null });
+        private PipelineSetup<TInput, TOutput> CreatePipelineSetup<TInput, TOutput>(Func<StageCreationContext, IPropagatorBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>>> executionBlockCreator)
+            => AppendStage(new StageSetup<TInput, TOutput>(executionBlockCreator) { PreviousStageSetup = null });
 
         private PipelineSetup<TInput, TOutput> AppendStage<TInput, TOutput>(IStageSetup<TInput, TOutput> stageSetup)
             => new PipelineSetup<TInput, TOutput>(stageSetup, _pipelineCreationContext);
