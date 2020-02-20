@@ -79,8 +79,6 @@ namespace PipelineLauncher.PipelineSetup
 
         #endregion
 
-        IPipelineSetup<TPipelineInput, TStageOutput> RemoveDuplicates(int totalOccurrences = 0);
-
         #region Native
 
 

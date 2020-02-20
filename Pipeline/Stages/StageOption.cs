@@ -8,17 +8,17 @@ namespace PipelineLauncher.Stages
     {
         public TOutput Remove(TInput input)
         {
-            throw new NoneParamException<TOutput>(new RemoveStageItem<TOutput>(input, GetType()));
+            throw new NonResultStageItemException<TOutput>(new RemoveStageItem<TOutput>(input, GetType()));
         }
 
         public TOutput Skip(TInput input)
         {
-            throw new NoneParamException<TOutput>(new SkipStageItem<TOutput>(input, GetType(), true));
+            throw new NonResultStageItemException<TOutput>(new SkipStageItem<TOutput>(input, GetType(), true));
         }
 
         public TOutput SkipTo<TSkipToStage>(TInput input) where TSkipToStage : IPipelineStageIn<TInput>
         {
-            throw new NoneParamException<TOutput>(new SkipStageItemTill<TOutput>(typeof(TSkipToStage), input, GetType()));
+            throw new NonResultStageItemException<TOutput>(new SkipStageItemTill<TOutput>(typeof(TSkipToStage), input, GetType()));
         }
     }
 }

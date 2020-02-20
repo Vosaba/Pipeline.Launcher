@@ -76,11 +76,11 @@ namespace PipelineLauncher
         #region Stages
 
         public IPipelineSetup<TInput, TOutput> Stage<TStage, TInput, TOutput>()
-            where TStage : Stages.Stage<TInput, TOutput>
+            where TStage : Stage<TInput, TOutput>
             => CreateStage<TInput, TOutput>(_pipelineCreationContext.StageService.GetStageInstance<TStage>());
 
         public IPipelineSetup<TInput, TInput> Stage<TStage, TInput>()
-            where TStage : Stages.Stage<TInput, TInput>
+            where TStage : Stage<TInput, TInput>
             => CreateStage<TInput, TInput>(_pipelineCreationContext.StageService.GetStageInstance<TStage>());
 
         #endregion
@@ -94,17 +94,17 @@ namespace PipelineLauncher
         public IPipelineSetup<TInput, TOutput> BulkStage<TInput, TOutput>(BulkStage<TInput, TOutput> bulkStage)
             => CreateBulkStage<TInput, TOutput>(bulkStage);
 
-        public IPipelineSetup<TInput, TOutput> BulkStage<TInput, TOutput>(Func<TInput[], IEnumerable<TOutput>> bulkFunc, BulkStageConfiguration bulkStageConfiguration)
-            => BulkStage(new LambdaBulkStage<TInput, TOutput>(bulkFunc, bulkStageConfiguration));
+        public IPipelineSetup<TInput, TOutput> BulkStage<TInput, TOutput>(Func<TInput[], IEnumerable<TOutput>> func, BulkStageConfiguration bulkStageConfiguration)
+            => BulkStage(new LambdaBulkStage<TInput, TOutput>(func, bulkStageConfiguration));
 
-        public IPipelineSetup<TInput, TOutput> BulkStage<TInput, TOutput>(Func<TInput[], Task<IEnumerable<TOutput>>> bulkFunc, BulkStageConfiguration bulkStageConfiguration)
-            => BulkStage(new LambdaBulkStage<TInput, TOutput>(bulkFunc, bulkStageConfiguration));
+        public IPipelineSetup<TInput, TOutput> BulkStage<TInput, TOutput>(Func<TInput[], Task<IEnumerable<TOutput>>> func, BulkStageConfiguration bulkStageConfiguration)
+            => BulkStage(new LambdaBulkStage<TInput, TOutput>(func, bulkStageConfiguration));
 
         #endregion
 
         #region Stages
 
-        public IPipelineSetup<TInput, TOutput> Stage<TInput, TOutput>(Stages.Stage<TInput, TOutput> stage)
+        public IPipelineSetup<TInput, TOutput> Stage<TInput, TOutput>(Stage<TInput, TOutput> stage)
             => CreateStage<TInput, TOutput>(stage);
 
         public IPipelineSetup<TInput, TOutput> Stage<TInput, TOutput>(Func<TInput, TOutput> func)

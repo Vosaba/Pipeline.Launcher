@@ -47,9 +47,9 @@ namespace PipelineLauncher.PipelineStage
                         return new PipelineStageItem<TOutput>(await ExecuteAsync(input.Item, executionContext.CancellationToken));
                 }
             }
-            catch (NoneParamException<TOutput> e)
+            catch (NonResultStageItemException<TOutput> e)
             {
-                executionContext.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(new [] {e.StageItem.OriginalItem} , GetType(), DiagnosticState.Skip));
+                executionContext.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(new [] { e.StageItem.OriginalItem } , GetType(), DiagnosticState.Skip));
                 return e.StageItem;
             }
         }

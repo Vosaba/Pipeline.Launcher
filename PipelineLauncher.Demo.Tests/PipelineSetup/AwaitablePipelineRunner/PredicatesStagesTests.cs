@@ -54,5 +54,28 @@ namespace PipelineLauncher.Demo.Tests.PipelineSetup.AwaitablePipelineRunner
             // Process items and print result
             (this, pipelineRunner).ProcessAndPrintResults(items);
         }
+
+        [Fact]
+        public void Stages_BroadCast()
+        {
+            // Test input 6 items
+            List<Item> items = MakeItemsInput(6);
+
+            // Configure stages
+            var pipelineSetup = PipelineCreator
+                .Prepare<Item>() 
+                .Stage<Stage_Conditional>()
+                .Broadcast((item => true,
+                        branchSetup => branchSetup.Stage<Stage_Conditional_1>()))
+                //.Stage<Stage_Conditional_1>(item => PredicateResult.Remove)
+                .Stage<Stage_2>(item => new[] { 1, 4 }.Contains(item.Index) ? PredicateResult.Remove : PredicateResult.Keep)
+                .Stage<Stage_3>();
+
+            // Make pipeline from stageSetup
+            var pipelineRunner = pipelineSetup.CreateAwaitable();
+
+            // Process items and print result
+            (this, pipelineRunner).ProcessAndPrintResults(items);
+        }
     }
 }

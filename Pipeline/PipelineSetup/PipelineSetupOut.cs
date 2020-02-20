@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace PipelineLauncher.PipelineSetup
 {
-    internal partial class PipelineSetup<TPipelineInput, TStageOutput>
+    internal partial class PipelineSetup<TPipelineInput, TStageOutput>// : PipelineSetup<TPipelineInput>, IPipelineSetup<TPipelineInput, TStageOutput>
     {
         #region Generic
 

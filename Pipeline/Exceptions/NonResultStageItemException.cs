@@ -3,10 +3,10 @@ using PipelineLauncher.PipelineStage;
 
 namespace PipelineLauncher.Exceptions
 {
-    internal class NoneParamException<TItem> : Exception
+    internal class NonResultStageItemException<TItem> : Exception
     {
         public NonResultStageItem<TItem> StageItem { get; }
-        public NoneParamException(NonResultStageItem<TItem> stageItem)
+        public NonResultStageItemException(NonResultStageItem<TItem> stageItem)
         {
             StageItem = stageItem;
         }

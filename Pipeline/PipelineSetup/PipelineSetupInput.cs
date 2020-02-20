@@ -1,26 +1,22 @@
 ﻿using PipelineLauncher.Abstractions.Dto;
-using PipelineLauncher.Abstractions.Services;
-using PipelineLauncher.Blocks;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Threading.Tasks.Dataflow;
-using PipelineLauncher.Extensions;
-using PipelineLauncher.Abstractions.PipelineEvents;
 using PipelineLauncher.Abstractions.PipelineRunner;
 using PipelineLauncher.Abstractions.PipelineRunner.Configurations;
 using PipelineLauncher.Abstractions.PipelineStage;
 using PipelineLauncher.Abstractions.PipelineStage.Configurations;
-using PipelineLauncher.Abstractions.PipelineStage.Dto;
+using PipelineLauncher.Abstractions.Services;
+using PipelineLauncher.Abstractions.Stages;
+using PipelineLauncher.Blocks;
+using PipelineLauncher.Exceptions;
 using PipelineLauncher.PipelineRunner;
 using PipelineLauncher.PipelineStage;
 using PipelineLauncher.Stages;
 using PipelineLauncher.StageSetup;
+using System;
 using System.Collections.Concurrent;
-using PipelineLauncher.Exceptions;
-using PipelineLauncher.Abstractions.Stages;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
 
 namespace PipelineLauncher.PipelineSetup
 {
@@ -39,13 +35,12 @@ namespace PipelineLauncher.PipelineSetup
         }
     }
 
+
     internal partial class PipelineSetup<TPipelineInput, TStageOutput> : PipelineSetup<TPipelineInput>, IPipelineSetup<TPipelineInput, TStageOutput>
     {
         public IStageSetupOut<TStageOutput> StageSetupOut => (IStageSetupOut<TStageOutput>)StageSetup;
 
-        internal PipelineSetup(
-            IStageSetupOut<TStageOutput> stageSetupOut,
-            PipelineCreationContext pipelineCreationContext)
+        internal PipelineSetup(IStageSetupOut<TStageOutput> stageSetupOut, PipelineCreationContext pipelineCreationContext)
             : base(stageSetupOut, pipelineCreationContext)
         { }
 
@@ -137,7 +132,7 @@ namespace PipelineLauncher.PipelineSetup
 
             var newCurrent = CreateNextBlock(MakeNextBlock);
 
-            return newCurrent.Branch(branches).RemoveDuplicates(branches.Length);
+            return ((PipelineSetup<TPipelineInput, TNextStageOutput>)newCurrent.Branch(branches)).RemoveDuplicates(branches.Length);
         }
 
         public IPipelineSetup<TPipelineInput, TNextStageOutput> Branch<TNextStageOutput>(
@@ -255,67 +250,6 @@ namespace PipelineLauncher.PipelineSetup
 
         #endregion
 
-        public IPipelineSetup<TPipelineInput, TStageOutput> RemoveDuplicates(int totalOccurrences)
-        {
-            IPropagatorBlock<PipelineStageItem<TStageOutput>, PipelineStageItem<TStageOutput>> MakeNextBlock(StageCreationContext options)
-            {
-                var processedHash = new ConcurrentDictionary<object, int>();
-
-                var buffer = new BatchBlock<PipelineStageItem<TStageOutput>>(1); //TODO
-                //var pipelineCreationContext = PipelineCreationContext.GetPipelineStageContext(null);
-
-
-                IEnumerable<PipelineStageItem<TStageOutput>> Filter(IEnumerable<PipelineStageItem<TStageOutput>> items)
-                {
-                    foreach (var item in items)
-                    {
-                        object originalItem;
-                        switch (item)
-                        {
-                            case NonResultStageItem<TPipelineInput> noneResultItem:
-                                originalItem = noneResultItem.OriginalItem;
-                                break;
-                            default:
-                                originalItem = item.Item;
-                                break;
-                        }
-
-                        if (processedHash.TryAdd(originalItem, 1))
-                        {
-                            yield return item;
-                        }
-                        else
-                        {
-                            processedHash[originalItem]++;
-                        }
-
-                        if (processedHash[originalItem] == totalOccurrences)
-                        {
-                            processedHash.Remove(originalItem, out _);
-                        }
-                    }
-                }
-
-                var mergeBlock = new TransformManyBlock<IEnumerable<PipelineStageItem<TStageOutput>>, PipelineStageItem<TStageOutput>>(Filter);
-               
-                buffer.LinkTo(mergeBlock);
-                buffer.Completion.ContinueWith(x => mergeBlock.Complete());
-
-                var next = DataflowBlock.Encapsulate(buffer, mergeBlock);
-
-                var currentBlock = StageSetupOut.RetrieveExecutionBlock(options);
-
-                currentBlock.LinkTo(next);
-
-                currentBlock.Completion.ContinueWith(x => next.Complete());//, PipelineCreationContext.CancellationToken);
-
-
-                return next;
-            }
-
-            return CreateNextBlock(MakeNextBlock);
-        }
-
         public IPipelineSetup<TPipelineInput, TNextStageOutput> MergeWith<TNextStageOutput>(IPipelineSetup<TStageOutput, TNextStageOutput> pipelineSetup)
         {
             var nextBlock = pipelineSetup.GetFirstStage<TStageOutput>();
@@ -370,6 +304,67 @@ namespace PipelineLauncher.PipelineSetup
 
             var firstStage = this.GetFirstStage<TPipelineInput>();
             return new PipelineRunner<TPipelineInput, TStageOutput>(firstStage.RetrieveExecutionBlock, StageSetupOut.RetrieveExecutionBlock, pipelineCreationConfig);
+        }
+
+        public IPipelineSetup<TPipelineInput, TStageOutput> RemoveDuplicates(int totalOccurrences)
+        {
+            IPropagatorBlock<PipelineStageItem<TStageOutput>, PipelineStageItem<TStageOutput>> MakeNextBlock(StageCreationContext options)
+            {
+                var processedHash = new ConcurrentDictionary<object, int>();
+
+                var buffer = new BatchBlock<PipelineStageItem<TStageOutput>>(1); //TODO
+                //var pipelineCreationContext = PipelineCreationContext.GetPipelineStageContext(null);
+
+
+                IEnumerable<PipelineStageItem<TStageOutput>> Filter(IEnumerable<PipelineStageItem<TStageOutput>> items)
+                {
+                    foreach (var item in items)
+                    {
+                        object originalItem;
+                        switch (item)
+                        {
+                            case NonResultStageItem<TPipelineInput> noneResultItem:
+                                originalItem = noneResultItem.OriginalItem;
+                                break;
+                            default:
+                                originalItem = item.Item;
+                                break;
+                        }
+
+                        if (processedHash.TryAdd(originalItem, 1))
+                        {
+                            yield return item;
+                        }
+                        else
+                        {
+                            processedHash[originalItem]++;
+                        }
+
+                        if (processedHash[originalItem] == totalOccurrences)
+                        {
+                            processedHash.Remove(originalItem, out _);
+                        }
+                    }
+                }
+
+                var mergeBlock = new TransformManyBlock<IEnumerable<PipelineStageItem<TStageOutput>>, PipelineStageItem<TStageOutput>>(Filter);
+
+                buffer.LinkTo(mergeBlock);
+                buffer.Completion.ContinueWith(x => mergeBlock.Complete());
+
+                var next = DataflowBlock.Encapsulate(buffer, mergeBlock);
+
+                var currentBlock = StageSetupOut.RetrieveExecutionBlock(options);
+
+                currentBlock.LinkTo(next);
+
+                currentBlock.Completion.ContinueWith(x => next.Complete());//, PipelineCreationContext.CancellationToken);
+
+
+                return next;
+            }
+
+            return CreateNextBlock(MakeNextBlock);
         }
 
         private PipelineSetup<TPipelineInput, TNextStageOutput> CreateNextStage<TNextStageOutput>(IStage<TStageOutput, TNextStageOutput> stage, PipelinePredicate<TStageOutput> predicate)
