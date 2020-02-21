@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks.Dataflow;
 
-namespace PipelineLauncher.StageSetup
+namespace PipelineLauncher.PipelineSetup.StageSetup
 {
     internal class StageSetup : IStageSetup
     {

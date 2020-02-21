@@ -1,8 +1,8 @@
-﻿using System.Threading.Tasks.Dataflow;
-using PipelineLauncher.Abstractions.Dto;
+﻿using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.PipelineStage;
+using System.Threading.Tasks.Dataflow;
 
-namespace PipelineLauncher.StageSetup
+namespace PipelineLauncher.PipelineSetup.StageSetup
 {
     public interface ITargetStageSetup<TInput> : IStageSetup
     {

@@ -1,11 +1,9 @@
-﻿using PipelineLauncher.PipelineSetup;
+﻿using PipelineLauncher.Abstractions.Services;
+using PipelineLauncher.PipelineSetup;
+using PipelineLauncher.Stages;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Reflection;
-using PipelineLauncher.Abstractions.Services;
-using PipelineLauncher.Stages;
 
 namespace PipelineLauncher.Extensions
 {
@@ -45,7 +43,7 @@ namespace PipelineLauncher.Extensions
             });
         }
 
-        public static IStageService AccessStageService<TOutput>(this IPipelineSetupOut<TOutput> pipelineSetup)
+        public static IStageService AccessStageService<TOutput>(this IPipelineSetupSource<TOutput> pipelineSetup)
         {
             var ty = pipelineSetup.GetType();
             var pi = ty.GetProperty(nameof(PipelineCreationContext.StageService), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.GetProperty);

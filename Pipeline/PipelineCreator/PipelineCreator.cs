@@ -7,12 +7,12 @@ using PipelineLauncher.Blocks;
 using PipelineLauncher.PipelineSetup;
 using PipelineLauncher.PipelineStage;
 using PipelineLauncher.Stages;
-using PipelineLauncher.StageSetup;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using PipelineLauncher.Exceptions;
+using PipelineLauncher.PipelineSetup.StageSetup;
 
 namespace PipelineLauncher
 {

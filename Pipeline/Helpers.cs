@@ -8,8 +8,8 @@ using PipelineLauncher.Abstractions.PipelineRunner;
 using PipelineLauncher.Abstractions.PipelineStage;
 using PipelineLauncher.Abstractions.PipelineStage.Dto;
 using PipelineLauncher.PipelineRunner;
+using PipelineLauncher.PipelineSetup.StageSetup;
 using PipelineLauncher.PipelineStage;
-using PipelineLauncher.StageSetup;
 
 namespace PipelineLauncher
 {

@@ -3,7 +3,7 @@ using PipelineLauncher.Abstractions.PipelineStage;
 using System.Collections.Generic;
 using System.Threading.Tasks.Dataflow;
 
-namespace PipelineLauncher.StageSetup
+namespace PipelineLauncher.PipelineSetup.StageSetup
 {
     public interface IStageSetup
     {

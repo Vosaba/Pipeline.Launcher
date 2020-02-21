@@ -1,9 +1,9 @@
-﻿using System;
-using System.Threading.Tasks.Dataflow;
-using PipelineLauncher.Abstractions.Dto;
+﻿using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.PipelineStage;
+using System;
+using System.Threading.Tasks.Dataflow;
 
-namespace PipelineLauncher.StageSetup
+namespace PipelineLauncher.PipelineSetup.StageSetup
 {
     internal class SourceStageSetup<TOutput> : StageSetup, ISourceStageSetup<TOutput>
     {

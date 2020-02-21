@@ -5,7 +5,7 @@ namespace PipelineLauncher.Extensions
 {
     public static class PipelineCreatorExtensions
     {
-        public static IStageService AccessStageService<TInput, TOutput>(this IPipelineCreator pipelineCreator)
+        private static IStageService AccessStageService<TInput, TOutput>(this IPipelineCreator pipelineCreator)
         {
             var ty = pipelineCreator.GetType();
             var pi = ty.GetProperty(nameof(PipelineCreationContext.StageService), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.GetProperty);
