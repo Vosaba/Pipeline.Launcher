@@ -142,14 +142,12 @@ namespace PipelineLauncher.PipelineSetup
         {
             IPropagatorBlock<PipelineStageItem<TNextStageOutput>, PipelineStageItem<TNextStageOutput>> CreateExecutionBlock(StageCreationContext options)
             {
+                var sourceBlock = StageSetupOut.RetrieveExecutionBlock(options);
                 var targetBlock = new TransformBlock<PipelineStageItem<TNextStageOutput>, PipelineStageItem<TNextStageOutput>>(x => x);
 
                 var branchId = 0;
                 IDataflowBlock[] headBranches = new IDataflowBlock[branches.Length];
                 IDataflowBlock[] tailBranches = new IDataflowBlock[branches.Length];
-
-
-                var sourceBlock = StageSetupOut.RetrieveExecutionBlock(options);
 
                 foreach (var (predicate, branch) in branches)
                 {

@@ -45,6 +45,9 @@ namespace PipelineLauncher.Demo.Tests.PipelineSetup.AwaitablePipelineRunner
 
             // Process items and print result
             (this, pipelineRunner).ProcessAndPrintResults(items);
+
+            // Process items and print result
+            (this, pipelineRunner).ProcessAndPrintResults(items);
         }
     }
 }
