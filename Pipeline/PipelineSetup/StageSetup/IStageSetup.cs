@@ -16,7 +16,7 @@ namespace PipelineLauncher.StageSetup
         IStageSetup PreviousStageSetup { get; set; }
     }
 
-    public interface IStageSetup<TInput, TOutput> : IStageSetupIn<TInput>, IStageSetupOut<TOutput>
+    public interface IStageSetup<TInput, TOutput> : ITargetStageSetup<TInput>, ISourceStageSetup<TOutput>
     {
         new IPropagatorBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>> RetrieveExecutionBlock(StageCreationContext context);
     }

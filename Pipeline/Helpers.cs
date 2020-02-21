@@ -15,7 +15,7 @@ namespace PipelineLauncher
 {
     internal static partial class Helpers
     {
-        public static IStageSetupIn<TInput> GetFirstStage<TInput>(this IPipelineSetup pipelineSetup)
+        public static ITargetStageSetup<TInput> GetFirstStage<TInput>(this IPipelineSetup pipelineSetup)
         {
             IStageSetup stageSetup = pipelineSetup.StageSetup;
 
@@ -24,7 +24,7 @@ namespace PipelineLauncher
                 stageSetup = stageSetup.PreviousStageSetup;
             }
 
-            return (IStageSetupIn<TInput>)stageSetup;
+            return (ITargetStageSetup<TInput>)stageSetup;
         }
 
         public static void DestroyStageBlocks(this IStageSetup stageSetup)

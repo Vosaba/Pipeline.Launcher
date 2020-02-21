@@ -4,7 +4,7 @@ using PipelineLauncher.Abstractions.PipelineStage;
 
 namespace PipelineLauncher.StageSetup
 {
-    public interface IStageSetupIn<TInput> : IStageSetup
+    public interface ITargetStageSetup<TInput> : IStageSetup
     {
         new ITargetBlock<PipelineStageItem<TInput>> RetrieveExecutionBlock(StageCreationContext context);
     }

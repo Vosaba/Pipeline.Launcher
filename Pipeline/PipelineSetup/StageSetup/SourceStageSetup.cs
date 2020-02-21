@@ -5,9 +5,9 @@ using PipelineLauncher.Abstractions.PipelineStage;
 
 namespace PipelineLauncher.StageSetup
 {
-    internal class StageSetupOut<TOutput> : StageSetup, IStageSetupOut<TOutput>
+    internal class SourceStageSetup<TOutput> : StageSetup, ISourceStageSetup<TOutput>
     {
-        public StageSetupOut(Func<StageCreationContext, ISourceBlock<PipelineStageItem<TOutput>>> executionBlockCreator)
+        public SourceStageSetup(Func<StageCreationContext, ISourceBlock<PipelineStageItem<TOutput>>> executionBlockCreator)
             : base(executionBlockCreator)
         { }
 

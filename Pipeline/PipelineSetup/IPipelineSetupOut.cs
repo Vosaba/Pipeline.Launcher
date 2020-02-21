@@ -16,7 +16,7 @@ namespace PipelineLauncher.PipelineSetup
 
     public interface IPipelineSetupOut<TOutput> : IPipelineSetup
     {
-        IStageSetupOut<TOutput> StageSetupOut { get; }
+        ISourceStageSetup<TOutput> SourceStageSetup { get; }
 
         #region Generic
 

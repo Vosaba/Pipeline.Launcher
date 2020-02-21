@@ -30,7 +30,7 @@ namespace PipelineLauncher.StageSetup
         }
     }
 
-    internal class StageSetup<TInput, TOutput> : StageSetupOut<TOutput>, IStageSetup<TInput, TOutput>
+    internal class StageSetup<TInput, TOutput> : SourceStageSetup<TOutput>, IStageSetup<TInput, TOutput>
     {
         public StageSetup(Func<StageCreationContext, IPropagatorBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>>> executionBlockCreator)
             : base(executionBlockCreator)
@@ -39,6 +39,6 @@ namespace PipelineLauncher.StageSetup
         public new IPropagatorBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>> RetrieveExecutionBlock(StageCreationContext context)
             => (IPropagatorBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>>)base.RetrieveExecutionBlock(context);
 
-        ITargetBlock<PipelineStageItem<TInput>> IStageSetupIn<TInput>.RetrieveExecutionBlock(StageCreationContext context) => RetrieveExecutionBlock(context);
+        ITargetBlock<PipelineStageItem<TInput>> ITargetStageSetup<TInput>.RetrieveExecutionBlock(StageCreationContext context) => RetrieveExecutionBlock(context);
     }
 }
