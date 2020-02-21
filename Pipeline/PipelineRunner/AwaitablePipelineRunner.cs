@@ -17,7 +17,6 @@ namespace PipelineLauncher.PipelineRunner
     {
         private readonly AwaitablePipelineCreationConfig _pipelineCreationConfig;
         private readonly Action _destroyTaskStages;
-        private readonly ConcurrentBag<TOutput> _processedItems = new ConcurrentBag<TOutput>(); //TODO remove
 
         internal AwaitablePipelineRunner(
             Func<StageCreationContext, ITargetBlock<PipelineStageItem<TInput>>> retrieveFirstBlock,
@@ -25,85 +24,73 @@ namespace PipelineLauncher.PipelineRunner
             Action destroyTaskStages,
             AwaitablePipelineCreationConfig pipelineCreationConfig)
             : base(retrieveFirstBlock, retrieveLastBlock, new StageCreationContext(PipelineType.Awaitable, !pipelineCreationConfig.IgnoreTimeOuts))
-            {
+        {
             _destroyTaskStages = destroyTaskStages;
             _pipelineCreationConfig = pipelineCreationConfig;
-
-            ItemReceivedEvent += AwaitablePipeline_ItemReceivedEvent;
 
             if (_pipelineCreationConfig.ThrowExceptionOccured)
             {
                 ExceptionItemsReceivedEvent += AwaitablePipelineRunner_ExceptionItemsReceivedEvent;
             }
-            }
+        }
 
         public IEnumerable<TOutput> Process(TInput input)
         {
-            return Process(new []{input});
+            return Process(new[] { input });
         }
 
         public IEnumerable<TOutput> Process(IEnumerable<TInput> input)
         {
-            _processedItems.Clear();
-            _destroyTaskStages();
+            var result = ProcessAsync(input)
+                .ConfigureAwait(false)
+                .GetAwaiter();
 
-            var lastBlock = RetrieveLastBlock(StageCreationContext);
-            var sortingBlock = GenerateSortingBlock(lastBlock);
-
-            var firstBlock = RetrieveFirstBlock(StageCreationContext);
-            var posted = input.Select(x => new PipelineStageItem<TInput>(x)).All(x => firstBlock.Post(x));
-            firstBlock.Complete();
-
-            lastBlock.Completion.ContinueWith(x =>
-            {
-                sortingBlock.Complete();
-            });//, PipelineCreationContext.CancellationToken);
-
-            sortingBlock.Completion.Wait();
-
-            return _processedItems;
+            return result.GetResult();
         }
 
         public Task<IEnumerable<TOutput>> ProcessAsync(TInput input)
         {
-            return ProcessAsync(new[] {input});
+            return ProcessAsync(new[] { input });
         }
 
         public async Task<IEnumerable<TOutput>> ProcessAsync(IEnumerable<TInput> input)
         {
-            _processedItems.Clear();
+            var result = new ConcurrentBag<TOutput>();
+
             _destroyTaskStages();
 
             var lastBlock = RetrieveLastBlock(StageCreationContext);
-            var sortingBlock = GenerateSortingBlock(lastBlock);
-
             var firstBlock = RetrieveFirstBlock(StageCreationContext);
+
             var posted = input.Select(x => new PipelineStageItem<TInput>(x)).All(x => firstBlock.Post(x));
             firstBlock.Complete();
 
-            await lastBlock.Completion.ContinueWith(x =>
+            while (await lastBlock.OutputAvailableAsync())
             {
-                sortingBlock.Complete();
-            });//, PipelineCreationContext.CancellationToken);
+                var item = await lastBlock.ReceiveAsync();
+                if (item.Item != null)
+                {
+                    result.Add(item.Item);
+                }
 
-            await sortingBlock.Completion;
+                SortingMethod(item);
+            }
 
-            return _processedItems;
+            return result;
         }
 
         public IAsyncEnumerable<TOutput> ProcessAsyncEnumerable(TInput input)
         {
-            return ProcessAsyncEnumerable(new[] {input});
+            return ProcessAsyncEnumerable(new[] { input });
         }
 
         public async IAsyncEnumerable<TOutput> ProcessAsyncEnumerable(IEnumerable<TInput> input)
         {
-            _processedItems.Clear();
             _destroyTaskStages();
 
             var lastBlock = RetrieveLastBlock(StageCreationContext);
-
             var firstBlock = RetrieveFirstBlock(StageCreationContext);
+
             var posted = input.Select(x => new PipelineStageItem<TInput>(x)).All(x => firstBlock.Post(x));
             firstBlock.Complete();
 
@@ -121,18 +108,17 @@ namespace PipelineLauncher.PipelineRunner
 
         public Task GetCompletionTaskFor(TInput input)
         {
-            return GetCompletionTaskFor(new[] {input});
+            return GetCompletionTaskFor(new[] { input });
         }
 
         public Task GetCompletionTaskFor(IEnumerable<TInput> input)
         {
-            _processedItems.Clear();
             _destroyTaskStages();
 
             var lastBlock = RetrieveLastBlock(StageCreationContext);
             var sortingBlock = GenerateSortingBlock(lastBlock);
-
             var firstBlock = RetrieveFirstBlock(StageCreationContext);
+
             var posted = input.Select(x => new PipelineStageItem<TInput>(x)).All(x => firstBlock.Post(x));
             firstBlock.Complete();
 
@@ -150,17 +136,12 @@ namespace PipelineLauncher.PipelineRunner
             return this;
         }
 
-        private void AwaitablePipeline_ItemReceivedEvent(TOutput item)
-        {
-            _processedItems.Add(item);
-        }
-
         private void AwaitablePipelineRunner_ExceptionItemsReceivedEvent(ExceptionItemsEventArgs items)
         {
             throw items.Exception;
         }
 
-        IAwaitablePipelineRunner<TInput, TOutput> IAwaitablePipelineRunner<TInput, TOutput>.SetupCancellationToken(CancellationToken cancellationToken) 
+        IAwaitablePipelineRunner<TInput, TOutput> IAwaitablePipelineRunner<TInput, TOutput>.SetupCancellationToken(CancellationToken cancellationToken)
             => (IAwaitablePipelineRunner<TInput, TOutput>)SetupCancellationToken(cancellationToken);
     }
 }
