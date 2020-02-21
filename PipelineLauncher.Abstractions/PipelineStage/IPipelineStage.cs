@@ -1,6 +1,6 @@
 ﻿using PipelineLauncher.Abstractions.Dto;
 
-namespace PipelineLauncher.Abstractions.Stages
+namespace PipelineLauncher.Abstractions.PipelineStage
 {
     public interface IPipelineStage
     {

@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using PipelineLauncher.Abstractions.Services;
-using PipelineLauncher.Abstractions.Stages;
 using PipelineLauncher.LightInject;
 using System.Reflection;
 using PipelineLauncher.Abstractions.PipelineStage;
+using PipelineLauncher.Abstractions.Stages;
 
 namespace PipelineLauncher.Services
 {

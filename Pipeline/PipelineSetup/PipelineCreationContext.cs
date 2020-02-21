@@ -1,7 +1,8 @@
 ﻿using PipelineLauncher.Abstractions.Services;
-using PipelineLauncher.Abstractions.Stages;
 using PipelineLauncher.Services;
 using System;
+using PipelineLauncher.Abstractions.PipelineStage;
+using PipelineLauncher.Abstractions.Stages;
 
 namespace PipelineLauncher.PipelineSetup
 {
@@ -39,7 +40,7 @@ namespace PipelineLauncher.PipelineSetup
             _stageService = stageService;
         }
 
-        public PipelineCreationContext(Func<Type, IPipelineStage> stageResolveFunc)
+        public PipelineCreationContext(Func<Type, IStage> stageResolveFunc)
         {
             _stageService = new DefaultLambdaStageService(stageResolveFunc);
         }
@@ -50,7 +51,7 @@ namespace PipelineLauncher.PipelineSetup
             return this;
         }
 
-        public PipelineCreationContext SetupStageService(Func<Type, IPipelineStage> stageResolveFunc)
+        public PipelineCreationContext SetupStageService(Func<Type, IStage> stageResolveFunc)
         {
             _stageService = new DefaultLambdaStageService(stageResolveFunc);
             return this;

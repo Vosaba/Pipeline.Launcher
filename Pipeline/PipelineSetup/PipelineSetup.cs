@@ -4,7 +4,6 @@ using PipelineLauncher.Abstractions.PipelineRunner.Configurations;
 using PipelineLauncher.Abstractions.PipelineStage;
 using PipelineLauncher.Abstractions.PipelineStage.Configurations;
 using PipelineLauncher.Abstractions.Services;
-using PipelineLauncher.Abstractions.Stages;
 using PipelineLauncher.Blocks;
 using PipelineLauncher.Exceptions;
 using PipelineLauncher.PipelineRunner;
@@ -17,6 +16,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
+using PipelineLauncher.Abstractions.Stages;
 
 namespace PipelineLauncher.PipelineSetup
 {

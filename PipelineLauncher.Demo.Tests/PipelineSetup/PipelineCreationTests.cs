@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using PipelineLauncher.Abstractions.PipelineStage;
 using PipelineLauncher.Abstractions.Stages;
 using PipelineLauncher.Demo.Tests.Fakes;
 using Xunit;
@@ -9,11 +10,11 @@ namespace PipelineLauncher.Demo.Tests.PipelineSetup
     public class PipelineCreationTests 
     {
         private IPipelineCreator _pipelineCreator;
-        private readonly Func<Type, IPipelineStage> _stageResolveFunc;
+        private readonly Func<Type, IStage> _stageResolveFunc;
 
         public PipelineCreationTests()
         {
-            _stageResolveFunc = x => (IPipelineStage) Activator.CreateInstance(x);
+            _stageResolveFunc = x => (IStage) Activator.CreateInstance(x);
         }
 
         [Fact]

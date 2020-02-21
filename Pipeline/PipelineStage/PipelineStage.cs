@@ -6,6 +6,7 @@ using PipelineLauncher.Exceptions;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using PipelineLauncher.Abstractions.Stages;
 
 namespace PipelineLauncher.PipelineStage
 {

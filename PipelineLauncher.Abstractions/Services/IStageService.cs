@@ -1,4 +1,5 @@
 ﻿using PipelineLauncher.Abstractions.PipelineStage;
+using PipelineLauncher.Abstractions.Stages;
 
 namespace PipelineLauncher.Abstractions.Services
 {

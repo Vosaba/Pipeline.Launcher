@@ -1,12 +1,12 @@
 ﻿using PipelineLauncher.Abstractions.PipelineStage.Configurations;
 using PipelineLauncher.Abstractions.Services;
-using PipelineLauncher.Abstractions.Stages;
 using PipelineLauncher.PipelineSetup;
 using PipelineLauncher.Stages;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using PipelineLauncher.Abstractions.PipelineStage;
+using PipelineLauncher.Abstractions.Stages;
 
 namespace PipelineLauncher
 {
@@ -14,7 +14,7 @@ namespace PipelineLauncher
     {
         IPipelineCreator WithStageService(IStageService stageService);
 
-        IPipelineCreator WithStageService(Func<Type, IPipelineStage> stageService);
+        IPipelineCreator WithStageService(Func<Type, IStage> stageService);
         
         IPipelineCreator UseDefaultServiceResolver(bool useDefaultServiceResolver);
 

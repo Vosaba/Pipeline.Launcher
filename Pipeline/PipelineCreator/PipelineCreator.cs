@@ -2,7 +2,6 @@
 using PipelineLauncher.Abstractions.PipelineStage;
 using PipelineLauncher.Abstractions.PipelineStage.Configurations;
 using PipelineLauncher.Abstractions.Services;
-using PipelineLauncher.Abstractions.Stages;
 using PipelineLauncher.Blocks;
 using PipelineLauncher.PipelineSetup;
 using PipelineLauncher.PipelineStage;
@@ -11,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
+using PipelineLauncher.Abstractions.Stages;
 using PipelineLauncher.Exceptions;
 using PipelineLauncher.PipelineSetup.StageSetup;
 
@@ -30,7 +30,7 @@ namespace PipelineLauncher
             _pipelineCreationContext = new PipelineCreationContext(stageService);
         }
 
-        public PipelineCreator(Func<Type, IPipelineStage> stageResolveFunc)
+        public PipelineCreator(Func<Type, IStage> stageResolveFunc)
         {
             _pipelineCreationContext = new PipelineCreationContext(stageResolveFunc);
         }
@@ -41,7 +41,7 @@ namespace PipelineLauncher
             return this;
         }
 
-        public IPipelineCreator WithStageService(Func<Type, IPipelineStage> stageService)
+        public IPipelineCreator WithStageService(Func<Type, IStage> stageService)
         {
             _pipelineCreationContext.SetupStageService(stageService);
             return this;

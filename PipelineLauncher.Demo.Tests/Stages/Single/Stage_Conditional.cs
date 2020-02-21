@@ -1,5 +1,5 @@
 ﻿using PipelineLauncher.Abstractions.Dto;
-using PipelineLauncher.Abstractions.Stages;
+using PipelineLauncher.Abstractions.PipelineStage;
 using PipelineLauncher.Demo.Tests.Items;
 using PipelineLauncher.Stages;
 

@@ -1,7 +1,7 @@
 ﻿using PipelineLauncher.Abstractions.Services;
-using PipelineLauncher.Abstractions.Stages;
 using System;
 using PipelineLauncher.Abstractions.PipelineStage;
+using PipelineLauncher.Abstractions.Stages;
 
 namespace PipelineLauncher.Demo.Tests.Fakes
 {

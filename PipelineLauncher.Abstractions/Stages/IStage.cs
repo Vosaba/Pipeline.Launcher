@@ -1,8 +1,8 @@
-﻿using PipelineLauncher.Abstractions.PipelineStage.Configurations;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
+using PipelineLauncher.Abstractions.PipelineStage.Configurations;
 
-namespace PipelineLauncher.Abstractions.PipelineStage
+namespace PipelineLauncher.Abstractions.Stages
 {
     public interface IStage<TInput, TOutput> : ITargetStage<TInput>, ISourceStage<TOutput>
     {

@@ -6,6 +6,7 @@ using PipelineLauncher.Stages;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using PipelineLauncher.Abstractions.Stages;
 
 namespace PipelineLauncher.PipelineSetup
 {
