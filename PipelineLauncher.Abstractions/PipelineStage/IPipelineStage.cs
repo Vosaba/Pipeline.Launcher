@@ -2,23 +2,8 @@
 
 namespace PipelineLauncher.Abstractions.PipelineStage
 {
-    public interface IPipelineStage
-    {
-    }
-
-    public interface IPipelineStageIn<TInput>: IPipelineStage
-    {
-    }
-
-    public interface IPipelineStageOut<TOutput>: IPipelineStage
-    {
-    }
-
-    public interface IPipelineStage<TInput, TOutput>: IPipelineStageIn<TInput>, IPipelineStageOut<TOutput>
-    {
-    }
-
-    public interface IConditionalStage<TInput> : IPipelineStageIn<TInput>
+    
+    public interface IConditionalStage<TInput> 
     {
         PredicateResult Predicate(TInput input);
     }
