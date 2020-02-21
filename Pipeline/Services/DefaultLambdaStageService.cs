@@ -1,6 +1,7 @@
 ﻿using PipelineLauncher.Abstractions.Services;
 using PipelineLauncher.Abstractions.Stages;
 using System;
+using PipelineLauncher.Abstractions.PipelineStage;
 
 namespace PipelineLauncher.Services
 {
@@ -13,9 +14,9 @@ namespace PipelineLauncher.Services
             _stageResolver = stageResolver;
         }
 
-        public TPipelineStage GetStageInstance<TPipelineStage>() where TPipelineStage : class, IPipelineStage
+        public TStage GetStageInstance<TStage>() where TStage : class, IStage
         {
-            return (TPipelineStage) _stageResolver(typeof(TPipelineStage));
+            return (TStage) _stageResolver(typeof(TStage));
         }
     }
 }

@@ -64,11 +64,11 @@ namespace PipelineLauncher
         #region BulkStages
 
         public IPipelineSetup<TInput, TOutput> BulkStage<TBulkStage, TInput, TOutput>()
-            where TBulkStage : BulkStage<TInput, TOutput>
+            where TBulkStage : class, IBulkStage<TInput, TOutput>
             => CreateBulkStage<TInput, TOutput>(_pipelineCreationContext.StageService.GetStageInstance<TBulkStage>());
 
         public IPipelineSetup<TInput, TInput> BulkStage<TBulkStage, TInput>()
-            where TBulkStage : BulkStage<TInput, TInput>
+            where TBulkStage : class, IBulkStage<TInput, TInput>
             => CreateBulkStage<TInput, TInput>(_pipelineCreationContext.StageService.GetStageInstance<TBulkStage>());
 
         #endregion
@@ -76,11 +76,11 @@ namespace PipelineLauncher
         #region Stages
 
         public IPipelineSetup<TInput, TOutput> Stage<TStage, TInput, TOutput>()
-            where TStage : Stage<TInput, TOutput>
+            where TStage : class, IStage<TInput, TOutput>
             => CreateStage<TInput, TOutput>(_pipelineCreationContext.StageService.GetStageInstance<TStage>());
 
         public IPipelineSetup<TInput, TInput> Stage<TStage, TInput>()
-            where TStage : Stage<TInput, TInput>
+            where TStage : class, IStage<TInput, TInput>
             => CreateStage<TInput, TInput>(_pipelineCreationContext.StageService.GetStageInstance<TStage>());
 
         #endregion
@@ -91,7 +91,7 @@ namespace PipelineLauncher
 
         #region BulkStages
 
-        public IPipelineSetup<TInput, TOutput> BulkStage<TInput, TOutput>(BulkStage<TInput, TOutput> bulkStage)
+        public IPipelineSetup<TInput, TOutput> BulkStage<TInput, TOutput>(IBulkStage<TInput, TOutput> bulkStage)
             => CreateBulkStage<TInput, TOutput>(bulkStage);
 
         public IPipelineSetup<TInput, TOutput> BulkStage<TInput, TOutput>(Func<TInput[], IEnumerable<TOutput>> func, BulkStageConfiguration bulkStageConfiguration)
@@ -104,7 +104,7 @@ namespace PipelineLauncher
 
         #region Stages
 
-        public IPipelineSetup<TInput, TOutput> Stage<TInput, TOutput>(Stage<TInput, TOutput> stage)
+        public IPipelineSetup<TInput, TOutput> Stage<TInput, TOutput>(IStage<TInput, TOutput> stage)
             => CreateStage<TInput, TOutput>(stage);
 
         public IPipelineSetup<TInput, TOutput> Stage<TInput, TOutput>(Func<TInput, TOutput> func)

@@ -3,6 +3,7 @@ using PipelineLauncher.Abstractions.PipelineStage;
 using PipelineLauncher.Abstractions.PipelineStage.Configurations;
 using PipelineLauncher.Abstractions.Stages;
 using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -25,16 +26,19 @@ namespace PipelineLauncher.Stages
         /// <param name="input">The param.</param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
+        [DebuggerStepThrough]
         public virtual async Task<TOutput> ExecuteAsync(TInput input, CancellationToken cancellationToken)
         {
             return await ExecuteAsync(input);
         }
 
+        [DebuggerStepThrough]
         public virtual Task<TOutput> ExecuteAsync(TInput input)
         {
             return Task.FromResult(Execute(input));
         }
 
+        [DebuggerStepThrough]
         public virtual TOutput Execute(TInput input)
         {
             throw new NotImplementedException($"Neither of {nameof(Execute)} methods, are not implemented");
@@ -50,7 +54,7 @@ namespace PipelineLauncher.Stages
             return new StageOption<TInput, TOutput>().Skip(input);
         }
 
-        protected TOutput SkipTo<TSkipToStage>(TInput input) where TSkipToStage : IPipelineStageIn<TInput>
+        protected TOutput SkipTo<TSkipToStage>(TInput input) where TSkipToStage : ITargetStage<TInput>
         {
             return new StageOption<TInput, TOutput>().SkipTo<TSkipToStage>(input);
         }

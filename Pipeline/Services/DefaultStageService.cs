@@ -4,6 +4,7 @@ using PipelineLauncher.Abstractions.Services;
 using PipelineLauncher.Abstractions.Stages;
 using PipelineLauncher.LightInject;
 using System.Reflection;
+using PipelineLauncher.Abstractions.PipelineStage;
 
 namespace PipelineLauncher.Services
 {
@@ -12,18 +13,18 @@ namespace PipelineLauncher.Services
         private readonly ServiceContainer _container = new ServiceContainer();
         private readonly List<string> _registeredAssemblies = new List<string>();
 
-        public TPipelineStage GetStageInstance<TPipelineStage>() where TPipelineStage : class, IPipelineStage
+        public TStage GetStageInstance<TStage>() where TStage : class, IStage
         {
             try
             {
-                return _container.GetInstance<TPipelineStage>();
+                return _container.GetInstance<TStage>();
             }
             catch (InvalidOperationException ex)
             {
-                RegisterAssemblyForTypeWithSubTypesAssemblies(typeof(TPipelineStage));
+                RegisterAssemblyForTypeWithSubTypesAssemblies(typeof(TStage));
             }
             
-            return _container.GetInstance<TPipelineStage>();
+            return _container.GetInstance<TStage>();
         }
 
         private void RegisterAssemblyForTypeWithSubTypesAssemblies(Type type)

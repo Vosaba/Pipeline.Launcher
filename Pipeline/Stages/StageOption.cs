@@ -1,3 +1,4 @@
+using PipelineLauncher.Abstractions.PipelineStage;
 using PipelineLauncher.Abstractions.Stages;
 using PipelineLauncher.Exceptions;
 using PipelineLauncher.PipelineStage;
@@ -16,7 +17,7 @@ namespace PipelineLauncher.Stages
             throw new NonResultStageItemException<TOutput>(new SkipStageItem<TOutput>(input, GetType(), true));
         }
 
-        public TOutput SkipTo<TSkipToStage>(TInput input) where TSkipToStage : IPipelineStageIn<TInput>
+        public TOutput SkipTo<TSkipToStage>(TInput input) where TSkipToStage : ITargetStage<TInput>
         {
             throw new NonResultStageItemException<TOutput>(new SkipStageItemTill<TOutput>(typeof(TSkipToStage), input, GetType()));
         }

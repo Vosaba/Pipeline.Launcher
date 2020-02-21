@@ -1,14 +1,15 @@
 ﻿using PipelineLauncher.Abstractions.Services;
 using PipelineLauncher.Abstractions.Stages;
 using System;
+using PipelineLauncher.Abstractions.PipelineStage;
 
 namespace PipelineLauncher.Demo.Tests.Fakes
 {
     public class StageServiceFake : IStageService
     {
-        public TPipelineStage GetStageInstance<TPipelineStage>() where TPipelineStage : class, IPipelineStage
+        public TStage GetStageInstance<TStage>() where TStage : class, IStage
         {
-            return (TPipelineStage)Activator.CreateInstance(typeof(TPipelineStage));
+            return (TStage)Activator.CreateInstance(typeof(TStage));
         }
     }
 }

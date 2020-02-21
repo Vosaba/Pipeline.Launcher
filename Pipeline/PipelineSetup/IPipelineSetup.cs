@@ -7,6 +7,7 @@ using PipelineLauncher.StageSetup;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using PipelineLauncher.Abstractions.PipelineStage;
 
 namespace PipelineLauncher.PipelineSetup
 {
@@ -18,20 +19,20 @@ namespace PipelineLauncher.PipelineSetup
         #region BulkStages
 
         new IPipelineSetup<TPipelineInput, TNextStageOutput> BulkStage<TBulkStage, TNextStageOutput>(PipelinePredicate<TStageOutput> predicate = null)
-            where TBulkStage : BulkStage<TStageOutput, TNextStageOutput>;
+            where TBulkStage : class, IBulkStage<TStageOutput, TNextStageOutput>;
 
         new IPipelineSetup<TPipelineInput, TStageOutput> BulkStage<TBulkStage>(PipelinePredicate<TStageOutput> predicate = null)
-            where TBulkStage : BulkStage<TStageOutput, TStageOutput>;
+            where TBulkStage : class, IBulkStage<TStageOutput, TStageOutput>;
 
         #endregion
 
         #region Stages
 
         new IPipelineSetup<TPipelineInput, TStageOutput> Stage<TStage>(PipelinePredicate<TStageOutput> predicate = null)
-           where TStage : Stages.Stage<TStageOutput, TStageOutput>;
+           where TStage : class, IStage<TStageOutput, TStageOutput>;
 
         new IPipelineSetup<TPipelineInput, TNextStageOutput> Stage<TStage, TNextStageOutput>(PipelinePredicate<TStageOutput> predicate = null)
-           where TStage : Stages.Stage<TStageOutput, TNextStageOutput>;
+           where TStage : class, IStage<TStageOutput, TNextStageOutput>;
 
         #endregion
 
@@ -41,7 +42,7 @@ namespace PipelineLauncher.PipelineSetup
 
         #region BulkStages
 
-        new IPipelineSetup<TPipelineInput, TNextStageOutput> BulkStage<TNextStageOutput>(BulkStage<TStageOutput, TNextStageOutput> bulkStage, PipelinePredicate<TStageOutput> predicate = null);
+        new IPipelineSetup<TPipelineInput, TNextStageOutput> BulkStage<TNextStageOutput>(IBulkStage<TStageOutput, TNextStageOutput> bulkStage, PipelinePredicate<TStageOutput> predicate = null);
 
         new IPipelineSetup<TPipelineInput, TNextStageOutput> BulkStage<TNextStageOutput>(Func<TStageOutput[], IEnumerable<TNextStageOutput>> func, BulkStageConfiguration bulkStageConfiguration = null);
 
@@ -51,7 +52,7 @@ namespace PipelineLauncher.PipelineSetup
 
         #region Stages
 
-        new IPipelineSetup<TPipelineInput, TNextStageOutput> Stage<TNextStageOutput>(Stage<TStageOutput, TNextStageOutput> stage, PipelinePredicate<TStageOutput> predicate = null);
+        new IPipelineSetup<TPipelineInput, TNextStageOutput> Stage<TNextStageOutput>(IStage<TStageOutput, TNextStageOutput> stage, PipelinePredicate<TStageOutput> predicate = null);
 
         new IPipelineSetup<TPipelineInput, TNextStageOutput> Stage<TNextStageOutput>(Func<TStageOutput, TNextStageOutput> func);
 
