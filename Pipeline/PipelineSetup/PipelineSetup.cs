@@ -189,7 +189,7 @@ namespace PipelineLauncher.PipelineSetup
                             }
                         });
 
-                    var tailBranchBlock = newBranchPipelineSetup.SourceStageSetup.RetrieveExecutionBlock(options);
+                    var tailBranchBlock = ((PipelineSetup<TPipelineInput, TNextStageOutput>)newBranchPipelineSetup).SourceStageSetup.RetrieveExecutionBlock(options);
 
                     headBranches[branchId] = headBranchBlock;
                     tailBranches[branchId] = tailBranchBlock;
@@ -239,7 +239,7 @@ namespace PipelineLauncher.PipelineSetup
                     nextBlock.RetrieveExecutionBlock(options).Complete();
                 });
 
-                return pipelineSetup.SourceStageSetup.RetrieveExecutionBlock(options);
+                return ((PipelineSetup<TStageOutput, TNextStageOutput>)pipelineSetup).SourceStageSetup.RetrieveExecutionBlock(options);
             };
 
             var nextStage = new SourceStageSetup<TNextStageOutput>(CreateExecutionBlock)

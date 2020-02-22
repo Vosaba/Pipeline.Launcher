@@ -17,7 +17,7 @@ namespace PipelineLauncher
     {
         public static ITargetStageSetup<TInput> GetFirstStage<TInput>(this IPipelineSetup pipelineSetup)
         {
-            IStageSetup stageSetup = pipelineSetup.StageSetup;
+            IStageSetup stageSetup = ((PipelineSetup<TInput>)pipelineSetup).StageSetup;
 
             while (stageSetup.PreviousStageSetup != null)
             {

@@ -6,10 +6,11 @@ using PipelineLauncher.Exceptions;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using PipelineLauncher.Abstractions.PipelineStage;
 
 namespace PipelineLauncher.PipelineStage
 {
-    internal interface IPipelineBaseStage<in TInput, TOutput>
+    internal interface IPipelineBaseStage<TInput, TOutput> : IPipelineStage<TInput, TOutput>
     {
         Task<TOutput> BaseExecute(TInput input, StageExecutionContext executionContext, int tryCount = 0);
     }

@@ -3,6 +3,28 @@ using System;
 
 namespace PipelineLauncher.PipelineStage
 {
+    internal class PipelineStageItem
+    {
+        public object Item { get; }
+
+        private PipelineStageItem() { }
+
+        public PipelineStageItem(object item)
+        {
+            Item = item;
+        }
+    }
+
+    internal class PipelineStageItem<TItem> : PipelineStageItem
+    {
+        public new TItem Item { get; }
+
+        public PipelineStageItem(TItem item) : base(item)
+        {
+            Item = item;
+        }
+    }
+
     internal abstract class NonResultStageItem<TItem> : PipelineStageItem<TItem>
     {
         public object OriginalItem { get; }

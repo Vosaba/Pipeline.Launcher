@@ -1,5 +1,5 @@
 ﻿using PipelineLauncher.Abstractions.Dto;
-using PipelineLauncher.Abstractions.PipelineStage;
+using PipelineLauncher.PipelineStage;
 using System;
 using System.Threading.Tasks.Dataflow;
 

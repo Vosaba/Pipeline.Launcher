@@ -1,11 +1,11 @@
 ﻿using PipelineLauncher.Abstractions.Dto;
-using PipelineLauncher.Abstractions.PipelineStage;
+using PipelineLauncher.PipelineStage;
 using System.Collections.Generic;
 using System.Threading.Tasks.Dataflow;
 
 namespace PipelineLauncher.PipelineSetup.StageSetup
 {
-    public interface IStageSetup
+    internal interface IStageSetup
     {
         IDataflowBlock RetrieveExecutionBlock(StageCreationContext context);
 
@@ -16,7 +16,7 @@ namespace PipelineLauncher.PipelineSetup.StageSetup
         IStageSetup PreviousStageSetup { get; set; }
     }
 
-    public interface IStageSetup<TInput, TOutput> : ITargetStageSetup<TInput>, ISourceStageSetup<TOutput>
+    internal interface IStageSetup<TInput, TOutput> : ITargetStageSetup<TInput>, ISourceStageSetup<TOutput>
     {
         new IPropagatorBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>> RetrieveExecutionBlock(StageCreationContext context);
     }

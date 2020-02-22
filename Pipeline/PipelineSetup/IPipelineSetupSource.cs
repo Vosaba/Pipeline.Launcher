@@ -12,12 +12,12 @@ namespace PipelineLauncher.PipelineSetup
 {
     public interface IPipelineSetup
     {
-        IStageSetup StageSetup { get; }
+        //IStageSetup StageSetup { get; }
     }
 
     public interface IPipelineSetupSource<TOutput> : IPipelineSetup
     {
-        ISourceStageSetup<TOutput> SourceStageSetup { get; }
+        //ISourceStageSetup<TOutput> SourceStageSetup { get; }
 
         #region Generic
 

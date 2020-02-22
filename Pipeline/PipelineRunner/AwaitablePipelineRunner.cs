@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using PipelineLauncher.Abstractions.PipelineRunner;
 using PipelineLauncher.Abstractions.PipelineRunner.Configurations;
-using PipelineLauncher.Abstractions.PipelineStage;
+using PipelineLauncher.PipelineStage;
 
 namespace PipelineLauncher.PipelineRunner
 {

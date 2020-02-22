@@ -1,7 +1,7 @@
 ﻿using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.PipelineRunner;
 using PipelineLauncher.Abstractions.PipelineRunner.Configurations;
-using PipelineLauncher.Abstractions.PipelineStage;
+using PipelineLauncher.PipelineStage;
 using System;
 using System.Collections.Generic;
 using System.Linq;
