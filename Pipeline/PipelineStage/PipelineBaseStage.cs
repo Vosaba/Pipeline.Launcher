@@ -36,7 +36,7 @@ namespace PipelineLauncher.PipelineStage
                     var itemsToLog = GetItemsToBeProcessed(input);
                     if (itemsToLog.Any())
                     {
-                        executionContext.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(itemsToLog, GetType(), DiagnosticState.Input));
+                        executionContext.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(itemsToLog, StageType, DiagnosticState.Input));
                     }
                 }
 
@@ -47,7 +47,7 @@ namespace PipelineLauncher.PipelineStage
                     var itemsToLog = GetProcessedItems(output);
                     if (itemsToLog.Any())
                     {
-                        executionContext.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(itemsToLog, GetType(), DiagnosticState.Output));
+                        executionContext.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(itemsToLog, StageType, DiagnosticState.Output));
                     }
                 }
 
@@ -67,7 +67,7 @@ namespace PipelineLauncher.PipelineStage
                     var shouldBeReExecuted = false;
                     void Retry() => shouldBeReExecuted = true;
 
-                    executionContext.ActionsSet?.InstantExceptionHandler(new ExceptionItemsEventArgs(itemsToLog, GetType(), ex, Retry));
+                    executionContext.ActionsSet?.InstantExceptionHandler(new ExceptionItemsEventArgs(itemsToLog, StageType, ex, Retry));
 
                     if (shouldBeReExecuted)
                     {
@@ -75,16 +75,16 @@ namespace PipelineLauncher.PipelineStage
                         {
                             var retryException = new StageRetryCountException(BaseConfiguration.MaxRetriesCount);
 
-                            executionContext.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(itemsToLog, GetType(), DiagnosticState.ExceptionOccured, retryException.Message));
+                            executionContext.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(itemsToLog, StageType, DiagnosticState.ExceptionOccured, retryException.Message));
                             return GetExceptionItem(input, retryException, executionContext);
                         }
 
-                        executionContext.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(itemsToLog, GetType(), DiagnosticState.Retry, ex.Message));
+                        executionContext.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(itemsToLog, StageType, DiagnosticState.Retry, ex.Message));
                         return await BaseExecute(input, executionContext, ++tryCount);
                     }
                 }
 
-                executionContext.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(itemsToLog, GetType(), DiagnosticState.ExceptionOccured, ex.Message));
+                executionContext.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(itemsToLog, StageType, DiagnosticState.ExceptionOccured, ex.Message));
                 return GetExceptionItem(input, ex, executionContext);
             }
         }

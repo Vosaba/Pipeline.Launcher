@@ -4,6 +4,7 @@ using PipelineLauncher.Abstractions.PipelineStage.Configurations;
 using PipelineLauncher.Abstractions.PipelineStage.Dto;
 using PipelineLauncher.Exceptions;
 using System;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using PipelineLauncher.Abstractions.Stages;
@@ -41,7 +42,7 @@ namespace PipelineLauncher.PipelineStage
                         return new PipelineStageItem<TOutput>(await ExecuteAsync((TInput)noneItem.OriginalItem, executionContext.CancellationToken));
 
                     case NonResultStageItem<TInput> nonItem:
-                        executionContext.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(new[] { nonItem.OriginalItem }, GetType(), DiagnosticState.Skip));
+                        executionContext.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(new[] { nonItem.OriginalItem }, StageType, DiagnosticState.Skip));
                         return nonItem.Return<TOutput>();
 
                     default:
@@ -50,7 +51,7 @@ namespace PipelineLauncher.PipelineStage
             }
             catch (NonResultStageItemException<TOutput> e)
             {
-                executionContext.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(new [] { e.StageItem.OriginalItem } , GetType(), DiagnosticState.Skip));
+                executionContext.ActionsSet?.DiagnosticHandler?.Invoke(new DiagnosticItem(new [] { e.StageItem.OriginalItem } , StageType, DiagnosticState.Skip));
                 return e.StageItem;
             }
         }

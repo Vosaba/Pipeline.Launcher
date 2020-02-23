@@ -49,7 +49,7 @@ namespace PipelineLauncher.PipelineStage
             if (nonItemsToReturn.Any(x => x.GetType() != typeof(ExceptionStageItem<TOutput>)))
             {
                 executionContext.ActionsSet?.DiagnosticHandler?.Invoke(
-                    new DiagnosticItem(nonItemsToReturn.Where(x => x.GetType() != typeof(ExceptionStageItem<TOutput>)).Select(e=>e.OriginalItem).ToArray(), GetType(), DiagnosticState.Skip));
+                    new DiagnosticItem(nonItemsToReturn.Where(x => x.GetType() != typeof(ExceptionStageItem<TOutput>)).Select(e=>e.OriginalItem).ToArray(), StageType, DiagnosticState.Skip));
             }
 
             var totalItemsToProcess =
