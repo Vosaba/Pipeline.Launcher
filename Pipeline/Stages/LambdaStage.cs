@@ -10,7 +10,6 @@ namespace PipelineLauncher.Stages
 
         private static readonly StageOption<TInput, TOutput> StageOption = new StageOption<TInput, TOutput>();
 
-
         private readonly Func<TInput, Task<TOutput>> _funcAsync = null;
         private readonly Func<TInput, TOutput> _func = null;
 

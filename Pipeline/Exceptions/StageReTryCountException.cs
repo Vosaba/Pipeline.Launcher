@@ -1,4 +1,6 @@
-﻿namespace PipelineLauncher.Exceptions
+﻿using PipelineLauncher.Extensions;
+
+namespace PipelineLauncher.Exceptions
 {
     public class StageRetryCountException: PipelineRunTimeException
     {

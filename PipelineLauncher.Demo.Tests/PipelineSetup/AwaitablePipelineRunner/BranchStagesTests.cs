@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using PipelineLauncher.Demo.Tests.Items;
 using PipelineLauncher.Demo.Tests.Stages.Bulk;
 using PipelineLauncher.Demo.Tests.Stages.Single;
@@ -22,7 +23,7 @@ namespace PipelineLauncher.Demo.Tests.PipelineSetup.AwaitablePipelineRunner
                 .Stage<Stage, Item>()
                 .Branch(
                     (x => x.Index % 2 == 0,
-                        branchSetup => branchSetup
+                        branch => branch
                             .Stage<Stage_1>()
                             .Branch(
                                 (x => x.Index > 1,
@@ -32,7 +33,7 @@ namespace PipelineLauncher.Demo.Tests.PipelineSetup.AwaitablePipelineRunner
                                     subBranchSetup => subBranchSetup
                                         .Stage<Stage_2>()))),
                     (x => true, 
-                        branchSetup => branchSetup
+                        branch => branch
                             .BulkStage<BulkStage>()))
                 //.Stage<Stage_Conditional>()
                 //.Stage<Stage_2>()
@@ -40,6 +41,20 @@ namespace PipelineLauncher.Demo.Tests.PipelineSetup.AwaitablePipelineRunner
 
             // Make pipeline from stageSetup
             var pipelineRunner = pipelineSetup.CreateAwaitable();
+
+            pipelineRunner.DiagnosticEvent += diagnosticItem =>
+            {
+                var itemsNames = diagnosticItem.Items.Cast<Item>().Select(x => x.Name).ToArray();
+                var message =
+                    $"Stage: {diagnosticItem.StageType.Name} | Items: {{ {string.Join(" }; { ", itemsNames)} }} | State: {diagnosticItem.State}";
+
+                if (!string.IsNullOrEmpty(diagnosticItem.Message))
+                {
+                    message += $" | Message: {diagnosticItem.Message}";
+                }
+
+                WriteLine(message);
+            };
 
             // Process items and print result
             (this, pipelineRunner).ProcessAndPrintResults(items);

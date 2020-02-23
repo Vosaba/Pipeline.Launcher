@@ -17,9 +17,9 @@ namespace PipelineLauncher.Stages
             throw new NonResultStageItemException<TOutput>(new SkipStageItem<TOutput>(input, GetType(), true));
         }
 
-        public TOutput SkipTo<TSkipToStage>(TInput input) where TSkipToStage : ITargetStage<TInput>
+        public TOutput SkipTo<TTargetStage>(TInput input) where TTargetStage : ITargetStage<TInput>
         {
-            throw new NonResultStageItemException<TOutput>(new SkipStageItemTill<TOutput>(typeof(TSkipToStage), input, GetType()));
+            throw new NonResultStageItemException<TOutput>(new SkipStageItemTill<TOutput>(typeof(TTargetStage), input, GetType()));
         }
     }
 }

@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using PipelineLauncher.Abstractions.Stages;
 using PipelineLauncher.Exceptions;
+using PipelineLauncher.Extensions;
 using PipelineLauncher.PipelineSetup.StageSetup;
 
 namespace PipelineLauncher

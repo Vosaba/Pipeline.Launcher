@@ -1,15 +1,14 @@
-﻿using PipelineLauncher.Abstractions.PipelineStage;
-using System;
+﻿using System;
 
 namespace PipelineLauncher.PipelineStage
 {
-    internal class PipelineStageItem
+    internal abstract class PipelineStageItem
     {
         public object Item { get; }
 
         private PipelineStageItem() { }
 
-        public PipelineStageItem(object item)
+        protected PipelineStageItem(object item)
         {
             Item = item;
         }

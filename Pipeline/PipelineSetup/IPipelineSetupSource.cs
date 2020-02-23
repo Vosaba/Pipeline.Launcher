@@ -1,24 +1,19 @@
 ﻿using PipelineLauncher.Abstractions.Dto;
-using PipelineLauncher.Abstractions.PipelineStage;
 using PipelineLauncher.Abstractions.PipelineStage.Configurations;
-using PipelineLauncher.PipelineSetup.StageSetup;
+using PipelineLauncher.Abstractions.Stages;
 using PipelineLauncher.Stages;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using PipelineLauncher.Abstractions.Stages;
 
 namespace PipelineLauncher.PipelineSetup
 {
     public interface IPipelineSetup
     {
-        //IStageSetup StageSetup { get; }
     }
 
     public interface IPipelineSetupSource<TOutput> : IPipelineSetup
     {
-        //ISourceStageSetup<TOutput> SourceStageSetup { get; }
-
         #region Generic
 
         #region BulkStages

@@ -10,6 +10,7 @@ namespace PipelineLauncher.Stages
         private readonly Func<TInput[], Task<IEnumerable<TOutput>>> _funcAsync;
         private readonly Func<TInput[], IEnumerable<TOutput>> _func;
         private readonly BulkStageConfiguration _configuration;
+
         public override BulkStageConfiguration Configuration => _configuration ?? base.Configuration;
 
         private LambdaBulkStage(BulkStageConfiguration bulkStageConfiguration)

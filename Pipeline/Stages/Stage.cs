@@ -54,9 +54,9 @@ namespace PipelineLauncher.Stages
             return new StageOption<TInput, TOutput>().Skip(input);
         }
 
-        protected TOutput SkipTo<TSkipToStage>(TInput input) where TSkipToStage : ITargetStage<TInput>
+        protected TOutput SkipTo<TTargetStage>(TInput input) where TTargetStage : ITargetStage<TInput>
         {
-            return new StageOption<TInput, TOutput>().SkipTo<TSkipToStage>(input);
+            return new StageOption<TInput, TOutput>().SkipTo<TTargetStage>(input);
         }
     }
 
