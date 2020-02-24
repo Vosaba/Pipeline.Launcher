@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using PipelineLauncher.Demo.Tests.Items;
+using PipelineLauncher.Demo.Tests.PipelineTest;
 using PipelineLauncher.Demo.Tests.Stages.Bulk;
 using PipelineLauncher.Demo.Tests.Stages.Single;
 using PipelineLauncher.Stages;
@@ -68,11 +69,11 @@ namespace PipelineLauncher.Demo.Tests.PipelineSetup.AwaitablePipelineRunner
                     message += $" | Message: {diagnosticItem.Message}";
                 }
 
-                WriteLine(message);
+                //WriteLine(message);
             };
 
             // Process items and print result
-            (this, pipelineRunner).ProcessAndPrintResults(items);
+            //(this, pipelineRunner).ProcessAndPrintResults(items);
 
             // Process items and print result
             //(this, pipelineRunner).ProcessAndPrintResults(items);
