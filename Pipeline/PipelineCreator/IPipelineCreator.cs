@@ -50,25 +50,19 @@ namespace PipelineLauncher
         #region Nongeneric
 
         #region BulkStages
-        [Obsolete("Use 'BulkPrepare' instead, since first functional stage is unnecessary.")]
+        [Obsolete("Use 'BulkPrepare' before your Stage instead, since first functional stage is unnecessary.")]
         IPipelineSetup<TInput, TOutput> BulkStage<TInput, TOutput>(IBulkStage<TInput, TOutput> bulkStage);
-        [Obsolete("Use 'BulkPrepare' instead, since first functional stage is unnecessary.")]
         IPipelineSetup<TInput, TOutput> BulkStage<TInput, TOutput>(Func<TInput[], IEnumerable<TOutput>> func, BulkStageConfiguration bulkStageConfiguration = null);
-        [Obsolete("Use 'BulkPrepare' instead, since first functional stage is unnecessary.")]
         IPipelineSetup<TInput, TOutput> BulkStage<TInput, TOutput>(Func<TInput[], Task<IEnumerable<TOutput>>> func, BulkStageConfiguration bulkStageConfiguration = null);
 
         #endregion
 
         #region Stages
-        [Obsolete("Use 'Prepare' instead, since first functional stage is unnecessary.")]
+        [Obsolete("Use 'Prepare' before your Stage instead, since first functional stage is unnecessary.")]
         IPipelineSetup<TInput, TOutput> Stage<TInput, TOutput>(IStage<TInput, TOutput> stage);
-        [Obsolete("Use 'Prepare' instead, since first functional stage is unnecessary.")]
         IPipelineSetup<TInput, TOutput> Stage<TInput, TOutput>(Func<TInput, TOutput> func);
-        [Obsolete("Use 'Prepare' instead, since first functional stage is unnecessary.")]
         IPipelineSetup<TInput, TOutput> Stage<TInput, TOutput>(Func<TInput, StageOption<TInput, TOutput>,  TOutput> funcWithOption);
-        [Obsolete("Use 'Prepare' instead, since first functional stage is unnecessary.")]
         IPipelineSetup<TInput, TOutput> Stage<TInput, TOutput>(Func<TInput, Task<TOutput>> func);
-        [Obsolete("Use 'Prepare' instead, since first functional stage is unnecessary.")]
         IPipelineSetup<TInput, TOutput> Stage<TInput, TOutput>(Func<TInput, StageOption<TInput, TOutput>, Task<TOutput>> funcWithOption);
 
         #endregion

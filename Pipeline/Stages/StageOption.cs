@@ -1,4 +1,3 @@
-using PipelineLauncher.Abstractions.PipelineStage;
 using PipelineLauncher.Abstractions.Stages;
 using PipelineLauncher.Exceptions;
 using PipelineLauncher.PipelineStage;

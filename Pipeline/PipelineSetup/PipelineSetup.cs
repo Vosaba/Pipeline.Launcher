@@ -281,9 +281,7 @@ namespace PipelineLauncher.PipelineSetup
             {
                 var processedHash = new ConcurrentDictionary<object, int>();
 
-                var buffer = new BatchBlock<PipelineStageItem<TStageOutput>>(1); //TODO
-                //var pipelineCreationContext = PipelineCreationContext.GetPipelineStageContext(null);
-
+                var buffer = new BatchBlock<PipelineStageItem<TStageOutput>>(1);
 
                 IEnumerable<PipelineStageItem<TStageOutput>> Filter(IEnumerable<PipelineStageItem<TStageOutput>> items)
                 {
@@ -327,7 +325,7 @@ namespace PipelineLauncher.PipelineSetup
 
                 currentBlock.LinkTo(next);
 
-                currentBlock.Completion.ContinueWith(x => next.Complete());//, PipelineCreationContext.CancellationToken);
+                currentBlock.Completion.ContinueWith(x => next.Complete());
 
 
                 return next;

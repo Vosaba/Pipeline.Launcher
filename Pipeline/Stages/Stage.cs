@@ -6,6 +6,8 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using PipelineLauncher.Abstractions.Stages;
+using PipelineLauncher.Exceptions;
+using PipelineLauncher.PipelineStage;
 
 namespace PipelineLauncher.Stages
 {
@@ -46,17 +48,17 @@ namespace PipelineLauncher.Stages
 
         protected TOutput Remove(TInput input)
         {
-            return new StageOption<TInput, TOutput>().Remove(input);
+            throw new NonResultStageItemException<TOutput>(new RemoveStageItem<TOutput>(input, GetType()));
         }
 
         protected TOutput Skip(TInput input)
         {
-            return new StageOption<TInput, TOutput>().Skip(input);
+            throw new NonResultStageItemException<TOutput>(new SkipStageItem<TOutput>(input, GetType(), true));
         }
 
         protected TOutput SkipTo<TTargetStage>(TInput input) where TTargetStage : ITargetStage<TInput>
         {
-            return new StageOption<TInput, TOutput>().SkipTo<TTargetStage>(input);
+            throw new NonResultStageItemException<TOutput>(new SkipStageItemTill<TOutput>(typeof(TTargetStage), input, GetType()));
         }
     }
 
