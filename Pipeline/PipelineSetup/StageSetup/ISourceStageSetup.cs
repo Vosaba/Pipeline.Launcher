@@ -6,6 +6,7 @@ namespace PipelineLauncher.PipelineSetup.StageSetup
 {
     internal interface ISourceStageSetup<TOutput> : IStageSetup
     {
+        new ISourceStageSetup<TOutput> CreateDeepCopy();
         new ISourceBlock<PipelineStageItem<TOutput>> RetrieveExecutionBlock(StageCreationContext context);
     }
 }

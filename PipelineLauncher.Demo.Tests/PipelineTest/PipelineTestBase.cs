@@ -5,7 +5,7 @@ using System.Diagnostics;
 using PipelineLauncher.Demo.Tests.Items;
 using Xunit.Abstractions;
 
-namespace PipelineLauncher.Demo.Tests.PipelineSetup
+namespace PipelineLauncher.Demo.Tests.PipelineTest
 {
     public abstract class PipelineTestBase
     {

@@ -1,16 +1,17 @@
-﻿using PipelineLauncher.Abstractions.PipelineEvents;
+﻿using System;
+using System.Collections.Generic;
+using PipelineLauncher.Abstractions.PipelineEvents;
+using PipelineLauncher.Demo.Tests.Extensions;
 using PipelineLauncher.Demo.Tests.Items;
 using PipelineLauncher.Demo.Tests.Stages.Single;
 using PipelineLauncher.Exceptions;
-using System;
-using System.Collections.Generic;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace PipelineLauncher.Demo.Tests.PipelineSetup.PipelineRunner
+namespace PipelineLauncher.Demo.Tests.PipelineTest.NonAwaitablePipelineRunner
 {
 
-    public class FeatureStagesTests : PipelineRunnerTestBase
+    public class FeatureStagesTests : NonAwaitableTestBase
     {
         public FeatureStagesTests(ITestOutputHelper output) : base(output) { }
 
@@ -123,17 +124,7 @@ namespace PipelineLauncher.Demo.Tests.PipelineSetup.PipelineRunner
 
             // Make pipeline from stageSetup
             var pipelineRunner = pipelineSetup.CreateAwaitable();
-                //.SetupExceptionHandler((ExceptionItemsEventArgs args) =>
-                //{
-                //    var item = args.Items[0];
-
-                //    WriteSeparator(); 
-                //    WriteLine($"{item} with exception {args.Exception.Message}");
-                //    WriteSeparator();
-
-                //    args.Retry();
-                //});
-
+                
             pipelineRunner.ExceptionItemsReceivedEvent += (ExceptionItemsEventArgs args) =>
             {
                 var item = args.Items[0];

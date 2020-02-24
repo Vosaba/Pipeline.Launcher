@@ -1,13 +1,14 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using PipelineLauncher.Demo.Tests.Extensions;
 using PipelineLauncher.Demo.Tests.Items;
 using PipelineLauncher.Demo.Tests.Stages.Bulk;
 using PipelineLauncher.Demo.Tests.Stages.Single;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace PipelineLauncher.Demo.Tests.PipelineSetup.AwaitablePipelineRunner
+namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner
 {
     public class BasicStagesTests : PipelineTestBase
     {
@@ -49,19 +50,6 @@ namespace PipelineLauncher.Demo.Tests.PipelineSetup.AwaitablePipelineRunner
             // Make pipeline from stageSetup
             var pipelineRunner = pipelineSetup.CreateAwaitable();
 
-            // 4) ProcessAsyncEnumerable TODO
-
-            pipelineRunner.ItemReceivedEvent += PrintProcessed;
-            // Process items
-
-            await foreach (var item in pipelineRunner.ProcessAsyncEnumerable(items))
-            {
-                PrintProcessed(item);
-            }
-            WriteSeparator();
-            pipelineRunner.ItemReceivedEvent -= PrintProcessed;
-
-
             // 1) Process TODO
 
             // Process items
@@ -84,7 +72,13 @@ namespace PipelineLauncher.Demo.Tests.PipelineSetup.AwaitablePipelineRunner
             pipelineRunner.ItemReceivedEvent -= PrintProcessed;
             WriteSeparator();
 
-            
+            // 4) ProcessAsyncEnumerable TODO
+
+            await foreach (var item in pipelineRunner.ProcessAsyncEnumerable(items))
+            {
+                PrintProcessed(item);
+            }
+            WriteSeparator();
         }
 
         [Fact]

@@ -14,10 +14,13 @@ namespace PipelineLauncher.PipelineSetup.StageSetup
         IList<IStageSetup> NextStageSetup { get; set; }
 
         IStageSetup PreviousStageSetup { get; set; }
+
+        IStageSetup CreateDeepCopy();
     }
 
     internal interface IStageSetup<TInput, TOutput> : ITargetStageSetup<TInput>, ISourceStageSetup<TOutput>
     {
+        new IStageSetup<TInput, TOutput> CreateDeepCopy();
         new IPropagatorBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>> RetrieveExecutionBlock(StageCreationContext context);
     }
 }

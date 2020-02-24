@@ -1,16 +1,17 @@
-﻿using PipelineLauncher.Abstractions.PipelineRunner;
+﻿using System.Collections.Generic;
+using PipelineLauncher.Abstractions.PipelineRunner;
+using PipelineLauncher.Demo.Tests.Extensions;
 using PipelineLauncher.Demo.Tests.Items;
-using System.Collections.Generic;
 using Xunit.Abstractions;
 
-namespace PipelineLauncher.Demo.Tests.PipelineSetup.PipelineRunner
+namespace PipelineLauncher.Demo.Tests.PipelineTest
 {
-    public class PipelineRunnerTestBase: PipelineTestBase
+    public class NonAwaitableTestBase: PipelineTestBase
     {
         protected int DefaultLastItemIndex = 5;
         protected int DefaultItemsProcessedCount = 6;
 
-        public PipelineRunnerTestBase(ITestOutputHelper output) : base(output) { }
+        public NonAwaitableTestBase(ITestOutputHelper output) : base(output) { }
 
         protected bool StopExecutionConditionByTotalProcessed(ref int totalProcessedCount)
         {
