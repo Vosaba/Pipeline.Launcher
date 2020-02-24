@@ -1,10 +1,10 @@
 ﻿using PipelineLauncher.Abstractions.PipelineRunner;
+using PipelineLauncher.Demo.Tests.PipelineTest;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using PipelineLauncher.Demo.Tests.PipelineSetup;
-using System.Collections;
 
-namespace PipelineLauncher.Demo.Tests
+namespace PipelineLauncher.Demo.Tests.Extensions
 {
     public static class AwaitablePipelineTestExtensions
     {

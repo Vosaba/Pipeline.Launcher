@@ -1,13 +1,13 @@
-﻿using PipelineLauncher.Demo.Tests.Items;
+﻿using System.Collections.Generic;
+using PipelineLauncher.Demo.Tests.Items;
 using PipelineLauncher.Demo.Tests.Stages.Single;
-using System.Collections.Generic;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace PipelineLauncher.Demo.Tests.PipelineSetup.PipelineRunner
+namespace PipelineLauncher.Demo.Tests.PipelineTest.NonAwaitablePipelineRunner
 {
 
-    public class BasicStagesTests : PipelineRunnerTestBase
+    public class BasicStagesTests : NonAwaitableTestBase
     {
         public BasicStagesTests(ITestOutputHelper output) : base(output) { }
 

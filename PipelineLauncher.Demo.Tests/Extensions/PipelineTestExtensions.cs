@@ -1,13 +1,11 @@
 ﻿using PipelineLauncher.Abstractions.PipelineRunner;
-using System.Collections.Generic;
-using System.Linq;
-using PipelineLauncher.Demo.Tests.PipelineSetup;
-using System.Collections;
-using System.Threading;
+using PipelineLauncher.Demo.Tests.PipelineTest;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 
-namespace PipelineLauncher.Demo.Tests
+namespace PipelineLauncher.Demo.Tests.Extensions
 {
     public static class PipelineTestExtensions
     {

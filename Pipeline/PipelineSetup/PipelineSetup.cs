@@ -366,9 +366,9 @@ namespace PipelineLauncher.PipelineSetup
 
                 var sourceBlock = SourceStageSetup.RetrieveExecutionBlock(stageCreationContext);
 
-                if (predicate != null || pipelineStage is IConditionalStage<TStageOutput>)
+                if (predicate != null || stage is IConditionalStage<TStageOutput>)
                 {
-                    if(pipelineStage is IConditionalStage<TStageOutput> stageCondition)
+                    if(stage is IConditionalStage<TStageOutput> stageCondition)
                     {
                         predicate = stageCondition.Predicate;
                     }
@@ -437,9 +437,9 @@ namespace PipelineLauncher.PipelineSetup
                 var currentBlock = SourceStageSetup.RetrieveExecutionBlock(stageCreationContext);
                 var targetBlock = DataflowBlock.Encapsulate(batchPrepareBlock, nextBlock);
 
-                if (predicate != null || pipelineBulkStage is IConditionalStage<TStageOutput>)
+                if (predicate != null || bulkStage is IConditionalStage<TStageOutput>)
                 {
-                    if (pipelineBulkStage is IConditionalStage<TStageOutput> stageCondition)
+                    if (bulkStage is IConditionalStage<TStageOutput> stageCondition)
                     {
                         predicate = stageCondition.Predicate;
                     }

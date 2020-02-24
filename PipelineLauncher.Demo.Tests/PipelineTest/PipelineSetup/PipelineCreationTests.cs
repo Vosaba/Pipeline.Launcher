@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Threading;
-using PipelineLauncher.Abstractions.PipelineStage;
 using PipelineLauncher.Abstractions.Stages;
 using PipelineLauncher.Demo.Tests.Fakes;
 using Xunit;
 
-namespace PipelineLauncher.Demo.Tests.PipelineSetup
+namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineSetup
 {
     public class PipelineCreationTests 
     {
@@ -36,9 +34,7 @@ namespace PipelineLauncher.Demo.Tests.PipelineSetup
 
             _pipelineCreator = _pipelineCreator.WithStageService(_stageResolveFunc); // IPipelineCreator
 
-            _pipelineCreator = _pipelineCreator
-                .UseDefaultServiceResolver(true); // IPipelineCreator
-                //.WithCancellationToken(CancellationToken.None); // IPipelineCreator
+            _pipelineCreator = _pipelineCreator.UseDefaultServiceResolver(true); // IPipelineCreator
         }
     }
 }
