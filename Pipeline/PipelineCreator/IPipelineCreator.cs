@@ -1,12 +1,11 @@
 ﻿using PipelineLauncher.Abstractions.PipelineStage.Configurations;
 using PipelineLauncher.Abstractions.Services;
+using PipelineLauncher.Abstractions.Stages;
 using PipelineLauncher.PipelineSetup;
 using PipelineLauncher.Stages;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using PipelineLauncher.Abstractions.PipelineStage;
-using PipelineLauncher.Abstractions.Stages;
 
 namespace PipelineLauncher
 {
@@ -50,7 +49,7 @@ namespace PipelineLauncher
         #region Nongeneric
 
         #region BulkStages
-        [Obsolete("Use 'BulkPrepare' before your Stage instead, since first functional stage is unnecessary.")]
+
         IPipelineSetup<TInput, TOutput> BulkStage<TInput, TOutput>(IBulkStage<TInput, TOutput> bulkStage);
         IPipelineSetup<TInput, TOutput> BulkStage<TInput, TOutput>(Func<TInput[], IEnumerable<TOutput>> func, BulkStageConfiguration bulkStageConfiguration = null);
         IPipelineSetup<TInput, TOutput> BulkStage<TInput, TOutput>(Func<TInput[], Task<IEnumerable<TOutput>>> func, BulkStageConfiguration bulkStageConfiguration = null);
@@ -58,7 +57,7 @@ namespace PipelineLauncher
         #endregion
 
         #region Stages
-        [Obsolete("Use 'Prepare' before your Stage instead, since first functional stage is unnecessary.")]
+
         IPipelineSetup<TInput, TOutput> Stage<TInput, TOutput>(IStage<TInput, TOutput> stage);
         IPipelineSetup<TInput, TOutput> Stage<TInput, TOutput>(Func<TInput, TOutput> func);
         IPipelineSetup<TInput, TOutput> Stage<TInput, TOutput>(Func<TInput, StageOption<TInput, TOutput>,  TOutput> funcWithOption);
