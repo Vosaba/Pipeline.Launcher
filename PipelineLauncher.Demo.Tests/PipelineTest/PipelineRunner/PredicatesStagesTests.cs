@@ -21,11 +21,11 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner
 
             // Configure stages
             var pipelineSetup = PipelineCreator
-                .Stage<Stage, Item>()
-                .Stage<Stage_1>()
-                .Stage<Stage_Conditional>()
-                .Stage<Stage_2>(item => item.Index == 4 ? PredicateResult.Skip : PredicateResult.Keep)
-                .Stage<Stage_3>();
+                .Stage<StageS, Item>()
+                .Stage<StageS1>()
+                .Stage<StageSConditional>()
+                .Stage<StageS2>(item => item.Index == 4 ? PredicateResult.Skip : PredicateResult.Keep)
+                .Stage<StageS3>();
 
             // Make pipeline from stageSetup
             var pipelineRunner = pipelineSetup.CreateAwaitable();
@@ -44,10 +44,10 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner
             // Configure stages
             var pipelineSetup = PipelineCreator
                 .Prepare<Item>() // TODO: explain
-                .Stage<Stage_Conditional>()
-                .Stage<Stage_Conditional_1>(item => PredicateResult.Remove)
-                .Stage<Stage_2>(item => new []{ 1, 4 }.Contains(item.Index) ? PredicateResult.Remove : PredicateResult.Keep)
-                .Stage<Stage_3>();
+                .Stage<StageSConditional>()
+                .Stage<StageSConditional1>(item => PredicateResult.Remove)
+                .Stage<StageS2>(item => new []{ 1, 4 }.Contains(item.Index) ? PredicateResult.Remove : PredicateResult.Keep)
+                .Stage<StageS3>();
 
             // Make pipeline from stageSetup
             var pipelineRunner = pipelineSetup.CreateAwaitable();

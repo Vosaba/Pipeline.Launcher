@@ -22,17 +22,17 @@ namespace PipelineLauncher.Demo.Tests.PipelineSetup.AwaitablePipelineRunner
 
             // Configure stages
             var pipelineSetup = PipelineCreator
-                .Stage<Stage, Item>()
+                .Stage<StageS, Item>()
                 .Stage((Item x, StageOption<Item,Item> options) =>
                 {
                     if (x.Index == 6)
                     {
-                        return options.SkipTo<Stage_5>(x);
+                        return options.SkipTo<StageS5>(x);
                     }
 
                     if (x.Index == 7)
                     {
-                        return options.SkipTo<Stage_5>(x);
+                        return options.SkipTo<StageS5>(x);
                     }
 
                     return x;
@@ -40,20 +40,20 @@ namespace PipelineLauncher.Demo.Tests.PipelineSetup.AwaitablePipelineRunner
                 .Branch(
                     (x => x.Index % 2 == 0,
                         branch => branch
-                            .Stage<Stage_1>()
+                            .Stage<StageS1>()
                             .Branch(
                                 (x => x.Index > 1,
                                     subBranchSetup => subBranchSetup
-                                        .Stage<Stage_3>()),
+                                        .Stage<StageS3>()),
                                 (x => true,
                                     subBranchSetup => subBranchSetup
-                                        .Stage<Stage_2>()))),
+                                        .Stage<StageS2>()))),
                     (x => true, 
                         branch => branch
                             .BulkStage<BulkStage>()))
                 //.Stage<Stage_Conditional>()
                 //.Stage<Stage_2>()
-                .Stage<Stage_5>();
+                .Stage<StageS5>();
 
             // Make pipeline from stageSetup
             var pipelineRunner = pipelineSetup.CreateAwaitable();

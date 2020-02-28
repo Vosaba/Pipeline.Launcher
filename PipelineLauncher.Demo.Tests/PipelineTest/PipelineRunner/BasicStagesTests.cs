@@ -22,7 +22,7 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner
 
             // Configure stages
             var pipelineSetup = PipelineCreator
-                    .Stage(new Stage());
+                    .Stage(new StageS());
 
             // Make pipeline from stageSetup
             var pipelineRunner = pipelineSetup.CreateAwaitable();
@@ -45,7 +45,7 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner
 
             // Configure stages
             var pipelineSetup = PipelineCreator
-                .Stage(new Stage());
+                .Stage(new StageS());
 
             // Make pipeline from stageSetup
             var pipelineRunner = pipelineSetup.CreateAwaitable();
@@ -89,10 +89,10 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner
 
             // Configure stages
             var pipelineSetup = PipelineCreator
-                    .Stage(new Stage())
-                    .Stage(new Stage_1())
-                    .Stage(new Stage_2())
-                    .Stage(new Stage_3());
+                    .Stage(new StageS())
+                    .Stage(new StageS1())
+                    .Stage(new StageS2())
+                    .Stage(new StageS3());
 
             // Make pipeline from stageSetup
             var pipelineRunner = pipelineSetup.CreateAwaitable();
@@ -129,9 +129,9 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner
 
             // Configure stages
             var pipelineSetup = PipelineCreator
-                .Stage(new Stage())
+                .Stage(new StageS())
                 .BulkStage(new BulkStage_1())
-                .Stage(new Stage_2())
+                .Stage(new StageS2())
                 .BulkStage(new BulkStage_3());
 
             // Make pipeline from stageSetup
@@ -149,10 +149,10 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner
 
             // Configure stages
             var pipelineSetup = PipelineCreator
-                .Stage(new Stage())
+                .Stage(new StageS())
                 .BulkStage(new BulkStage_1())
-                .Stage(new Stage_Item_To_Item2())
-                .Stage(new Stage_Item2_To_Item())
+                .Stage(new StageSItemToItem2())
+                .Stage(new StageSItem2ToItem())
                 .BulkStage(new BulkStage_Item_To_Object());
 
             // Make pipeline from stageSetup

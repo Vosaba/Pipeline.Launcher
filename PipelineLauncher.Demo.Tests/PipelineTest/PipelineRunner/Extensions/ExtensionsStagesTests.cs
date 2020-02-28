@@ -24,10 +24,10 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner.Extensions
 
             // Configure stages
             var pipelineSetup = PipelineCreator
-                .Stage<Stage_1, Item>()
+                .Stage<StageS1, Item>()
                 .BulkStage<BulkStage_1>()
                 .DoNothing()
-                .Stage(new Stage_3())
+                .Stage(new StageS3())
                 .ExtensionContext(extension => extension.GetHashCode(1995))
                 .GetString("19_", "_95");
 
@@ -50,7 +50,7 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner.Extensions
 
             // Configure stages
             var pipelineSetup = PipelineCreator
-                .Stage<Stage_1, Item>()
+                .Stage<StageS1, Item>()
                 .MakeContext(context)
                 .Stage(contextual =>
                 {
@@ -63,7 +63,7 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner.Extensions
                 {
                     return contextual.Item;
                 })
-                .Stage(new Stage_3());
+                .Stage(new StageS3());
 
 
             // Make pipeline from stageSetup

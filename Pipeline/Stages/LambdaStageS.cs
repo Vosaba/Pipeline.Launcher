@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace PipelineLauncher.Stages
 {
-    internal class LambdaStage<TInput, TOutput> : Stage<TInput, TOutput>
+    internal class LambdaStageS<TInput, TOutput> : StageS<TInput, TOutput>
     {
         private readonly Func<TInput, StageOption<TInput, TOutput>, Task<TOutput>> _funcAsyncWithStageOption = null;
         private readonly Func<TInput, StageOption<TInput, TOutput>, TOutput> _funcWithStageOption = null;
@@ -13,22 +13,22 @@ namespace PipelineLauncher.Stages
         private readonly Func<TInput, Task<TOutput>> _funcAsync = null;
         private readonly Func<TInput, TOutput> _func = null;
 
-        internal LambdaStage(Func<TInput, StageOption<TInput, TOutput>, Task<TOutput>> funcAsyncWithStageOption)
+        internal LambdaStageS(Func<TInput, StageOption<TInput, TOutput>, Task<TOutput>> funcAsyncWithStageOption)
         {
             _funcAsyncWithStageOption = funcAsyncWithStageOption;
         }
 
-        internal LambdaStage(Func<TInput, StageOption<TInput, TOutput>, TOutput> funcWithStageOption)
+        internal LambdaStageS(Func<TInput, StageOption<TInput, TOutput>, TOutput> funcWithStageOption)
         {
             _funcWithStageOption = funcWithStageOption;
         }
 
-        internal LambdaStage(Func<TInput, Task<TOutput>> funcAsync)
+        internal LambdaStageS(Func<TInput, Task<TOutput>> funcAsync)
         {
             _funcAsync = funcAsync;
         }
 
-        internal LambdaStage(Func<TInput, TOutput> func)
+        internal LambdaStageS(Func<TInput, TOutput> func)
         {
             _func = func;
         }

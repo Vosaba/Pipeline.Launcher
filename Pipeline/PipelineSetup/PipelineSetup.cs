@@ -18,20 +18,21 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using PipelineLauncher.Abstractions.Stages;
 using PipelineLauncher.Extensions;
+using IStage = PipelineLauncher.PipelineSetup.StageSetup.IStage;
 
 namespace PipelineLauncher.PipelineSetup
 {
     internal abstract class PipelineSetup<TPipelineInput> : IPipelineSetup
     {
-        public IStageSetup StageSetup { get; }
+        public IStage Stage { get; }
 
         protected PipelineCreationContext PipelineCreationContext;
         protected IStageService StageService => PipelineCreationContext.StageService;
 
 
-        internal PipelineSetup(IStageSetup stageSetup, PipelineCreationContext pipelineCreationContext)
+        internal PipelineSetup(IStage stage, PipelineCreationContext pipelineCreationContext)
         {
-            StageSetup = stageSetup;
+            Stage = stage;
             PipelineCreationContext = pipelineCreationContext;
         }
     }
@@ -39,10 +40,10 @@ namespace PipelineLauncher.PipelineSetup
 
     internal partial class PipelineSetup<TPipelineInput, TStageOutput> : PipelineSetup<TPipelineInput>, IPipelineSetup<TPipelineInput, TStageOutput>
     {
-        public ISourceStageSetup<TStageOutput> SourceStageSetup => (ISourceStageSetup<TStageOutput>)StageSetup;
+        public StageSetup.ISourceStage<TStageOutput> SourceStage => (StageSetup.ISourceStage<TStageOutput>)base.Stage;
 
-        internal PipelineSetup(ISourceStageSetup<TStageOutput> sourceStageSetup, PipelineCreationContext pipelineCreationContext)
-            : base(sourceStageSetup, pipelineCreationContext)
+        internal PipelineSetup(StageSetup.ISourceStage<TStageOutput> sourceStage, PipelineCreationContext pipelineCreationContext)
+            : base(sourceStage, pipelineCreationContext)
         { }
 
         #region Generic
@@ -62,11 +63,11 @@ namespace PipelineLauncher.PipelineSetup
         #region Stages
 
         public IPipelineSetup<TPipelineInput, TStageOutput> Stage<TStage>(PipelinePredicate<TStageOutput> predicate = null)
-            where TStage : class, IStage<TStageOutput, TStageOutput>
+            where TStage : class, Abstractions.Stages.IStage<TStageOutput, TStageOutput>
             => CreateStage(StageService.GetStageInstance<TStage>(), predicate);
 
         public IPipelineSetup<TPipelineInput, TNextStageOutput> Stage<TStage, TNextStageOutput>(PipelinePredicate<TStageOutput> predicate = null)
-            where TStage : class, IStage<TStageOutput, TNextStageOutput>
+            where TStage : class, Abstractions.Stages.IStage<TStageOutput, TNextStageOutput>
             => CreateStage(StageService.GetStageInstance<TStage>(), predicate);
 
         #endregion
@@ -90,20 +91,20 @@ namespace PipelineLauncher.PipelineSetup
 
         #region Stages
 
-        public IPipelineSetup<TPipelineInput, TNextStageOutput> Stage<TNextStageOutput>(IStage<TStageOutput, TNextStageOutput> stage, PipelinePredicate<TStageOutput> predicate = null)
+        public IPipelineSetup<TPipelineInput, TNextStageOutput> Stage<TNextStageOutput>(Abstractions.Stages.IStage<TStageOutput, TNextStageOutput> stage, PipelinePredicate<TStageOutput> predicate = null)
             => CreateStage(stage, predicate);
 
         public IPipelineSetup<TPipelineInput, TNextStageOutput> Stage<TNextStageOutput>(Func<TStageOutput, TNextStageOutput> func)
-            => Stage(new LambdaStage<TStageOutput, TNextStageOutput>(func));
+            => Stage(new LambdaStageS<TStageOutput, TNextStageOutput>(func));
 
         public IPipelineSetup<TPipelineInput, TNextStageOutput> Stage<TNextStageOutput>(Func<TStageOutput, StageOption<TStageOutput, TNextStageOutput>, TNextStageOutput> func)
-            => Stage(new LambdaStage<TStageOutput, TNextStageOutput>(func));
+            => Stage(new LambdaStageS<TStageOutput, TNextStageOutput>(func));
 
         public IPipelineSetup<TPipelineInput, TNextStageOutput> Stage<TNextStageOutput>(Func<TStageOutput, Task<TNextStageOutput>> func)
-            => Stage(new LambdaStage<TStageOutput, TNextStageOutput>(func));
+            => Stage(new LambdaStageS<TStageOutput, TNextStageOutput>(func));
 
         public IPipelineSetup<TPipelineInput, TNextStageOutput> Stage<TNextStageOutput>(Func<TStageOutput, StageOption<TStageOutput, TNextStageOutput>, Task<TNextStageOutput>> func)
-            => Stage(new LambdaStage<TStageOutput, TNextStageOutput>(func));
+            => Stage(new LambdaStageS<TStageOutput, TNextStageOutput>(func));
 
         #endregion
 
@@ -112,15 +113,15 @@ namespace PipelineLauncher.PipelineSetup
         #region Nongeneric Branch
 
         public IPipelineSetup<TPipelineInput, TNextStageOutput> Broadcast<TNextStageOutput>(
-            params (Predicate<TStageOutput> predicate, 
+            params (Predicate<TStageOutput> predicate,
                 Func<IPipelineSetup<TPipelineInput, TStageOutput>, IPipelineSetup<TPipelineInput, TNextStageOutput>> branch)[] branches)
         {
             BroadcastBlock<PipelineStageItem<TStageOutput>> MakeNextBlock(StageCreationContext stageCreationContext)
             {
                 var broadcastBlock = new BroadcastBlock<PipelineStageItem<TStageOutput>>(x => x);
-                var sourceBlock = SourceStageSetup.RetrieveExecutionBlock(stageCreationContext);
+                var sourceBlock = SourceStage.RetrieveExecutionBlock(stageCreationContext);
 
-                sourceBlock.LinkTo(broadcastBlock, new DataflowLinkOptions { PropagateCompletion = false} );
+                sourceBlock.LinkTo(broadcastBlock, new DataflowLinkOptions { PropagateCompletion = false });
                 sourceBlock.Completion.ContinueWith(x => broadcastBlock.Complete());
 
 
@@ -133,8 +134,8 @@ namespace PipelineLauncher.PipelineSetup
         }
 
         public IPipelineSetup<TPipelineInput, TNextStageOutput> Branch<TNextStageOutput>(
-            (Predicate<TStageOutput> predicate, 
-                Func<IPipelineSetup<TPipelineInput, TStageOutput>, IPipelineSetup<TPipelineInput, TNextStageOutput>> branch)[] branches) 
+            (Predicate<TStageOutput> predicate,
+                Func<IPipelineSetup<TPipelineInput, TStageOutput>, IPipelineSetup<TPipelineInput, TNextStageOutput>> branch)[] branches)
             => Branch(ConditionExceptionScenario.GoToNextCondition, branches);
 
         public IPipelineSetup<TPipelineInput, TNextStageOutput> Branch<TNextStageOutput>(
@@ -143,7 +144,7 @@ namespace PipelineLauncher.PipelineSetup
         {
             IPropagatorBlock<PipelineStageItem<TNextStageOutput>, PipelineStageItem<TNextStageOutput>> CreateExecutionBlock(StageCreationContext options)
             {
-                var sourceBlock = SourceStageSetup.RetrieveExecutionBlock(options);
+                var sourceBlock = SourceStage.RetrieveExecutionBlock(options);
                 var targetBlock = new TransformBlock<PipelineStageItem<TNextStageOutput>, PipelineStageItem<TNextStageOutput>>(x => x);
 
                 var branchId = 0;
@@ -190,12 +191,12 @@ namespace PipelineLauncher.PipelineSetup
                             }
                         });
 
-                    var tailBranchBlock = ((PipelineSetup<TPipelineInput, TNextStageOutput>)newBranchPipelineSetup).SourceStageSetup.RetrieveExecutionBlock(options);
+                    var tailBranchBlock = ((PipelineSetup<TPipelineInput, TNextStageOutput>)newBranchPipelineSetup).SourceStage.RetrieveExecutionBlock(options);
 
                     headBranches[branchId] = headBranchBlock;
                     tailBranches[branchId] = tailBranchBlock;
 
-                    tailBranchBlock.LinkTo(targetBlock, new DataflowLinkOptions { PropagateCompletion = false } ); 
+                    tailBranchBlock.LinkTo(targetBlock, new DataflowLinkOptions { PropagateCompletion = false });
                     tailBranchBlock.Completion.ContinueWith(x =>
                     {
                         if (tailBranches.All(tail => tail.Completion.IsCompleted))
@@ -230,9 +231,9 @@ namespace PipelineLauncher.PipelineSetup
 
             ISourceBlock<PipelineStageItem<TNextStageOutput>> CreateExecutionBlock(StageCreationContext options)
             {
-                SourceStageSetup.NextStageSetup.Add(nextBlock);
-                nextBlock.PreviousStageSetup = SourceStageSetup;
-                var currentBlock = SourceStageSetup.RetrieveExecutionBlock(options);
+                SourceStage.NextStageSetup.Add(nextBlock);
+                nextBlock.PreviousStage = SourceStage;
+                var currentBlock = SourceStage.RetrieveExecutionBlock(options);
 
                 currentBlock.LinkTo(nextBlock.RetrieveExecutionBlock(options), new DataflowLinkOptions() { PropagateCompletion = false });
                 currentBlock.Completion.ContinueWith(x =>
@@ -240,15 +241,15 @@ namespace PipelineLauncher.PipelineSetup
                     nextBlock.RetrieveExecutionBlock(options).Complete();
                 });
 
-                return ((PipelineSetup<TStageOutput, TNextStageOutput>)pipelineSetup).SourceStageSetup.RetrieveExecutionBlock(options);
+                return ((PipelineSetup<TStageOutput, TNextStageOutput>)pipelineSetup).SourceStage.RetrieveExecutionBlock(options);
             };
 
             var nextStage = new SourceStageSetup<TNextStageOutput>(CreateExecutionBlock, null)
             {
-                PreviousStageSetup = SourceStageSetup
+                PreviousStageSetup = SourceStage
             };
 
-            SourceStageSetup.NextStageSetup.Add(nextStage); // Hack with cross linking to destroy
+            SourceStage.NextStageSetup.Add(nextStage); // Hack with cross linking to destroy
 
             return new PipelineSetup<TPipelineInput, TNextStageOutput>(nextStage, PipelineCreationContext);
         }
@@ -261,7 +262,7 @@ namespace PipelineLauncher.PipelineSetup
             }
 
             var firstStage = this.GetFirstStage<TPipelineInput>();
-            return new AwaitablePipelineRunner<TPipelineInput, TStageOutput>(firstStage.RetrieveExecutionBlock, SourceStageSetup.RetrieveExecutionBlock, () => firstStage.DestroyStageBlocks(), pipelineCreationConfig);
+            return new AwaitablePipelineRunner<TPipelineInput, TStageOutput>(firstStage.RetrieveExecutionBlock, SourceStage.RetrieveExecutionBlock, () => firstStage.DestroyStageBlocks(), pipelineCreationConfig);
         }
 
         public IPipelineRunner<TPipelineInput, TStageOutput> Create(PipelineCreationConfig pipelineCreationConfig = null)
@@ -272,7 +273,7 @@ namespace PipelineLauncher.PipelineSetup
             }
 
             var firstStage = this.GetFirstStage<TPipelineInput>();
-            return new PipelineRunner<TPipelineInput, TStageOutput>(firstStage.RetrieveExecutionBlock, SourceStageSetup.RetrieveExecutionBlock, pipelineCreationConfig);
+            return new PipelineRunner<TPipelineInput, TStageOutput>(firstStage.RetrieveExecutionBlock, SourceStage.RetrieveExecutionBlock, pipelineCreationConfig);
         }
 
         public IPipelineSetup<TPipelineInput, TStageOutput> RemoveDuplicates(int totalOccurrences)
@@ -321,7 +322,7 @@ namespace PipelineLauncher.PipelineSetup
 
                 var next = DataflowBlock.Encapsulate(buffer, mergeBlock);
 
-                var currentBlock = SourceStageSetup.RetrieveExecutionBlock(stageCreationContext);
+                var currentBlock = SourceStage.RetrieveExecutionBlock(stageCreationContext);
 
                 currentBlock.LinkTo(next);
 
@@ -334,7 +335,7 @@ namespace PipelineLauncher.PipelineSetup
             return CreatePipelineSetup(CreateExecutionBlock);
         }
 
-        private PipelineSetup<TPipelineInput, TNextStageOutput> CreateStage<TNextStageOutput>(IStage<TStageOutput, TNextStageOutput> stage, PipelinePredicate<TStageOutput> predicate)
+        private PipelineSetup<TPipelineInput, TNextStageOutput> CreateStage<TNextStageOutput>(Abstractions.Stages.IStage<TStageOutput, TNextStageOutput> stage, PipelinePredicate<TStageOutput> predicate)
         {
             IPropagatorBlock<PipelineStageItem<TStageOutput>, PipelineStageItem<TNextStageOutput>> CreateExecutionBlock(StageCreationContext stageCreationContext)
             {
@@ -362,24 +363,24 @@ namespace PipelineLauncher.PipelineSetup
                         EnsureOrdered = pipelineStage.Configuration.EnsureOrdered
                     });
 
-                var sourceBlock = SourceStageSetup.RetrieveExecutionBlock(stageCreationContext);
+                //var sourceBlock = SourceStageSetup.RetrieveExecutionBlock(stageCreationContext);
 
-                if (predicate != null || stage is IConditionalStage<TStageOutput>)
-                {
-                    if(stage is IConditionalStage<TStageOutput> stageCondition)
-                    {
-                        predicate = stageCondition.Predicate;
-                    }
+                //if (predicate != null || stage is IConditionalStage<TStageOutput>)
+                //{
+                //    if(stage is IConditionalStage<TStageOutput> stageCondition)
+                //    {
+                //        predicate = stageCondition.Predicate;
+                //    }
 
-                    sourceBlock.LinkTo(nextBlock, new DataflowLinkOptions { PropagateCompletion = false }, predicate.GetPredicate(nextBlock));
-                    sourceBlock.LinkTo(DataflowBlock.NullTarget<PipelineStageItem<TStageOutput>>(), new DataflowLinkOptions { PropagateCompletion = false });
-                }
-                else
-                {
-                    sourceBlock.LinkTo(nextBlock, new DataflowLinkOptions { PropagateCompletion = false });
-                }
+                //    sourceBlock.LinkTo(nextBlock, new DataflowLinkOptions { PropagateCompletion = false }, predicate.GetPredicate(nextBlock));
+                //    sourceBlock.LinkTo(DataflowBlock.NullTarget<PipelineStageItem<TStageOutput>>(), new DataflowLinkOptions { PropagateCompletion = false });
+                //}
+                //else
+                //{
+                //    sourceBlock.LinkTo(nextBlock, new DataflowLinkOptions { PropagateCompletion = false });
+                //}
 
-                sourceBlock.Completion.ContinueWith(x => nextBlock.Complete());
+                //sourceBlock.Completion.ContinueWith(x => nextBlock.Complete());
 
                 return nextBlock;
             }
@@ -429,36 +430,39 @@ namespace PipelineLauncher.PipelineSetup
 
                 batchPrepareBlock.Completion.ContinueWith(x => nextBlock.Complete());
 
-                var currentBlock = SourceStageSetup.RetrieveExecutionBlock(stageCreationContext);
+                //var currentBlock = SourceStageSetup.RetrieveExecutionBlock(stageCreationContext);
                 var targetBlock = DataflowBlock.Encapsulate(batchPrepareBlock, nextBlock);
 
-                if (predicate != null || bulkStage is IConditionalStage<TStageOutput>)
-                {
-                    if (bulkStage is IConditionalStage<TStageOutput> stageCondition)
-                    {
-                        predicate = stageCondition.Predicate;
-                    }
+                //if (predicate != null || bulkStage is IConditionalStage<TStageOutput>)
+                //{
+                //    if (bulkStage is IConditionalStage<TStageOutput> stageCondition)
+                //    {
+                //        predicate = stageCondition.Predicate;
+                //    }
 
-                    currentBlock.LinkTo(targetBlock, new DataflowLinkOptions() { PropagateCompletion = false }, predicate.GetPredicate(nextBlock, pipelineBulkStage.GetType()));
-                    currentBlock.LinkTo(DataflowBlock.NullTarget<PipelineStageItem<TStageOutput>>(), new DataflowLinkOptions() { PropagateCompletion = false });
+                //    currentBlock.LinkTo(targetBlock, new DataflowLinkOptions() { PropagateCompletion = false }, predicate.GetPredicate(nextBlock, pipelineBulkStage.GetType()));
+                //    currentBlock.LinkTo(DataflowBlock.NullTarget<PipelineStageItem<TStageOutput>>(), new DataflowLinkOptions() { PropagateCompletion = false });
 
-                }
-                else
-                {
-                    predicate = x => PredicateResult.Keep;
-                    currentBlock.LinkTo(targetBlock, new DataflowLinkOptions() { PropagateCompletion = false }, predicate.GetPredicate(nextBlock, pipelineBulkStage.GetType()));
-                    currentBlock.LinkTo(DataflowBlock.NullTarget<PipelineStageItem<TStageOutput>>(), new DataflowLinkOptions() { PropagateCompletion = false });
-                }
+                //}
+                //else
+                //{
+                //    predicate = x => PredicateResult.Keep;
+                //    currentBlock.LinkTo(targetBlock, new DataflowLinkOptions() { PropagateCompletion = false }, predicate.GetPredicate(nextBlock, pipelineBulkStage.GetType()));
+                //    currentBlock.LinkTo(DataflowBlock.NullTarget<PipelineStageItem<TStageOutput>>(), new DataflowLinkOptions() { PropagateCompletion = false });
+                //}
 
-                currentBlock.Completion.ContinueWith(x => targetBlock.Complete());
+                //currentBlock.Completion.ContinueWith(x => targetBlock.Complete());
 
                 return targetBlock;
             }
 
             IPipelinePredicate<PipelineStageItem<TStageOutput>> CreateExecutionBlockPredicate(StageCreationContext stageCreationContext)
             {
-
+                return null;
             };
+
+            BlockCreator<TStageOutput, TNextStageOutput> df = CreateExecutionBlock;
+
 
             return CreatePipelineSetup(CreateExecutionBlock, CreateExecutionBlockPredicate);
         }
@@ -466,25 +470,23 @@ namespace PipelineLauncher.PipelineSetup
         private PipelineSetup<TPipelineInput, TNextStageOutput> CreatePipelineSetup<TNextStageOutput>(
             Func<StageCreationContext, IPropagatorBlock<PipelineStageItem<TStageOutput>, PipelineStageItem<TNextStageOutput>>> executionBlockCreator,
             Func<StageCreationContext, IPipelinePredicate<PipelineStageItem<TStageOutput>>> pipelinePredicateCreator)
-            => CreatePipelineSetup(LinkStageSetupOut(SourceStageSetup, CreateStageSetupOut(executionBlockCreator, pipelinePredicateCreator)));
-        
-        private ISourceStageSetup<TNextStageOutput> LinkStageSetupOut<TNextStageOutput>(ISourceStageSetup<TStageOutput> source, ISourceStageSetup<TNextStageOutput> target)
+            => CreatePipelineSetup(LinkStageSetupOut(SourceStage, CreateStageSetupOut(executionBlockCreator, pipelinePredicateCreator)));
+
+        private StageSetup.ISourceStage<TNextStageOutput> LinkStageSetupOut<TNextStageOutput>(StageSetup.ISourceStage<TStageOutput> source, StageSetup.ISourceStage<TNextStageOutput> target)
         {
-            target.PreviousStageSetup = source;
+            target.PreviousStage = source;
             source.NextStageSetup.Add(target);
 
             return target;
         }
 
-        private PipelineSetup<TPipelineInput, TNextStageOutput> CreatePipelineSetup<TNextStageOutput>(ISourceStageSetup<TNextStageOutput> sourceStageSetup) 
-            => new PipelineSetup<TPipelineInput, TNextStageOutput>(sourceStageSetup, PipelineCreationContext);
+        private PipelineSetup<TPipelineInput, TNextStageOutput> CreatePipelineSetup<TNextStageOutput>(StageSetup.ISourceStage<TNextStageOutput> sourceStage)
+            => new PipelineSetup<TPipelineInput, TNextStageOutput>(sourceStage, PipelineCreationContext);
 
-        private StageSetup<TStageOutput, TNextStageOutput> CreateStageSetupOut<TNextStageOutput>(
-            Func<StageCreationContext, IPropagatorBlock<PipelineStageItem<TStageOutput>, PipelineStageItem<TNextStageOutput>>> executionBlockCreator,
-            Func<StageCreationContext, IPipelinePredicate<PipelineStageItem<TStageOutput>>> pipelinePredicateCreator) 
-            => new StageSetup<TStageOutput ,TNextStageOutput>(executionBlockCreator, pipelinePredicateCreator);
+        private Stage<TStageOutput, TNextStageOutput> CreateStage<TNextStageOutput>(BlockCreator<TStageOutput, TNextStageOutput> executionBlockCreator, TargetBlockPredicateCreator<TStageOutput> pipelinePredicateCreator)
+            => new Stage<TStageOutput, TNextStageOutput>(executionBlockCreator, pipelinePredicateCreator);
 
     }
 
-    
+
 }

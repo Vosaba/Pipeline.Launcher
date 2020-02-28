@@ -20,22 +20,22 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner
 
             // Configure stages
             var pipelineSetup = PipelineCreator
-                .Stage<Stage, Item>()
-                .Stage<Stage_1>()
+                .Stage<StageS, Item>()
+                .Stage<StageS1>()
                 .Branch(
                     (x => x.Index % 2 == 0,
                         branch => branch
-                            .Stage<Stage_2>()),
+                            .Stage<StageS2>()),
                     (x => false, 
                         branch => branch
-                            .Stage<Stage_2>()
-                            .Stage<Stage_3>()
-                            .Stage<Stage_4>()),
+                            .Stage<StageS2>()
+                            .Stage<StageS3>()
+                            .Stage<StageS4>()),
                     (x => true,
                         branch => branch
                             .BulkStage<BulkStage>()))
-                .Stage<Stage_5>()
-                .Stage<Stage_6>();
+                .Stage<StageS5>()
+                .Stage<StageS6>();
 
             // Make pipeline from stageSetup
             var pipelineRunner = pipelineSetup.CreateAwaitable();
@@ -53,24 +53,24 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner
 
             // Configure stages
             var pipelineSetup = PipelineCreator
-                .Stage<Stage, Item>()
-                .Stage<Stage_1>()
+                .Stage<StageS, Item>()
+                .Stage<StageS1>()
                 .Branch(
                     (x => x.Index % 2 == 0,
                         branch => branch
-                            .Stage<Stage_2>()
+                            .Stage<StageS2>()
                             .Branch(
                                 (x => x.Index > 1,
                                     subBranch => subBranch
-                                        .Stage<Stage_3>()),
+                                        .Stage<StageS3>()),
                                 (x => true,
                                     subBranch => subBranch
-                                        .Stage<Stage_4>()))),
+                                        .Stage<StageS4>()))),
                     (x => true,
                         branch => branch
                             .BulkStage<BulkStage>()))
-                .Stage<Stage_5>()
-                .Stage<Stage_6>();
+                .Stage<StageS5>()
+                .Stage<StageS6>();
 
             // Make pipeline from stageSetup
             var pipelineRunner = pipelineSetup.CreateAwaitable();
@@ -87,17 +87,17 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner
 
             // Configure stages
             var pipelineSetup = PipelineCreator
-                .Stage<Stage, Item>()
-                .Stage<Stage_1>()
+                .Stage<StageS, Item>()
+                .Stage<StageS1>()
                 .Broadcast(
                     (x => x.Index % 2 == 0,
                         branch => branch
-                            .Stage<Stage_2>()),
+                            .Stage<StageS2>()),
                     (x => true,
                         branch => branch
-                            .Stage<Stage_3>()))
-                .Stage<Stage_5>()
-                .Stage<Stage_6>();
+                            .Stage<StageS3>()))
+                .Stage<StageS5>()
+                .Stage<StageS6>();
 
             // Make pipeline from stageSetup
             var pipelineRunner = pipelineSetup.CreateAwaitable();

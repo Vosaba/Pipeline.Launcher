@@ -3,7 +3,7 @@ using PipelineLauncher.Stages;
 
 namespace PipelineLauncher.Demo.Tests.Stages.Single
 {
-    public class Stage_Item2_To_Item : Stage<Item2, Item>
+    public class StageSItem2ToItem : StageS<Item2, Item>
     {
         public override Item Execute(Item2 item2)
         {

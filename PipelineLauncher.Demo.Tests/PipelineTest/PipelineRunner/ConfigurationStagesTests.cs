@@ -25,11 +25,11 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner
 
             // Configure stages
             var pipelineSetup = PipelineCreator
-                .Stage<Stage, Item>()
-                .Stage<Stage_1>()
-                .Stage<Stage_Async>()
-                .Stage<Stage_Async_CancelationToken>()
-                .Stage<Stage_2>();
+                .Stage<StageS, Item>()
+                .Stage<StageS1>()
+                .Stage<StageSAsync>()
+                .Stage<StageSAsyncCancelationToken>()
+                .Stage<StageS2>();
 
             cancellationTokenSource.CancelAfter(1995);
 
@@ -50,10 +50,10 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner
 
             // Configure stages
             var pipelineSetup = PipelineCreator
-                .Stage<Stage, Item>()
-                .Stage<Stage_1>(x => x.Index == 2 ? PredicateResult.Skip: PredicateResult.Keep)
+                .Stage<StageS, Item>()
+                .Stage<StageS1>(x => x.Index == 2 ? PredicateResult.Skip: PredicateResult.Keep)
                 .BulkStage<BulkStage>(x => x.Index == 2 ? PredicateResult.Skip : PredicateResult.Keep)
-                .Stage<Stage_2>();
+                .Stage<StageS2>();
 
 
             // Make pipeline from stageSetup

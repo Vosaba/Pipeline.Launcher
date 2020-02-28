@@ -22,7 +22,7 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner
 
             // Configure stages
             var pipelineSetup = PipelineCreator
-                .Stage<Stage, Item>()
+                .Stage<StageS, Item>()
                 .Stage(item =>
                 {
                     item.Process(GetType());
@@ -34,7 +34,7 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner
 
                     return item;
                 })
-                .Stage<Stage_1>();
+                .Stage<StageS1>();
 
             // Make pipeline from stageSetup
             var pipelineRunner = pipelineSetup.CreateAwaitable();
@@ -65,7 +65,7 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner
 
             // Configure stages
             var pipelineSetup = PipelineCreator
-                .Stage<Stage, Item>()
+                .Stage<StageS, Item>()
                 .Stage(item =>
                 {
                     item.Process(GetType());
@@ -77,7 +77,7 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner
 
                     return item;
                 })
-                .Stage<Stage_1>();
+                .Stage<StageS1>();
 
             // Make pipeline from stageSetup
             var pipelineRunner = pipelineSetup.CreateAwaitable();
@@ -103,18 +103,18 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner
 
             // Configure stages for the first PipelineSetup
             var pipelineSetup = PipelineCreator
-                .Stage<Stage, Item>()
-                .Stage<Stage_1>();
+                .Stage<StageS, Item>()
+                .Stage<StageS1>();
 
             // Configure stages for the second PipelineSetup
             var pipelineSetup2 = PipelineCreator
-                .Stage<Stage_2, Item>()
-                .Stage<Stage_3>();
+                .Stage<StageS2, Item>()
+                .Stage<StageS3>();
 
             // Configure stages for the third PipelineSetup
             var pipelineSetup3 = PipelineCreator
-                .Stage<Stage_4, Item>()
-                .Stage<Stage_5>();
+                .Stage<StageS4, Item>()
+                .Stage<StageS5>();
 
             // Merge all pipelines setup 
             var mergedPipelineSetup = pipelineSetup.MergeWith(pipelineSetup2).MergeWith(pipelineSetup3);

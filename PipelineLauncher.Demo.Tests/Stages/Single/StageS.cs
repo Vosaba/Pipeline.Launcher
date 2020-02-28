@@ -3,7 +3,7 @@ using PipelineLauncher.Stages;
 
 namespace PipelineLauncher.Demo.Tests.Stages.Single
 {
-    public class Stage : Stage<Item>
+    public class StageS : StageS<Item>
     {
         public override Item Execute(Item item)
         {
@@ -13,7 +13,7 @@ namespace PipelineLauncher.Demo.Tests.Stages.Single
         }
     }
 
-    public class Stage_1 : Stage<Item>
+    public class StageS1 : StageS<Item>
     {
         public override Item Execute(Item item)
         {
@@ -23,7 +23,7 @@ namespace PipelineLauncher.Demo.Tests.Stages.Single
         }
     }
 
-    public class Stage_2 : Stage<Item>
+    public class StageS2 : StageS<Item>
     {
         public override Item Execute(Item item)
         {
@@ -33,7 +33,7 @@ namespace PipelineLauncher.Demo.Tests.Stages.Single
         }
     }
 
-    public class Stage_3 : Stage<Item>
+    public class StageS3 : StageS<Item>
     {
         public override Item Execute(Item item)
         {
@@ -43,7 +43,7 @@ namespace PipelineLauncher.Demo.Tests.Stages.Single
         }
     }
 
-    public class Stage_4 : Stage<Item>
+    public class StageS4 : StageS<Item>
     {
         public override Item Execute(Item item)
         {
@@ -53,7 +53,7 @@ namespace PipelineLauncher.Demo.Tests.Stages.Single
         }
     }
 
-    public class Stage_5 : Stage<Item>
+    public class StageS5 : StageS<Item>
     {
         public override Item Execute(Item item)
         {
@@ -63,7 +63,7 @@ namespace PipelineLauncher.Demo.Tests.Stages.Single
         }
     }
 
-    public class Stage_6 : Stage<Item>
+    public class StageS6 : StageS<Item>
     {
         public override Item Execute(Item item)
         {
@@ -73,7 +73,7 @@ namespace PipelineLauncher.Demo.Tests.Stages.Single
         }
     }
 
-    public class Stage_7 : Stage<Item>
+    public class StageS7 : StageS<Item>
     {
         public override Item Execute(Item item)
         {
@@ -83,7 +83,7 @@ namespace PipelineLauncher.Demo.Tests.Stages.Single
         }
     }
 
-    public class Stage_8 : Stage<Item>
+    public class StageS8 : StageS<Item>
     {
         public override Item Execute(Item item)
         {

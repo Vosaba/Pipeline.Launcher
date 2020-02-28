@@ -5,7 +5,7 @@ using PipelineLauncher.Stages;
 
 namespace PipelineLauncher.Demo.Tests.Stages.Single
 {
-    public class Stage_Async_CancelationToken : Stage<Item>
+    public class StageSAsyncCancelationToken : StageS<Item>
     {
         public override async Task<Item> ExecuteAsync(Item item, CancellationToken cancellationToken)
         {

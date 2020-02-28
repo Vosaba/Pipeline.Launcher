@@ -4,7 +4,7 @@ using PipelineLauncher.Stages;
 
 namespace PipelineLauncher.Demo.Tests.Stages.Single
 {
-    public class Stage_Async : Stage<Item>
+    public class StageSAsync : StageS<Item>
     {
         public override async Task<Item> ExecuteAsync(Item item)
         {

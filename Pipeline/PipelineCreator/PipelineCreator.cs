@@ -13,6 +13,7 @@ using PipelineLauncher.Abstractions.Stages;
 using PipelineLauncher.Exceptions;
 using PipelineLauncher.Extensions;
 using PipelineLauncher.PipelineSetup.StageSetup;
+using IStage = PipelineLauncher.Abstractions.Stages.IStage;
 
 namespace PipelineLauncher
 {
@@ -76,11 +77,11 @@ namespace PipelineLauncher
         #region Stages
 
         public IPipelineSetup<TInput, TOutput> Stage<TStage, TInput, TOutput>()
-            where TStage : class, IStage<TInput, TOutput>
+            where TStage : class, Abstractions.Stages.IStage<TInput, TOutput>
             => CreateStage<TInput, TOutput>(_pipelineCreationContext.StageService.GetStageInstance<TStage>());
 
         public IPipelineSetup<TInput, TInput> Stage<TStage, TInput>()
-            where TStage : class, IStage<TInput, TInput>
+            where TStage : class, Abstractions.Stages.IStage<TInput, TInput>
             => CreateStage<TInput, TInput>(_pipelineCreationContext.StageService.GetStageInstance<TStage>());
 
         #endregion
@@ -104,20 +105,20 @@ namespace PipelineLauncher
 
         #region Stages
 
-        public IPipelineSetup<TInput, TOutput> Stage<TInput, TOutput>(IStage<TInput, TOutput> stage)
+        public IPipelineSetup<TInput, TOutput> Stage<TInput, TOutput>(Abstractions.Stages.IStage<TInput, TOutput> stage)
             => CreateStage<TInput, TOutput>(stage);
 
         public IPipelineSetup<TInput, TOutput> Stage<TInput, TOutput>(Func<TInput, TOutput> func)
-            => Stage(new LambdaStage<TInput, TOutput>(func));
+            => Stage(new LambdaStageS<TInput, TOutput>(func));
 
         public IPipelineSetup<TInput, TOutput> Stage<TInput, TOutput>(Func<TInput, StageOption<TInput, TOutput>, TOutput> funcWithOption)
-            => Stage(new LambdaStage<TInput, TOutput>(funcWithOption));
+            => Stage(new LambdaStageS<TInput, TOutput>(funcWithOption));
 
         public IPipelineSetup<TInput, TOutput> Stage<TInput, TOutput>(Func<TInput, Task<TOutput>> func)
-            => Stage(new LambdaStage<TInput, TOutput>(func));
+            => Stage(new LambdaStageS<TInput, TOutput>(func));
 
         public IPipelineSetup<TInput, TOutput> Stage<TInput, TOutput>(Func<TInput, StageOption<TInput, TOutput>, Task<TOutput>> funcWithOption)
-            => Stage(new LambdaStage<TInput, TOutput>(funcWithOption));
+            => Stage(new LambdaStageS<TInput, TOutput>(funcWithOption));
 
         #endregion
 
@@ -170,7 +171,7 @@ namespace PipelineLauncher
             return CreatePipelineSetup(CreateExecutionBlock);
         }
 
-        private PipelineSetup<TInput, TOutput> CreateStage<TInput, TOutput>(IStage<TInput, TOutput> stage)
+        private PipelineSetup<TInput, TOutput> CreateStage<TInput, TOutput>(Abstractions.Stages.IStage<TInput, TOutput> stage)
         {
             IPropagatorBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>> CreateExecutionBlock(StageCreationContext stageCreationContext)
             {
@@ -210,9 +211,9 @@ namespace PipelineLauncher
         }
 
         private PipelineSetup<TInput, TOutput> CreatePipelineSetup<TInput, TOutput>(Func<StageCreationContext, IPropagatorBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>>> executionBlockCreator)
-            => AppendStage(new StageSetup<TInput, TOutput>(executionBlockCreator, null) { PreviousStageSetup = null });
+            => AppendStage(new PipelineSetup.StageSetup.Stage<TInput, TOutput>(executionBlockCreator, null) { PreviousStage = null });
 
-        private PipelineSetup<TInput, TOutput> AppendStage<TInput, TOutput>(IStageSetup<TInput, TOutput> stageSetup)
-            => new PipelineSetup<TInput, TOutput>(stageSetup, _pipelineCreationContext);
+        private PipelineSetup<TInput, TOutput> AppendStage<TInput, TOutput>(PipelineSetup.StageSetup.IStage<TInput, TOutput> stage)
+            => new PipelineSetup<TInput, TOutput>(stage, _pipelineCreationContext);
     }
 }

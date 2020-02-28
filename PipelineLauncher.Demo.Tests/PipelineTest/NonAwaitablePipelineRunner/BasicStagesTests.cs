@@ -19,11 +19,11 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.NonAwaitablePipelineRunner
 
             // Configure stages
             var pipelineSetup = PipelineCreator
-                .Stage<Stage, Item>()
-                .Stage<Stage_1>()
-                .Stage<Stage_Item_To_Item2, Item2>()
-                .Stage<Stage_Item2_To_Item, Item>()
-                .Stage<Stage_3>();
+                .Stage<StageS, Item>()
+                .Stage<StageS1>()
+                .Stage<StageSItemToItem2, Item2>()
+                .Stage<StageSItem2ToItem, Item>()
+                .Stage<StageS3>();
 
             // Make pipeline from stageSetup
             var pipelineRunner = pipelineSetup.Create();

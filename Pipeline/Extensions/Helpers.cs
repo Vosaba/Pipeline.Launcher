@@ -13,16 +13,16 @@ namespace PipelineLauncher.Extensions
 {
     internal static partial class Helpers
     {
-        public static ITargetStageSetup<TInput> GetFirstStage<TInput>(this IPipelineSetup pipelineSetup)
+        public static ITargetStage<TInput> GetFirstStage<TInput>(this IPipelineSetup pipelineSetup)
         {
-            IStageSetup stageSetup = ((PipelineSetup<TInput>)pipelineSetup).StageSetup;
+            IStage stage = ((PipelineSetup<TInput>)pipelineSetup).Stage;
 
-            while (stageSetup.PreviousStageSetup != null)
+            while (stage.PreviousStage != null)
             {
-                stageSetup = stageSetup.PreviousStageSetup;
+                stage = stage.PreviousStage;
             }
 
-            return (ITargetStageSetup<TInput>)stageSetup;
+            return (ITargetStage<TInput>)stage;
         }
 
         //public static ITargetStageSetup<TInput> CopyFullPipelineReturnNewRoot<TInput>(this IPipelineSetup pipelineSetup)
@@ -68,25 +68,23 @@ namespace PipelineLauncher.Extensions
         //    return stageSetupNew;
         //}
 
-        public static void DestroyStageBlocks(this IStageSetup stageSetup)
+        public static void DestroyStageBlocks(this IStage stage)
         {
-            if (stageSetup == null)
+            if (stage == null)
             {
                 return;
             }
 
-            stageSetup.DestroyExecutionBlock();
+            stage.DestroyExecutionBlock();
 
-            if (stageSetup.NextStageSetup == null || !stageSetup.NextStageSetup.Any()) return;
-            foreach (var nextStage in stageSetup.NextStageSetup)
+            if (stage.NextStageSetup == null || !stage.NextStageSetup.Any()) return;
+            foreach (var nextStage in stage.NextStageSetup)
             {
                 DestroyStageBlocks(nextStage);
             }
         }
 
-        public static Predicate<PipelineStageItem<TOutput>> GetPredicate<TOutput>(
-            this PipelinePredicate<TOutput> predicate,
-            ITargetBlock<PipelineStageItem<TOutput>> target)
+        public static Predicate<PipelineStageItem<TOutput>> GetPredicate<TOutput>(this PipelinePredicate<TOutput> predicate, ITargetBlock<PipelineStageItem<TOutput>> target)
         {
             return x =>
             {
@@ -126,6 +124,8 @@ namespace PipelineLauncher.Extensions
                 }
             };
         }
+
+
 
         public static Predicate<PipelineStageItem<TOutput>> GetPredicate<TOutput>(
             this PipelinePredicate<TOutput> predicate,

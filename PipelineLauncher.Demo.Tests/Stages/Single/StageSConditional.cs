@@ -5,7 +5,7 @@ using PipelineLauncher.Stages;
 
 namespace PipelineLauncher.Demo.Tests.Stages.Single
 {
-    public class Stage_Conditional : Stage<Item>, IConditionalStage<Item>
+    public class StageSConditional : StageS<Item>, IConditionalStage<Item>
     {
         public override Item Execute(Item item)
         {
@@ -20,7 +20,7 @@ namespace PipelineLauncher.Demo.Tests.Stages.Single
         }
     }
 
-    public class Stage_Conditional_1 : ConditionalStage<Item>
+    public class StageSConditional1 : ConditionalStageS<Item>
     {
         public override Item Execute(Item item)
         {

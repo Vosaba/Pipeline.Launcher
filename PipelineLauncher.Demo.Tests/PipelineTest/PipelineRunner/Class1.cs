@@ -10,7 +10,7 @@ using Xunit.Abstractions;
 
 namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner.DemoSamples
 {
-    public class Stage_1 : Stage<Item>
+    public class StageS1 : StageS<Item>
     {
         public override Item Execute(Item item)
         {
@@ -19,7 +19,7 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner.DemoSamples
             return item;
         }
     }
-    public class Stage_2 : Stage<Item>
+    public class StageS2 : StageS<Item>
     {
         private Dictionary<int, bool> _throwForItem = new Dictionary<int, bool>()
         {
@@ -39,7 +39,7 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner.DemoSamples
             return item;
         }
     }
-    public class Stage_3 : Stage<Item, Item2>
+    public class StageS3 : StageS<Item, Item2>
     {
         public override Item2 Execute(Item item)
         {
@@ -48,7 +48,7 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner.DemoSamples
             return new Item2(item);
         }
     }
-    public class Stage_4 : Stage<Item2, Item>
+    public class StageS4 : StageS<Item2, Item>
     {
         public override Item Execute(Item2 item2)
         {
@@ -59,7 +59,7 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner.DemoSamples
             return item;
         }
     }
-    public class Stage_5 : Stage<Item>
+    public class StageS5 : StageS<Item>
     {
         public override Item Execute(Item item)
         {
@@ -68,7 +68,7 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner.DemoSamples
             return item;
         }
     }
-    public class Stage_6 : Stage<Item>
+    public class StageS6 : StageS<Item>
     {
         public override Item Execute(Item item)
         {
@@ -77,7 +77,7 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner.DemoSamples
             return item;
         }
     }
-    public class Stage_7 : Stage<Item>
+    public class StageS7 : StageS<Item>
     {
         public override Item Execute(Item item)
         {
@@ -88,7 +88,7 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner.DemoSamples
 
             if (item.Index == 9)
             {
-                return SkipTo<Stage_9>(item);
+                return SkipTo<StageS9>(item);
             }
 
             item.Process(GetType());
@@ -96,7 +96,7 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner.DemoSamples
             return item;
         }
     }
-    public class Stage_8 : Stage<Item>
+    public class StageS8 : StageS<Item>
     {
         public override Item Execute(Item item)
         {
@@ -105,7 +105,7 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner.DemoSamples
             return item;
         }
     }
-    public class Stage_9 : Stage<Item, Item3>
+    public class StageS9 : StageS<Item, Item3>
     {
         public override Item3 Execute(Item item)
         {
@@ -204,16 +204,16 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner.DemoSamples
 
             // Configure stages
             var pipelineSetup = PipelineCreator
-                .Stage<Stage_1, Item>()
+                .Stage<StageS1, Item>()
                 .Branch(
                     (x => indexesForBranch1.Contains(x.Index),
                         branch => branch
                             .BulkStage<BulkStage_1>()
-                            .Stage<Stage_2>()),
+                            .Stage<StageS2>()),
                     (x => indexesForBranch2.Contains(x.Index),
                         branch => branch
-                            .Stage<Stage_3, Item2>()
-                            .Stage<Stage_4, Item>()),
+                            .Stage<StageS3, Item2>()
+                            .Stage<StageS4, Item>()),
                     (x => true,
                         branch => branch
                             .BulkStage<BulkStage_2>()
@@ -221,15 +221,15 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner.DemoSamples
                                 (x => indexesForBranch3SubBranch1.Contains(x.Index),
                                     subBranch => subBranch
                                         .BulkStage<BulkStage_3>()
-                                        .Stage<Stage_5>()
-                                        .Stage<Stage_6>()),
+                                        .Stage<StageS5>()
+                                        .Stage<StageS6>()),
                                 (x => true,
                                     subBranch => subBranch
-                                        .Stage<Stage_7>()
+                                        .Stage<StageS7>()
                                         .BulkStage<BulkStage_4, Item2>()
                                         .BulkStage<BulkStage_5, Item>()
-                                        .Stage<Stage_8>()))))
-                .Stage<Stage_9, Item3>();
+                                        .Stage<StageS8>()))))
+                .Stage<StageS9, Item3>();
 
             // Make pipeline from stageSetup
             var pipelineRunner = pipelineSetup.CreateAwaitable();

@@ -55,7 +55,7 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner
 
                     return items.AsEnumerable();
                 })
-                .Stage<Stage>();
+                .Stage<StageS>();
 
             // Make pipeline from stageSetup
             var pipelineRunner = pipelineSetup.CreateAwaitable();
@@ -92,15 +92,15 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner
 
                     if (item.Index == 2)
                     {
-                        return options.SkipTo<Stage_1>(item);
+                        return options.SkipTo<StageS1>(item);
                     }
 
                     item.Process(GetType());
 
                     return item;
                 })
-                .Stage<Stage>()
-                .Stage<Stage_1>();
+                .Stage<StageS>()
+                .Stage<StageS1>();
 
             // Make pipeline from stageSetup
             var pipelineRunner = pipelineSetup.CreateAwaitable();
@@ -123,7 +123,7 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner
 
                     return item;
                 })
-                .Stage<Stage>()
+                .Stage<StageS>()
                 .BulkStage(items =>
                 {
                     foreach (var item in items)
@@ -137,7 +137,7 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner
                 {
                     BatchSize = 3
                 })
-                .Stage<Stage_1>();
+                .Stage<StageS1>();
 
             // Make pipeline from stageSetup
             var pipelineRunner = pipelineSetup.CreateAwaitable();

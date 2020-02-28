@@ -4,7 +4,7 @@ using PipelineLauncher.Stages;
 
 namespace PipelineLauncher.Demo.Tests.Stages.Single
 {
-    public class Stage_Configuration : Stage<Item>
+    public class StageSConfiguration : StageS<Item>
     {
         public override Item Execute(Item item)
         {

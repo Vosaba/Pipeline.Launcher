@@ -18,7 +18,7 @@ namespace PipelineLauncher.Stages
     /// </summary>
     /// <typeparam name="TInput">The type of the param.</typeparam>
     /// <typeparam name="TOutput">The type of the result.</typeparam>
-    public abstract class Stage<TInput, TOutput> : IStage<TInput, TOutput>
+    public abstract class StageS<TInput, TOutput> : IStage<TInput, TOutput>
     {
         public virtual StageConfiguration Configuration => new StageConfiguration();
 
@@ -62,16 +62,16 @@ namespace PipelineLauncher.Stages
         }
     }
 
-    public abstract class Stage<TInput> : Stage<TInput, TInput>
+    public abstract class StageS<TInput> : StageS<TInput, TInput>
     {
     }
 
-    public abstract class ConditionalStage<TInput, TOutput> : Stage<TInput, TOutput>, IConditionalStage<TInput>
+    public abstract class ConditionalStageS<TInput, TOutput> : StageS<TInput, TOutput>, IConditionalStage<TInput>
     {
         public abstract PredicateResult Predicate(TInput input);
     }
 
-    public abstract class ConditionalStage<TInput> : Stage<TInput>, IConditionalStage<TInput>
+    public abstract class ConditionalStageS<TInput> : StageS<TInput>, IConditionalStage<TInput>
     {
         public abstract PredicateResult Predicate(TInput input);
     }

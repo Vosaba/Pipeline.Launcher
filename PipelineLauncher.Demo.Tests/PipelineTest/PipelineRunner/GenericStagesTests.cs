@@ -20,12 +20,12 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner
 
             // Configure stages
             var pipelineSetup = PipelineCreator
-                .Stage(new Stage())
-                .Stage<Stage_1>()
+                .Stage(new StageS())
+                .Stage<StageS1>()
                 .BulkStage(new BulkStage())
-                .Stage<Stage_2>()
+                .Stage<StageS2>()
                 .BulkStage<BulkStage_1>()
-                .Stage(new Stage_3());
+                .Stage(new StageS3());
 
 
             // Make pipeline from stageSetup
@@ -43,11 +43,11 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner
 
             // Configure stages
             var pipelineSetup = PipelineCreator
-                .Stage<Stage, Item>()
-                .Stage<Stage_1>()
-                .Stage<Stage_Item_To_Item2, Item2>()
-                .Stage<Stage_Item2_To_Item, Item>()
-                .Stage<Stage_3>();
+                .Stage<StageS, Item>()
+                .Stage<StageS1>()
+                .Stage<StageSItemToItem2, Item2>()
+                .Stage<StageSItem2ToItem, Item>()
+                .Stage<StageS3>();
 
 
             // Make pipeline from stageSetup

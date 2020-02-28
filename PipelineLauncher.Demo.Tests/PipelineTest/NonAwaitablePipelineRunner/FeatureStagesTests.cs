@@ -26,7 +26,7 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.NonAwaitablePipelineRunner
 
             // Configure stages
             var pipelineSetup = PipelineCreator
-                .Stage<Stage, Item>()
+                .Stage<StageS, Item>()
                 .Stage(item =>
                 {
                     item.Process(GetType());
@@ -38,7 +38,7 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.NonAwaitablePipelineRunner
 
                     return item;
                 })
-                .Stage<Stage_1>();
+                .Stage<StageS1>();
 
             // Make pipeline from stageSetup
             var pipelineRunner = pipelineSetup.Create();
@@ -65,7 +65,7 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.NonAwaitablePipelineRunner
 
             // Configure stages
             var pipelineSetup = PipelineCreator
-                .Stage<Stage, Item>()
+                .Stage<StageS, Item>()
                 .Stage(item =>
                 {
                     item.Process(GetType());
@@ -77,7 +77,7 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.NonAwaitablePipelineRunner
 
                     return item;
                 })
-                .Stage<Stage_1>();
+                .Stage<StageS1>();
 
             // Make pipeline from stageSetup
             var pipelineRunner = pipelineSetup.CreateAwaitable();
@@ -108,7 +108,7 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.NonAwaitablePipelineRunner
 
             // Configure stages
             var pipelineSetup = PipelineCreator
-                .Stage<Stage, Item>()
+                .Stage<StageS, Item>()
                 .Stage(item =>
                 {
                     item.Process(GetType());
@@ -120,7 +120,7 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.NonAwaitablePipelineRunner
 
                     return item;
                 })
-                .Stage<Stage_1>();
+                .Stage<StageS1>();
 
             // Make pipeline from stageSetup
             var pipelineRunner = pipelineSetup.CreateAwaitable();
