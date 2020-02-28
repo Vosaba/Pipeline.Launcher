@@ -25,48 +25,48 @@ namespace PipelineLauncher.Extensions
             return (ITargetStageSetup<TInput>)stageSetup;
         }
 
-        public static ITargetStageSetup<TInput> CopyFullPipelineReturnNewRoot<TInput>(this IPipelineSetup pipelineSetup)
-        {
-            ITargetStageSetup<TInput> stageSetup = pipelineSetup.GetFirstStage<TInput>();
-            ITargetStageSetup<TInput> stageSetupNew = stageSetup.CreateDeepCopy();
+        //public static ITargetStageSetup<TInput> CopyFullPipelineReturnNewRoot<TInput>(this IPipelineSetup pipelineSetup)
+        //{
+        //    ITargetStageSetup<TInput> stageSetup = pipelineSetup.GetFirstStage<TInput>();
+        //    ITargetStageSetup<TInput> stageSetupNew = stageSetup.CreateDeepCopy();
 
-            var asBase = (IStageSetup)stageSetupNew;
+        //    var asBase = (IStageSetup)stageSetupNew;
 
-            CopyWithChild(stageSetup, stageSetupNew, null, ref asBase);
+        //    CopyWithChild(stageSetup, stageSetupNew, null, ref asBase);
 
-            return (ITargetStageSetup<TInput>)stageSetupNew;
-        }
+        //    return (ITargetStageSetup<TInput>)stageSetupNew;
+        //}
 
-        public static ISourceStageSetup<TInput> CopyFullPipelineReturnNewCurrent<TInput>(this IPipelineSetup pipelineSetup)
-        {
-            IStageSetup stageSetupCurrent = ((PipelineSetup<TInput>)pipelineSetup).StageSetup;
+        //public static ISourceStageSetup<TInput> CopyFullPipelineReturnNewCurrent<TInput>(this IPipelineSetup pipelineSetup)
+        //{
+        //    IStageSetup stageSetupCurrent = ((PipelineSetup<TInput>)pipelineSetup).StageSetup;
 
-            IStageSetup stageSetup = pipelineSetup.GetFirstStage<TInput>();
-            IStageSetup stageSetupNew = stageSetup.CreateDeepCopy();
+        //    IStageSetup stageSetup = pipelineSetup.GetFirstStage<TInput>();
+        //    IStageSetup stageSetupNew = stageSetup.CreateDeepCopy();
 
-            IStageSetup stageSetupCurrentNew = null;
+        //    IStageSetup stageSetupCurrentNew = null;
 
-            CopyWithChild(stageSetup, stageSetupNew, stageSetupCurrent, ref stageSetupCurrentNew);
+        //    CopyWithChild(stageSetup, stageSetupNew, stageSetupCurrent, ref stageSetupCurrentNew);
 
-            return (ISourceStageSetup<TInput>)((PipelineSetup<TInput>) pipelineSetup).StageSetup;
-        }
+        //    return (ISourceStageSetup<TInput>)((PipelineSetup<TInput>) pipelineSetup).StageSetup;
+        //}
 
-        public static IStageSetup CopyWithChild(IStageSetup stageSetup, IStageSetup stageSetupNew, IStageSetup copyFromStageSetup, ref IStageSetup copyFromStageSetupNew)
-        {
-            stageSetupNew.PreviousStageSetup = stageSetup.PreviousStageSetup?.CreateDeepCopy();
+        //public static IStageSetup CopyWithChild(IStageSetup stageSetup, IStageSetup stageSetupNew, IStageSetup copyFromStageSetup, ref IStageSetup copyFromStageSetupNew)
+        //{
+        //    stageSetupNew.PreviousStageSetup = stageSetup.PreviousStageSetup?.CreateDeepCopy();
 
-            if (copyFromStageSetup != null && stageSetup.Equals(copyFromStageSetup))
-            {
-                copyFromStageSetupNew = stageSetupNew;
-            }
+        //    if (copyFromStageSetup != null && stageSetup.Equals(copyFromStageSetup))
+        //    {
+        //        copyFromStageSetupNew = stageSetupNew;
+        //    }
 
-            foreach (var nextStageSetup in stageSetup.NextStageSetup)
-            {
-                stageSetupNew.NextStageSetup.Add(CopyWithChild(nextStageSetup, nextStageSetup.CreateDeepCopy(), copyFromStageSetup, ref copyFromStageSetupNew));
-            }
+        //    foreach (var nextStageSetup in stageSetup.NextStageSetup)
+        //    {
+        //        stageSetupNew.NextStageSetup.Add(CopyWithChild(nextStageSetup, nextStageSetup.CreateDeepCopy(), copyFromStageSetup, ref copyFromStageSetupNew));
+        //    }
 
-            return stageSetupNew;
-        }
+        //    return stageSetupNew;
+        //}
 
         public static void DestroyStageBlocks(this IStageSetup stageSetup)
         {

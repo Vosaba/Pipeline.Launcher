@@ -45,7 +45,7 @@ namespace PipelineLauncher.Addon.Web
 
             //app.M("/",ApplicationBuilderExtensions.GetTestPipeline());
             //app.UseWebSockets();
-            //app.M2("/testHub");
+            app.M2("/testHub");
             app.UseRouting();
 
             app.UseWebSockets(new WebSocketOptions

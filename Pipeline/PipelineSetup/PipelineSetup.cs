@@ -243,7 +243,7 @@ namespace PipelineLauncher.PipelineSetup
                 return ((PipelineSetup<TStageOutput, TNextStageOutput>)pipelineSetup).SourceStageSetup.RetrieveExecutionBlock(options);
             };
 
-            var nextStage = new SourceStageSetup<TNextStageOutput>(CreateExecutionBlock)
+            var nextStage = new SourceStageSetup<TNextStageOutput>(CreateExecutionBlock, null)
             {
                 PreviousStageSetup = SourceStageSetup
             };
@@ -425,12 +425,9 @@ namespace PipelineLauncher.PipelineSetup
                         EnsureOrdered = pipelineBulkStage.Configuration.EnsureOrdered
                     });
 
-                batchPrepareBlock.LinkTo(nextBlock, new DataflowLinkOptions() { PropagateCompletion = false });
+                batchPrepareBlock.LinkTo(nextBlock, new DataflowLinkOptions { PropagateCompletion = false });
 
-                batchPrepareBlock.Completion.ContinueWith(x =>
-                {
-                    nextBlock.Complete();
-                });
+                batchPrepareBlock.Completion.ContinueWith(x => nextBlock.Complete());
 
                 var currentBlock = SourceStageSetup.RetrieveExecutionBlock(stageCreationContext);
                 var targetBlock = DataflowBlock.Encapsulate(batchPrepareBlock, nextBlock);
@@ -458,11 +455,18 @@ namespace PipelineLauncher.PipelineSetup
                 return targetBlock;
             }
 
-            return CreatePipelineSetup(CreateExecutionBlock);
+            IPipelinePredicate<PipelineStageItem<TStageOutput>> CreateExecutionBlockPredicate(StageCreationContext stageCreationContext)
+            {
+
+            };
+
+            return CreatePipelineSetup(CreateExecutionBlock, CreateExecutionBlockPredicate);
         }
 
-        private PipelineSetup<TPipelineInput, TNextStageOutput> CreatePipelineSetup<TNextStageOutput>(Func<StageCreationContext, ISourceBlock<PipelineStageItem<TNextStageOutput>>> executionBlockCreator)
-            => CreatePipelineSetup(LinkStageSetupOut(SourceStageSetup, CreateStageSetupOut(executionBlockCreator)));
+        private PipelineSetup<TPipelineInput, TNextStageOutput> CreatePipelineSetup<TNextStageOutput>(
+            Func<StageCreationContext, IPropagatorBlock<PipelineStageItem<TStageOutput>, PipelineStageItem<TNextStageOutput>>> executionBlockCreator,
+            Func<StageCreationContext, IPipelinePredicate<PipelineStageItem<TStageOutput>>> pipelinePredicateCreator)
+            => CreatePipelineSetup(LinkStageSetupOut(SourceStageSetup, CreateStageSetupOut(executionBlockCreator, pipelinePredicateCreator)));
         
         private ISourceStageSetup<TNextStageOutput> LinkStageSetupOut<TNextStageOutput>(ISourceStageSetup<TStageOutput> source, ISourceStageSetup<TNextStageOutput> target)
         {
@@ -475,7 +479,12 @@ namespace PipelineLauncher.PipelineSetup
         private PipelineSetup<TPipelineInput, TNextStageOutput> CreatePipelineSetup<TNextStageOutput>(ISourceStageSetup<TNextStageOutput> sourceStageSetup) 
             => new PipelineSetup<TPipelineInput, TNextStageOutput>(sourceStageSetup, PipelineCreationContext);
 
-        private SourceStageSetup<TNextStageOutput> CreateStageSetupOut<TNextStageOutput>(Func<StageCreationContext, ISourceBlock<PipelineStageItem<TNextStageOutput>>> executionBlockCreator) 
-            => new SourceStageSetup<TNextStageOutput>(executionBlockCreator);
+        private StageSetup<TStageOutput, TNextStageOutput> CreateStageSetupOut<TNextStageOutput>(
+            Func<StageCreationContext, IPropagatorBlock<PipelineStageItem<TStageOutput>, PipelineStageItem<TNextStageOutput>>> executionBlockCreator,
+            Func<StageCreationContext, IPipelinePredicate<PipelineStageItem<TStageOutput>>> pipelinePredicateCreator) 
+            => new StageSetup<TStageOutput ,TNextStageOutput>(executionBlockCreator, pipelinePredicateCreator);
+
     }
+
+    
 }

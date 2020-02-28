@@ -210,7 +210,7 @@ namespace PipelineLauncher
         }
 
         private PipelineSetup<TInput, TOutput> CreatePipelineSetup<TInput, TOutput>(Func<StageCreationContext, IPropagatorBlock<PipelineStageItem<TInput>, PipelineStageItem<TOutput>>> executionBlockCreator)
-            => AppendStage(new StageSetup<TInput, TOutput>(executionBlockCreator) { PreviousStageSetup = null });
+            => AppendStage(new StageSetup<TInput, TOutput>(executionBlockCreator, null) { PreviousStageSetup = null });
 
         private PipelineSetup<TInput, TOutput> AppendStage<TInput, TOutput>(IStageSetup<TInput, TOutput> stageSetup)
             => new PipelineSetup<TInput, TOutput>(stageSetup, _pipelineCreationContext);
