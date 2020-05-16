@@ -19,7 +19,7 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner
         public void Multiple_Mixed_Lambda_Stages()
         {
             // Test input 6 items
-            List<Item> items = MakeItemsInput(6);
+            List<Item> items1 = MakeItemsInput(6);
 
             // Configure stages
             var pipelineSetup = PipelineCreator
@@ -61,7 +61,7 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner
             var pipelineRunner = pipelineSetup.CreateAwaitable();
 
             // Process items and print result
-            (this, pipelineRunner).ProcessAndPrintResults(items);
+            (this, pipelineRunner).ProcessAndPrintResults(items1);
         }
 
         [Fact]
@@ -113,7 +113,7 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner
         public void Multiple_Mixed_Lambda_Stages_Configuration()
         {
             // Test input 6 items
-            List<Item> items = MakeItemsInput(6);
+            List<Item> items1 = MakeItemsInput(6);
 
             // Configure stages
             var pipelineSetup = PipelineCreator
@@ -143,7 +143,7 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner
             var pipelineRunner = pipelineSetup.CreateAwaitable();
 
             // Process items and print result
-            (this, pipelineRunner).ProcessAndPrintResults(items);
+            (this, pipelineRunner).ProcessAndPrintResults(items1);
         }
     }
 }

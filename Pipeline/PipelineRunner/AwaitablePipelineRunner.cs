@@ -79,32 +79,32 @@ namespace PipelineLauncher.PipelineRunner
             return result;
         }
 
-        public IAsyncEnumerable<TOutput> ProcessAsyncEnumerable(TInput input)
-        {
-            return ProcessAsyncEnumerable(new[] { input });
-        }
+        //public IAsyncEnumerable<TOutput> ProcessAsyncEnumerable(TInput input)
+        //{
+        //    return ProcessAsyncEnumerable(new[] { input });
+        //}
 
-        public async IAsyncEnumerable<TOutput> ProcessAsyncEnumerable(IEnumerable<TInput> input)
-        {
-            _destroyTaskStages();
+        //public async IAsyncEnumerable<TOutput> ProcessAsyncEnumerable(IEnumerable<TInput> input)
+        //{
+        //    _destroyTaskStages();
 
-            var lastBlock = RetrieveLastBlock(StageCreationContext);
-            var firstBlock = RetrieveFirstBlock(StageCreationContext);
+        //    var lastBlock = RetrieveLastBlock(StageCreationContext);
+        //    var firstBlock = RetrieveFirstBlock(StageCreationContext);
 
-            var posted = input.Select(x => new PipelineStageItem<TInput>(x)).All(x => firstBlock.Post(x));
-            firstBlock.Complete();
+        //    var posted = input.Select(x => new PipelineStageItem<TInput>(x)).All(x => firstBlock.Post(x));
+        //    firstBlock.Complete();
 
-            while (await lastBlock.OutputAvailableAsync())
-            {
-                var item = await lastBlock.ReceiveAsync();
-                if (item.Item != null)
-                {
-                    yield return item.Item;
-                }
+        //    while (await lastBlock.OutputAvailableAsync())
+        //    {
+        //        var item = await lastBlock.ReceiveAsync();
+        //        if (item.Item != null)
+        //        {
+        //            yield return item.Item;
+        //        }
 
-                SortingMethod(item);
-            }
-        }
+        //        SortingMethod(item);
+        //    }
+        //}
 
         public Task GetCompletionTaskFor(TInput input)
         {

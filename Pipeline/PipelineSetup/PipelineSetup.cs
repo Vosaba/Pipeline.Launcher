@@ -309,7 +309,7 @@ namespace PipelineLauncher.PipelineSetup
 
                         if (processedHash[originalItem] == totalOccurrences)
                         {
-                            processedHash.Remove(originalItem, out _);
+                            processedHash.TryRemove(originalItem, out _);
                         }
                     }
                 }

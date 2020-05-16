@@ -74,10 +74,10 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.PipelineRunner
 
             // 4) ProcessAsyncEnumerable TODO
 
-            await foreach (var item in pipelineRunner.ProcessAsyncEnumerable(items))
-            {
-                PrintProcessed(item);
-            }
+            //await foreach (var item in pipelineRunner.ProcessAsyncEnumerable(items))
+            //{
+            //    PrintProcessed(item);
+            //}
             WriteSeparator();
         }
 

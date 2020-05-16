@@ -14,8 +14,8 @@ namespace PipelineLauncher.Abstractions.PipelineRunner
         Task<IEnumerable<TOutput>> ProcessAsync(TInput input);
         Task<IEnumerable<TOutput>> ProcessAsync(IEnumerable<TInput> input);
 
-        IAsyncEnumerable<TOutput> ProcessAsyncEnumerable(TInput input);
-        IAsyncEnumerable<TOutput> ProcessAsyncEnumerable(IEnumerable<TInput> input);
+        //IAsyncEnumerable<TOutput> ProcessAsyncEnumerable(TInput input);
+        //IAsyncEnumerable<TOutput> ProcessAsyncEnumerable(IEnumerable<TInput> input);
 
         Task GetCompletionTaskFor(TInput input);
         Task GetCompletionTaskFor(IEnumerable<TInput> input);
