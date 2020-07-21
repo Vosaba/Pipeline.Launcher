@@ -1,17 +1,18 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks.Dataflow;
 using PipelineLauncher.Abstractions.Dto;
 using PipelineLauncher.Abstractions.PipelineEvents;
 using PipelineLauncher.Abstractions.PipelineRunner;
-using PipelineLauncher.Abstractions.PipelineStage;
-using PipelineLauncher.PipelineSetup;
 using PipelineLauncher.PipelineStage;
 
 namespace PipelineLauncher.PipelineRunner
 {
     internal abstract class PipelineRunnerBase<TInput, TOutput> : IPipelineRunnerBase<TInput, TOutput>
     {
+        private readonly Dictionary<Type, TypedHandler> _eventTypeHandlers = new Dictionary<Type, TypedHandler>();
+
         public event ItemReceivedEventHandler<TOutput> ItemReceivedEvent;
         public event ExceptionItemsReceivedEventHandler ExceptionItemsReceivedEvent;
         public event SkippedItemReceivedEventHandler SkippedItemReceivedEvent;
@@ -56,16 +57,52 @@ namespace PipelineLauncher.PipelineRunner
             return this;
         }
 
+        public ITypedHandler<T> TypedHandler<T>()
+        {
+            if (_eventTypeHandlers.ContainsKey(typeof(T)))
+            {
+                return (ITypedHandler<T>)_eventTypeHandlers[typeof(T)];
+            }
+
+            var typeHandler = new TypedHandler<T>();
+            _eventTypeHandlers.Add(typeof(T), typeHandler);
+            return typeHandler;
+        }
+
+        public IPipelineRunnerBase<TInput, TOutput> WithModifier(Action<IPipelineRunnerBase<TInput, TOutput>> modifier)
+        {
+            modifier(this);
+            return this;
+        }
+
         protected void SortingMethod(PipelineStageItem<TOutput> input)
         {
             switch (input)
             {
                 case ExceptionStageItem<TOutput> exceptionItem:
-                    ExceptionItemsReceivedEvent?.Invoke(new ExceptionItemsEventArgs(exceptionItem.FailedItems, exceptionItem.StageType, exceptionItem.Exception, exceptionItem.Retry));
+                {
+                    var exceptionItemsEventArgs = new ExceptionItemsEventArgs(exceptionItem.FailedItems, exceptionItem.StageType, exceptionItem.Exception, exceptionItem.Retry);
+
+                    if (_eventTypeHandlers.ContainsKey(exceptionItem.OriginalItemType) && _eventTypeHandlers[exceptionItem.OriginalItemType].TryToHandleExceptionItems(exceptionItemsEventArgs))
+                    {
+                        return;
+                    }
+
+                    ExceptionItemsReceivedEvent?.Invoke(exceptionItemsEventArgs);
                     return;
+                }
                 case NonResultStageItem<TOutput> nonResultItem:
-                    SkippedItemReceivedEvent?.Invoke(new SkippedItemEventArgs(nonResultItem.OriginalItem, nonResultItem.StageType));
+                {
+                    var skippedItemEventArgs = new SkippedItemEventArgs(nonResultItem.OriginalItem, nonResultItem.StageType);
+
+                    if (_eventTypeHandlers.ContainsKey(nonResultItem.OriginalItemType) && _eventTypeHandlers[nonResultItem.OriginalItemType].TryToHandleSkippedItem(skippedItemEventArgs))
+                    {
+                        return;
+                    }
+
+                    SkippedItemReceivedEvent?.Invoke(skippedItemEventArgs);
                     return;
+                }
                 default:
                     ItemReceivedEvent?.Invoke(input.Item);
                     return;

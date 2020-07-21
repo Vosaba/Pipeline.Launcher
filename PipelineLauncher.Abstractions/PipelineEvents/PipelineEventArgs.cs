@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 namespace PipelineLauncher.Abstractions.PipelineEvents
 {
@@ -10,6 +11,27 @@ namespace PipelineLauncher.Abstractions.PipelineEvents
         public PipelineEventArgs(Type stageType)
         {
             StageType = stageType;
+        }
+    }
+
+    public class SkippedItemEventArgs : PipelineEventArgs
+    {
+        public object Item { get; }
+
+        public SkippedItemEventArgs(object item, Type stageType)
+            : base(stageType)
+        {
+            Item = item;
+        }
+    }
+
+    public class SkippedItemEventArgs<TItem> : SkippedItemEventArgs
+    {
+        public new TItem Item => (TItem)base.Item;
+
+        public SkippedItemEventArgs(object item, Type stageType)
+            : base(item, stageType)
+        {
         }
     }
 
@@ -29,14 +51,13 @@ namespace PipelineLauncher.Abstractions.PipelineEvents
         }
     }
 
-    public class SkippedItemEventArgs : PipelineEventArgs
+    public class ExceptionItemsEventArgs<TItem> : ExceptionItemsEventArgs
     {
-        public object Item { get; }
+        public new TItem[] Items => base.Items.Select(x => (TItem) x).ToArray();
 
-        public SkippedItemEventArgs(object item, Type stageType)
-            : base(stageType)
+        public ExceptionItemsEventArgs(object[] items, Type stageType, Exception exception, Action retry)
+            : base(items, stageType, exception, retry)
         {
-            Item = item;
         }
     }
 }

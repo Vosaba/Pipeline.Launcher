@@ -27,7 +27,7 @@ namespace PipelineLauncher.PipelineStage
     internal abstract class NonResultStageItem<TItem> : PipelineStageItem<TItem>
     {
         public object OriginalItem { get; }
-        public Type OriginalItemType => OriginalItem.GetType();
+        public virtual Type OriginalItemType => OriginalItem.GetType();
         public Type StageType { get; }
 
         protected NonResultStageItem(object originalItem, Type stageType) : base(default)
@@ -105,7 +105,9 @@ namespace PipelineLauncher.PipelineStage
         public Exception Exception { get; }
         public Action Retry { get; }
 
-        public ExceptionStageItem(Exception exception, Action reProcess, Type stageType, params object[] failedItems)
+        public override Type OriginalItemType => FailedItems[0].GetType();
+
+        public ExceptionStageItem(Exception exception, Action reProcess, Type stageType, object[] failedItems)
             : base(failedItems, stageType)
         {
             Exception = exception;

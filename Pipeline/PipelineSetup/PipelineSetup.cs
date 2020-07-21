@@ -181,7 +181,7 @@ namespace PipelineLauncher.PipelineSetup
                                     case ConditionExceptionScenario.GoToNextCondition:
                                         return false;
                                     case ConditionExceptionScenario.AddExceptionAndGoToNextCondition:
-                                        targetBlock.Post(new ExceptionStageItem<TNextStageOutput>(ex, null, predicate.GetType(), x.Item));
+                                        targetBlock.Post(new ExceptionStageItem<TNextStageOutput>(ex, null, predicate.GetType(), new object[] { x.Item }));
                                         return false;
                                     case ConditionExceptionScenario.StopPipelineExecution:
                                     default:

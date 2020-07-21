@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.1;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>netcoreapp2.1;</TargetFrameworks>
     <LangVersion>Latest</LangVersion>
     <RootNamespace>PipelineLauncher</RootNamespace>
     <Authors>Leonid Abasov</Authors>
@@ -9,7 +9,7 @@
     <PackageId>PipelineLauncher</PackageId>
     <Company>Abasov Software</Company>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.9.78</Version>
+    <Version>0.9.79</Version>
     <Product>PipelineLauncher</Product>
   </PropertyGroup>
 

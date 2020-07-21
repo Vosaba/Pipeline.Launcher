@@ -82,6 +82,10 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.NonAwaitablePipelineRunner
             // Make pipeline from stageSetup
             var pipelineRunner = pipelineSetup.CreateAwaitable();
 
+            pipelineRunner.TypedHandler<Item>().ExceptionItemsReceivedEvent += (ExceptionItemsEventArgs<Item> args) =>
+            {
+            };
+
             pipelineRunner.ExceptionItemsReceivedEvent += (ExceptionItemsEventArgs args) =>
             {
                 var item = args.Items[0];

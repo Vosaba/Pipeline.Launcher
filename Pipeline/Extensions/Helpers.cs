@@ -115,13 +115,13 @@ namespace PipelineLauncher.Extensions
                             target.Post(new RemoveStageItem<TOutput>(x.Item, predicate.GetType()));
                             return false;
                         default:
-                            target.Post(new ExceptionStageItem<TOutput>(new ArgumentOutOfRangeException(), null, predicate.GetType(), x.Item));
+                            target.Post(new ExceptionStageItem<TOutput>(new ArgumentOutOfRangeException(), null, predicate.GetType(), new object[] { x.Item }));
                             return false;
                     }
                 }
                 catch (Exception ex)
                 {
-                    target.Post(new ExceptionStageItem<TOutput>(ex, null, predicate.GetType(), x.Item));
+                    target.Post(new ExceptionStageItem<TOutput>(ex, null, predicate.GetType(), new object[] { x.Item }));
                     return false;
                 }
             };
@@ -172,13 +172,13 @@ namespace PipelineLauncher.Extensions
                         target.Post(new[] { new RemoveStageItem<TItem>(item, predicate.GetType()) });
                         return false;
                     default:
-                        target.Post(new[] { new ExceptionStageItem<TItem>(new ArgumentOutOfRangeException(), null, predicate.GetType(), item) });
+                        target.Post(new[] { new ExceptionStageItem<TItem>(new ArgumentOutOfRangeException(), null, predicate.GetType(), new object[]{item}) });
                         return false;
                 }
             }
             catch (Exception ex)
             {
-                target.Post(new[] { new ExceptionStageItem<TItem>(ex, null, predicate.GetType(), item) });
+                target.Post(new[] { new ExceptionStageItem<TItem>(ex, null, predicate.GetType(), new object[] { item }) });
                 return false;
             }
         }
