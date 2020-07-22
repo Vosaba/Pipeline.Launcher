@@ -31,14 +31,38 @@ namespace PipelineLauncher.PipelineRunner
             GenerateSortingBlock(_lastBlock);
         }
 
-        public bool Post(TInput input)
+        public bool Post(TInput input) => _firstBlock.Post(new PipelineStageItem<TInput>(input));
+
+        public bool Post(IEnumerable<TInput> input) => input.All(Post);
+
+        public async Task<bool> PostAsync(TInput input) => await _firstBlock.SendAsync(new PipelineStageItem<TInput>(input));
+
+        public async Task<bool> PostAsync(IEnumerable<TInput> input)
         {
-            return Post(new [] {input});
+            foreach (var item in input)
+            {
+                if (!await PostAsync(item))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
-        public bool Post(IEnumerable<TInput> input)
+        public async Task<bool> PostAsync(TInput input, CancellationToken cancellationToken) => await _firstBlock.SendAsync(new PipelineStageItem<TInput>(input), cancellationToken);
+
+        public async Task<bool> PostAsync(IEnumerable<TInput> input, CancellationToken cancellationToken)
         {
-            return input.Select(x => new PipelineStageItem<TInput>(x)).All(x => _firstBlock.Post(x));
+            foreach (var item in input)
+            {
+                if (!await PostAsync(item, cancellationToken))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         public Task CompleteExecution()
