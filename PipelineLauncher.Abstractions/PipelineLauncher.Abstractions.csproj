@@ -9,7 +9,7 @@
     <PackageId>PipelineLauncher.Abstractions</PackageId>
     <Company>Abasov Software</Company>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.9.81</Version>
+    <Version>0.9.82</Version>
     <Product>PipelineLauncher.Abstractions</Product>
   </PropertyGroup>
 

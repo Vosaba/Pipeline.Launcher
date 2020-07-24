@@ -93,17 +93,17 @@ namespace PipelineLauncher.PipelineSetup
         public IPipelineSetup<TPipelineInput, TNextStageOutput> Stage<TNextStageOutput>(IStage<TStageOutput, TNextStageOutput> stage, PipelinePredicate<TStageOutput> predicate = null)
             => CreateStage(stage, predicate);
 
-        public IPipelineSetup<TPipelineInput, TNextStageOutput> Stage<TNextStageOutput>(Func<TStageOutput, TNextStageOutput> func)
-            => Stage(new LambdaStage<TStageOutput, TNextStageOutput>(func));
+        public IPipelineSetup<TPipelineInput, TNextStageOutput> Stage<TNextStageOutput>(Func<TStageOutput, TNextStageOutput> func, StageConfiguration stageConfiguration = null)
+            => Stage(new LambdaStage<TStageOutput, TNextStageOutput>(func, stageConfiguration));
 
-        public IPipelineSetup<TPipelineInput, TNextStageOutput> Stage<TNextStageOutput>(Func<TStageOutput, StageOption<TStageOutput, TNextStageOutput>, TNextStageOutput> func)
-            => Stage(new LambdaStage<TStageOutput, TNextStageOutput>(func));
+        public IPipelineSetup<TPipelineInput, TNextStageOutput> Stage<TNextStageOutput>(Func<TStageOutput, StageOption<TStageOutput, TNextStageOutput>, TNextStageOutput> func, StageConfiguration stageConfiguration = null)
+            => Stage(new LambdaStage<TStageOutput, TNextStageOutput>(func, stageConfiguration));
 
-        public IPipelineSetup<TPipelineInput, TNextStageOutput> Stage<TNextStageOutput>(Func<TStageOutput, Task<TNextStageOutput>> func)
-            => Stage(new LambdaStage<TStageOutput, TNextStageOutput>(func));
+        public IPipelineSetup<TPipelineInput, TNextStageOutput> Stage<TNextStageOutput>(Func<TStageOutput, Task<TNextStageOutput>> func, StageConfiguration stageConfiguration = null)
+            => Stage(new LambdaStage<TStageOutput, TNextStageOutput>(func, stageConfiguration));
 
-        public IPipelineSetup<TPipelineInput, TNextStageOutput> Stage<TNextStageOutput>(Func<TStageOutput, StageOption<TStageOutput, TNextStageOutput>, Task<TNextStageOutput>> func)
-            => Stage(new LambdaStage<TStageOutput, TNextStageOutput>(func));
+        public IPipelineSetup<TPipelineInput, TNextStageOutput> Stage<TNextStageOutput>(Func<TStageOutput, StageOption<TStageOutput, TNextStageOutput>, Task<TNextStageOutput>> func, StageConfiguration stageConfiguration = null)
+            => Stage(new LambdaStage<TStageOutput, TNextStageOutput>(func, stageConfiguration));
 
         #endregion
 

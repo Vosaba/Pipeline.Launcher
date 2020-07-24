@@ -54,13 +54,13 @@ namespace PipelineLauncher.PipelineSetup
 
        IPipelineSetupSource<TNextStageOutput> Stage<TNextStageOutput>(IStage<TOutput, TNextStageOutput> stage, PipelinePredicate<TOutput> predicate = null);
 
-       IPipelineSetupSource<TNextStageOutput> Stage<TNextStageOutput>(Func<TOutput, TNextStageOutput> func);
+       IPipelineSetupSource<TNextStageOutput> Stage<TNextStageOutput>(Func<TOutput, TNextStageOutput> func, StageConfiguration stageConfiguration = null);
 
-       IPipelineSetupSource<TNextStageOutput> Stage<TNextStageOutput>(Func<TOutput, StageOption<TOutput, TNextStageOutput>, TNextStageOutput> funcWithOption);
+       IPipelineSetupSource<TNextStageOutput> Stage<TNextStageOutput>(Func<TOutput, StageOption<TOutput, TNextStageOutput>, TNextStageOutput> funcWithOption, StageConfiguration stageConfiguration = null);
 
-       IPipelineSetupSource<TNextStageOutput> Stage<TNextStageOutput>(Func<TOutput, Task<TNextStageOutput>> func);
+       IPipelineSetupSource<TNextStageOutput> Stage<TNextStageOutput>(Func<TOutput, Task<TNextStageOutput>> func, StageConfiguration stageConfiguration = null);
 
-       IPipelineSetupSource<TNextStageOutput> Stage<TNextStageOutput>(Func<TOutput, StageOption<TOutput, TNextStageOutput>, Task<TNextStageOutput>> funcWithOption);
+       IPipelineSetupSource<TNextStageOutput> Stage<TNextStageOutput>(Func<TOutput, StageOption<TOutput, TNextStageOutput>, Task<TNextStageOutput>> funcWithOption, StageConfiguration stageConfiguration = null);
 
         #endregion
 

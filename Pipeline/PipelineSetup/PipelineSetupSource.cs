@@ -55,17 +55,17 @@ namespace PipelineLauncher.PipelineSetup
         IPipelineSetupSource<TNextStageOutput> IPipelineSetupSource<TStageOutput>.Stage<TNextStageOutput>(IStage<TStageOutput, TNextStageOutput> stage, PipelinePredicate<TStageOutput> predicate = null)
             => Stage<TNextStageOutput>(stage, predicate);
 
-        IPipelineSetupSource<TNextStageOutput> IPipelineSetupSource<TStageOutput>.Stage<TNextStageOutput>(Func<TStageOutput, TNextStageOutput> func)
-            => Stage<TNextStageOutput>(func);
+        IPipelineSetupSource<TNextStageOutput> IPipelineSetupSource<TStageOutput>.Stage<TNextStageOutput>(Func<TStageOutput, TNextStageOutput> func, StageConfiguration stageConfiguration = null)
+            => Stage<TNextStageOutput>(func, stageConfiguration);
 
-        IPipelineSetupSource<TNextStageOutput> IPipelineSetupSource<TStageOutput>.Stage<TNextStageOutput>(Func<TStageOutput, StageOption<TStageOutput, TNextStageOutput>, TNextStageOutput> funcWithOption)
-            => Stage<TNextStageOutput>(funcWithOption);
+        IPipelineSetupSource<TNextStageOutput> IPipelineSetupSource<TStageOutput>.Stage<TNextStageOutput>(Func<TStageOutput, StageOption<TStageOutput, TNextStageOutput>, TNextStageOutput> funcWithOption, StageConfiguration stageConfiguration = null)
+            => Stage<TNextStageOutput>(funcWithOption, stageConfiguration);
 
-        IPipelineSetupSource<TNextStageOutput> IPipelineSetupSource<TStageOutput>.Stage<TNextStageOutput>(Func<TStageOutput, Task<TNextStageOutput>> func)
-            => Stage<TNextStageOutput>(func);
+        IPipelineSetupSource<TNextStageOutput> IPipelineSetupSource<TStageOutput>.Stage<TNextStageOutput>(Func<TStageOutput, Task<TNextStageOutput>> func, StageConfiguration stageConfiguration = null)
+            => Stage<TNextStageOutput>(func, stageConfiguration);
 
-        IPipelineSetupSource<TNextStageOutput> IPipelineSetupSource<TStageOutput>.Stage<TNextStageOutput>(Func<TStageOutput, StageOption<TStageOutput, TNextStageOutput>, Task<TNextStageOutput>> funcWithOption)
-            => Stage<TNextStageOutput>(funcWithOption);
+        IPipelineSetupSource<TNextStageOutput> IPipelineSetupSource<TStageOutput>.Stage<TNextStageOutput>(Func<TStageOutput, StageOption<TStageOutput, TNextStageOutput>, Task<TNextStageOutput>> funcWithOption, StageConfiguration stageConfiguration = null)
+            => Stage<TNextStageOutput>(funcWithOption, stageConfiguration);
 
         #endregion
 

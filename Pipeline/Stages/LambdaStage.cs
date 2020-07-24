@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using PipelineLauncher.Abstractions.PipelineStage.Configurations;
 
 namespace PipelineLauncher.Stages
 {
@@ -8,27 +9,40 @@ namespace PipelineLauncher.Stages
         private readonly Func<TInput, StageOption<TInput, TOutput>, Task<TOutput>> _funcAsyncWithStageOption = null;
         private readonly Func<TInput, StageOption<TInput, TOutput>, TOutput> _funcWithStageOption = null;
 
+        private readonly StageConfiguration _configuration;
+
         private static readonly StageOption<TInput, TOutput> StageOption = new StageOption<TInput, TOutput>();
 
         private readonly Func<TInput, Task<TOutput>> _funcAsync = null;
         private readonly Func<TInput, TOutput> _func = null;
 
-        internal LambdaStage(Func<TInput, StageOption<TInput, TOutput>, Task<TOutput>> funcAsyncWithStageOption)
+        public override StageConfiguration Configuration => _configuration ?? base.Configuration;
+
+        internal LambdaStage(StageConfiguration stageConfiguration)
+        {
+            _configuration = stageConfiguration;
+        }
+
+        internal LambdaStage(Func<TInput, StageOption<TInput, TOutput>, Task<TOutput>> funcAsyncWithStageOption, StageConfiguration stageConfiguration)
+            : this(stageConfiguration)
         {
             _funcAsyncWithStageOption = funcAsyncWithStageOption;
         }
 
-        internal LambdaStage(Func<TInput, StageOption<TInput, TOutput>, TOutput> funcWithStageOption)
+        internal LambdaStage(Func<TInput, StageOption<TInput, TOutput>, TOutput> funcWithStageOption, StageConfiguration stageConfiguration)
+            : this(stageConfiguration)
         {
             _funcWithStageOption = funcWithStageOption;
         }
 
-        internal LambdaStage(Func<TInput, Task<TOutput>> funcAsync)
+        internal LambdaStage(Func<TInput, Task<TOutput>> funcAsync, StageConfiguration stageConfiguration)
+            : this(stageConfiguration)
         {
             _funcAsync = funcAsync;
         }
 
-        internal LambdaStage(Func<TInput, TOutput> func)
+        internal LambdaStage(Func<TInput, TOutput> func, StageConfiguration stageConfiguration)
+            : this(stageConfiguration)
         {
             _func = func;
         }

@@ -107,17 +107,17 @@ namespace PipelineLauncher
         public IPipelineSetup<TInput, TOutput> Stage<TInput, TOutput>(IStage<TInput, TOutput> stage)
             => CreateStage<TInput, TOutput>(stage);
 
-        public IPipelineSetup<TInput, TOutput> Stage<TInput, TOutput>(Func<TInput, TOutput> func)
-            => Stage(new LambdaStage<TInput, TOutput>(func));
+        public IPipelineSetup<TInput, TOutput> Stage<TInput, TOutput>(Func<TInput, TOutput> func, StageConfiguration stageConfiguration = null)
+            => Stage(new LambdaStage<TInput, TOutput>(func, stageConfiguration));
 
-        public IPipelineSetup<TInput, TOutput> Stage<TInput, TOutput>(Func<TInput, StageOption<TInput, TOutput>, TOutput> funcWithOption)
-            => Stage(new LambdaStage<TInput, TOutput>(funcWithOption));
+        public IPipelineSetup<TInput, TOutput> Stage<TInput, TOutput>(Func<TInput, StageOption<TInput, TOutput>, TOutput> funcWithOption, StageConfiguration stageConfiguration = null)
+            => Stage(new LambdaStage<TInput, TOutput>(funcWithOption, stageConfiguration));
 
-        public IPipelineSetup<TInput, TOutput> Stage<TInput, TOutput>(Func<TInput, Task<TOutput>> func)
-            => Stage(new LambdaStage<TInput, TOutput>(func));
+        public IPipelineSetup<TInput, TOutput> Stage<TInput, TOutput>(Func<TInput, Task<TOutput>> func, StageConfiguration stageConfiguration = null)
+            => Stage(new LambdaStage<TInput, TOutput>(func, stageConfiguration));
 
-        public IPipelineSetup<TInput, TOutput> Stage<TInput, TOutput>(Func<TInput, StageOption<TInput, TOutput>, Task<TOutput>> funcWithOption)
-            => Stage(new LambdaStage<TInput, TOutput>(funcWithOption));
+        public IPipelineSetup<TInput, TOutput> Stage<TInput, TOutput>(Func<TInput, StageOption<TInput, TOutput>, Task<TOutput>> funcWithOption, StageConfiguration stageConfiguration = null)
+            => Stage(new LambdaStage<TInput, TOutput>(funcWithOption, stageConfiguration));
 
         #endregion
 
