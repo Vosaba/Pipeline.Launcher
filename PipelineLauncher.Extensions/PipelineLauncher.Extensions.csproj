@@ -1,7 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFrameworks>netcoreapp3.1;</TargetFrameworks>
+    <LangVersion>Latest</LangVersion>
+    <RootNamespace>PipelineLauncher.Extensions</RootNamespace>
+    <Authors>Leonid Abasov</Authors>
+    <NeutralLanguage>en</NeutralLanguage>
+    <PackageId>PipelineLauncher.Extensions</PackageId>
+    <Company>Abasov Software</Company>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>0.1.1</Version>
+    <Product>PipelineLauncher.Extensions</Product>
   </PropertyGroup>
 
   <ItemGroup>
@@ -9,4 +18,7 @@
     <ProjectReference Include="..\Pipeline\PipelineLauncher.csproj" />
   </ItemGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile></DocumentationFile>
+  </PropertyGroup>
 </Project>

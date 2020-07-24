@@ -4,7 +4,7 @@ namespace PipelineLauncher
 {
     public static class Configurations
     {
-        public static StageConfiguration Ordered = new StageConfiguration
+        public static StageBaseConfiguration Ordered = new StageBaseConfiguration
         {
             EnsureOrdered = true
         };
