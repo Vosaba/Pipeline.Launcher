@@ -143,4 +143,3 @@ namespace PipelineLauncher.Demo.Tests.PipelineTest.NonAwaitablePipelineRunner
         }
     }
 }
-;
