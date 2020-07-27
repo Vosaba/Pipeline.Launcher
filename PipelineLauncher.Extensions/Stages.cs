@@ -7,7 +7,7 @@ using PipelineLauncher.Stages;
 
 namespace PipelineLauncher.Extensions
 {
-    public static class StageExtensions
+    public static class Stages
     {
         public static IPipelineSetup<TInput, TNextOutput> SingleThreadStage<TInput, TOutput, TNextOutput>(
             this IPipelineSetup<TInput, TOutput> pipelineSetup, Func<TOutput, TNextOutput> func)
