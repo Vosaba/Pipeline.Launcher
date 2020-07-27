@@ -18,16 +18,22 @@ namespace PipelineLauncher.Extensions.Test
             int millisecondsTimeout = MillisecondsTimeout)
         {
             var waitHandle = new AutoResetEvent(false);
-            pipelineRunner.ItemReceivedEvent += args =>
+
+            void OnPipelineRunnerOnItemReceivedEvent(TOutput args)
             {
                 if (receiveExpectedItemPredicate == null || receiveExpectedItemPredicate(args))
                 {
                     waitHandle.Set();
                 }
-            };
+            }
+
+            pipelineRunner.ItemReceivedEvent += OnPipelineRunnerOnItemReceivedEvent;
 
             postItemsToPipelineAction();
-            return waitHandle.WaitOne(millisecondsTimeout);
+            var result = waitHandle.WaitOne(millisecondsTimeout);
+            pipelineRunner.ItemReceivedEvent -= OnPipelineRunnerOnItemReceivedEvent;
+
+            return result;
         }
 
         public static async Task<bool> WaitForItemReceivedAsync<TInput, TOutput>(
@@ -37,35 +43,47 @@ namespace PipelineLauncher.Extensions.Test
             int millisecondsTimeout = MillisecondsTimeout)
         {
             var waitHandle = new AsyncAutoResetEvent(false);
-            pipelineRunner.ItemReceivedEvent += args =>
+
+            void OnPipelineRunnerOnItemReceivedEvent(TOutput args)
             {
                 if (receiveExpectedItemPredicate == null || receiveExpectedItemPredicate(args))
                 {
                     waitHandle.Set();
                 }
-            };
+            }
+
+            pipelineRunner.ItemReceivedEvent += OnPipelineRunnerOnItemReceivedEvent;
 
             postItemsToPipelineAction();
-            return await waitHandle.WaitAsync(TimeSpan.FromMilliseconds(millisecondsTimeout));
+            var result = await waitHandle.WaitAsync(TimeSpan.FromMilliseconds(millisecondsTimeout));
+            pipelineRunner.ItemReceivedEvent -= OnPipelineRunnerOnItemReceivedEvent;
+
+            return result;
         }
 
-        public static void WaitForItemsExceptionReceived<TInput, TOutput>(
+        public static bool WaitForItemsExceptionReceived<TInput, TOutput>(
             this IPipelineRunner<TInput, TOutput> pipelineRunner,
             Action postItemsToPipelineAction,
             Predicate<ExceptionItemsEventArgs<TOutput>> receiveExpectedExceptionPredicate = null,
             int millisecondsTimeout = MillisecondsTimeout)
         {
             var waitHandle = new AutoResetEvent(false);
-            pipelineRunner.TypedHandler<TOutput>().ExceptionItemsReceivedEvent += args =>
+
+            void OnExceptionItemsReceivedEvent(ExceptionItemsEventArgs<TOutput> args)
             {
                 if (receiveExpectedExceptionPredicate == null || receiveExpectedExceptionPredicate(args))
                 {
                     waitHandle.Set();
                 }
-            };
+            }
+
+            pipelineRunner.TypedHandler<TOutput>().ExceptionItemsReceivedEvent += OnExceptionItemsReceivedEvent;
 
             postItemsToPipelineAction();
-            waitHandle.WaitOne(millisecondsTimeout);
+            var result = waitHandle.WaitOne(millisecondsTimeout);
+            pipelineRunner.TypedHandler<TOutput>().ExceptionItemsReceivedEvent -= OnExceptionItemsReceivedEvent;
+
+            return result;
         }
 
         public static async Task<bool> WaitForItemsExceptionReceivedAsync<TInput, TOutput>(
@@ -75,16 +93,22 @@ namespace PipelineLauncher.Extensions.Test
             int millisecondsTimeout = MillisecondsTimeout)
         {
             var waitHandle = new AsyncAutoResetEvent(false);
-            pipelineRunner.TypedHandler<TOutput>().ExceptionItemsReceivedEvent += args =>
+
+            void OnExceptionItemsReceivedEvent(ExceptionItemsEventArgs<TOutput> args)
             {
                 if (receiveExpectedExceptionPredicate == null || receiveExpectedExceptionPredicate(args))
                 {
                     waitHandle.Set();
                 }
-            };
+            }
+
+            pipelineRunner.TypedHandler<TOutput>().ExceptionItemsReceivedEvent += OnExceptionItemsReceivedEvent;
 
             postItemsToPipelineAction();
-            return await waitHandle.WaitAsync(TimeSpan.FromMilliseconds(millisecondsTimeout));
+            var result = await waitHandle.WaitAsync(TimeSpan.FromMilliseconds(millisecondsTimeout));
+            pipelineRunner.TypedHandler<TOutput>().ExceptionItemsReceivedEvent -= OnExceptionItemsReceivedEvent;
+
+            return result;
         }
     }
 }
