@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace PipelineLauncher.Extensions.Infrastructure
 {
-    public class AsyncAutoResetEvent
+    internal class AsyncAutoResetEvent
     {
         readonly LinkedList<TaskCompletionSource<bool>> _waiters = new LinkedList<TaskCompletionSource<bool>>();
 

@@ -2,7 +2,7 @@
 using System.Threading;
 using PipelineLauncher.Demo.Tests.Items;
 using PipelineLauncher.Demo.Tests.Stages.Single;
-using PipelineLauncher.Extensions.Test;
+using PipelineLauncher.Extensions.PipelineRunner;
 using Xunit;
 using Xunit.Abstractions;
 

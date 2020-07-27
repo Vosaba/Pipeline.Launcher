@@ -5,7 +5,7 @@ using PipelineLauncher.Abstractions.PipelineStage.Configurations;
 using PipelineLauncher.PipelineSetup;
 using PipelineLauncher.Stages;
 
-namespace PipelineLauncher.Extensions
+namespace PipelineLauncher.Extensions.Stages
 {
     public static class Stages
     {

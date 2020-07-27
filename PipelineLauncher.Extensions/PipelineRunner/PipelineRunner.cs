@@ -5,7 +5,7 @@ using PipelineLauncher.Abstractions.PipelineEvents;
 using PipelineLauncher.Abstractions.PipelineRunner;
 using PipelineLauncher.Extensions.Infrastructure;
 
-namespace PipelineLauncher.Extensions.Test
+namespace PipelineLauncher.Extensions.PipelineRunner
 {
     public static class PipelineRunner
     {
