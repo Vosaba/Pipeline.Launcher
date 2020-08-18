@@ -9,7 +9,7 @@ namespace PipelineLauncher.Extensions.PipelineRunner
 {
     public static class PipelineRunner
     {
-        public const int MillisecondsTimeout = int.MaxValue;
+        public const int MillisecondsTimeout = 1000;
 
         public static bool WaitForItemReceived<TInput, TOutput>(
             this IPipelineRunner<TInput, TOutput> pipelineRunner,
