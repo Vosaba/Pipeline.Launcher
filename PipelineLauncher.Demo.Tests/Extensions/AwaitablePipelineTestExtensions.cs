@@ -17,11 +17,19 @@ namespace PipelineLauncher.Demo.Tests.Extensions
             // Start timer
             var stopWatch = pipelineTest.StartTimer();
 
+            pipelineRunner.SkippedItemReceivedEvent += PipelineRunner_SkippedItemReceivedEvent;
             // Process items
             var result = pipelineRunner.Process(items).ToArray();
 
+
+
             // Print elapsed time and result
             pipelineTest.StopTimerAndPrintResult(printInputItems ? (IEnumerable)items : result, stopWatch);
+        }
+
+        private static void PipelineRunner_SkippedItemReceivedEvent(Abstractions.PipelineEvents.SkippedItemEventArgs args)
+        {
+            throw new System.NotImplementedException();
         }
 
         public static void ProcessAndPrintResults<TInput, TOutput>(

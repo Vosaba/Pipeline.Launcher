@@ -165,13 +165,19 @@ namespace PipelineLauncher.PipelineSetup
                                 return false;
                             }
 
-                            if (x.Item == null)
-                            {
-                                return true;
-                            }
-
                             try
                             {
+                                if (x.Item == null)
+                                {
+                                    switch (x)
+                                    {
+                                        case NonResultStageItem<TStageOutput> noneItem when noneItem.OriginalItem is TStageOutput item:
+                                            return predicate(item);
+                                        default:
+                                            return true;
+                                    }
+                                }
+
                                 return predicate(x.Item);
                             }
                             catch (Exception ex)

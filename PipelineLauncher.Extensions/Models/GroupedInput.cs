@@ -1,17 +1,15 @@
-﻿using System.Collections.Generic;
-
-namespace PipelineLauncher.Extensions.Models
+﻿namespace PipelineLauncher.Extensions.Models
 {
     public class GroupedInput<TKey, TInput>
     {
-        public GroupedInput(TKey key, TInput[] input)
+        public GroupedInput(TKey key, TInput[] group)
         {
-            Input = input;
+            Group = group;
             Key = key;
         }
 
         public TKey Key { get; set; }
 
-        public TInput[] Input { get; set; }
+        public TInput[] Group { get; set; }
     }
 }

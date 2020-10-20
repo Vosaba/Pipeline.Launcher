@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using PipelineLauncher.Abstractions.Dto;
+using PipelineLauncher.Demo.Tests.Extensions;
 using PipelineLauncher.Demo.Tests.Items;
 using PipelineLauncher.Demo.Tests.PipelineTest;
 using PipelineLauncher.Demo.Tests.Stages.Bulk;
@@ -18,27 +20,28 @@ namespace PipelineLauncher.Demo.Tests.PipelineSetup.AwaitablePipelineRunner
         public void Stages_Branch()
         {
             // Test input 6 items
-            List<Item> items = MakeItemsInput(8);
+            List<Item> items = MakeItemsInput(1);
 
             // Configure stages
             var pipelineSetup = PipelineCreator
-                .Stage<Stage, Item>()
-                .Stage((Item x, StageOption<Item,Item> options) =>
-                {
-                    if (x.Index == 6)
-                    {
-                        return options.SkipTo<Stage_5>(x);
-                    }
+                .Prepare<Item>()
+                .BulkStage<BulkStage>(x => PredicateResult.Skip)
+                //.Stage((Item x, StageOption<Item,Item> options) =>
+                //{
+                //    if (x.Index == 6)
+                //    {
+                //        return options.SkipTo<Stage_5>(x);
+                //    }
 
-                    if (x.Index == 7)
-                    {
-                        return options.SkipTo<Stage_5>(x);
-                    }
+                //    if (x.Index == 7)
+                //    {
+                //        return options.SkipTo<Stage_5>(x);
+                //    }
 
-                    return x;
-                })
+                //    return x;
+                //})
                 .Branch(
-                    (x => x.Index % 2 == 0,
+                    (x => x.Index == 80,
                         branch => branch
                             .Stage<Stage_1>()
                             .Branch(
@@ -48,12 +51,11 @@ namespace PipelineLauncher.Demo.Tests.PipelineSetup.AwaitablePipelineRunner
                                 (x => true,
                                     subBranchSetup => subBranchSetup
                                         .Stage<Stage_2>()))),
-                    (x => true, 
-                        branch => branch
-                            .BulkStage<BulkStage>()))
+                    (x => true,
+                        branch => branch));
                 //.Stage<Stage_Conditional>()
-                //.Stage<Stage_2>()
-                .Stage<Stage_5>();
+                //.Stage<Stage_2>();
+                //.Stage<Stage_5>();
 
             // Make pipeline from stageSetup
             var pipelineRunner = pipelineSetup.CreateAwaitable();
@@ -72,8 +74,8 @@ namespace PipelineLauncher.Demo.Tests.PipelineSetup.AwaitablePipelineRunner
                 //WriteLine(message);
             };
 
-            // Process items and print result
-            //(this, pipelineRunner).ProcessAndPrintResults(items);
+            //Process items and print result
+            (this, pipelineRunner).ProcessAndPrintResults(items);
 
             // Process items and print result
             //(this, pipelineRunner).ProcessAndPrintResults(items);

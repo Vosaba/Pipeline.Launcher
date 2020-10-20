@@ -1,7 +1,4 @@
-﻿using System;
-using System.Text;
-
-namespace PipelineLauncher.Extensions.Models
+﻿namespace PipelineLauncher.Extensions.Models
 {
     public class WrappedInput<TInput, TData>
     {

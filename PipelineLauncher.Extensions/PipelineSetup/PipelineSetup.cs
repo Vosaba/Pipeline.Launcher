@@ -43,7 +43,7 @@ namespace PipelineLauncher.Extensions.PipelineSetup
             pipelineSetup
                 .BulkStage<TPipelineOutput>(
                     input => input
-                        .SelectMany(x => x.Input)
+                        .SelectMany(x => x.Group)
                         .ToArray(),
                     bulkStageConfiguration ?? Configurations.BulkStage.TakeUntilSizeIsFilled(1));
     }

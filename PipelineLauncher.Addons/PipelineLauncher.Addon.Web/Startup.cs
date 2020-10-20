@@ -139,11 +139,11 @@ namespace PipelineLauncher.Addon.Web
             return base.OnConnectedAsync();
         }
 
-        public async Task SendMessage(string message)
+        public bool SendMessage(string message)
         {
             var s = JsonSerializer.Deserialize<Test[]>(message);
 
-            PipelineRunner.Post(s);
+            return PipelineRunner.Post(s);
         }
     }
 }
