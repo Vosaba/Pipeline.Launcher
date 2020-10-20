@@ -22,6 +22,18 @@ namespace PipelineLauncher
                 BatchSize = int.MaxValue,
                 BatchTimeOut = batchTimeOut
             };
+
+            public static BulkStageConfiguration TakeUntilSizeIsFilled(int batchSize) => new BulkStageConfiguration
+            {
+                BatchSize = batchSize,
+                BatchTimeOut = int.MaxValue
+            };
+
+            public static BulkStageConfiguration TakeUntilSizeOrTimeout(int batchSize, int batchTimeOut) => new BulkStageConfiguration
+            {
+                BatchSize = batchSize,
+                BatchTimeOut = batchTimeOut
+            };
         }
     }
 }
