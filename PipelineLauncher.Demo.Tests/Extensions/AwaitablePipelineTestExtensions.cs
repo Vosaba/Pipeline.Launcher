@@ -17,7 +17,7 @@ namespace PipelineLauncher.Demo.Tests.Extensions
             // Start timer
             var stopWatch = pipelineTest.StartTimer();
 
-            pipelineRunner.SkippedItemReceivedEvent += PipelineRunner_SkippedItemReceivedEvent;
+           
             // Process items
             var result = pipelineRunner.Process(items).ToArray();
 

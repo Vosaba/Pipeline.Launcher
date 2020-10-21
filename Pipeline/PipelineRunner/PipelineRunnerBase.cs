@@ -91,6 +91,11 @@ namespace PipelineLauncher.PipelineRunner
                     ExceptionItemsReceivedEvent?.Invoke(exceptionItemsEventArgs);
                     return;
                 }
+                case SkipStageItem<TOutput> stageSkipItem when stageSkipItem.OriginalItemType == typeof(TOutput):
+                {
+                    ItemReceivedEvent?.Invoke((TOutput)stageSkipItem.OriginalItem);
+                    return;
+                }
                 case NonResultStageItem<TOutput> nonResultItem:
                 {
                     var skippedItemEventArgs = new SkippedItemEventArgs(nonResultItem.OriginalItem, nonResultItem.StageType);
@@ -106,6 +111,28 @@ namespace PipelineLauncher.PipelineRunner
                 default:
                     ItemReceivedEvent?.Invoke(input.Item);
                     return;
+            }
+        }
+
+        protected bool TryRetrieveItem(PipelineStageItem<TOutput> input, out TOutput output)
+        {
+            switch (input)
+            {
+                case { } pipelineStageItem when pipelineStageItem.Item != null:
+                {
+                    output = pipelineStageItem.Item;
+                    return true;
+                }
+                case SkipStageItem<TOutput> stageSkipItem when stageSkipItem.OriginalItemType == typeof(TOutput):
+                {
+                    output = (TOutput)stageSkipItem.OriginalItem;
+                    return true;
+                }
+                default:
+                {
+                    output = default;
+                    return false;
+                }
             }
         }
     }

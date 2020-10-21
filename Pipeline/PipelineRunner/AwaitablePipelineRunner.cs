@@ -13,7 +13,8 @@ using PipelineLauncher.PipelineStage;
 
 namespace PipelineLauncher.PipelineRunner
 {
-    internal class AwaitablePipelineRunner<TInput, TOutput> : PipelineRunnerBase<TInput, TOutput>, IAwaitablePipelineRunner<TInput, TOutput>
+    internal class AwaitablePipelineRunner<TInput, TOutput> : PipelineRunnerBase<TInput, TOutput>,
+        IAwaitablePipelineRunner<TInput, TOutput>
     {
         private readonly AwaitablePipelineCreationConfig _pipelineCreationConfig;
         private readonly Action _destroyTaskStages;
@@ -23,7 +24,8 @@ namespace PipelineLauncher.PipelineRunner
             Func<StageCreationContext, ISourceBlock<PipelineStageItem<TOutput>>> retrieveLastBlock,
             Action destroyTaskStages,
             AwaitablePipelineCreationConfig pipelineCreationConfig)
-            : base(retrieveFirstBlock, retrieveLastBlock, new StageCreationContext(PipelineType.Awaitable, !pipelineCreationConfig.IgnoreTimeOuts))
+            : base(retrieveFirstBlock, retrieveLastBlock,
+                new StageCreationContext(PipelineType.Awaitable, !pipelineCreationConfig.IgnoreTimeOuts))
         {
             _destroyTaskStages = destroyTaskStages;
             _pipelineCreationConfig = pipelineCreationConfig;
@@ -36,7 +38,7 @@ namespace PipelineLauncher.PipelineRunner
 
         public IEnumerable<TOutput> Process(TInput input)
         {
-            return Process(new[] { input });
+            return Process(new[] {input});
         }
 
         public IEnumerable<TOutput> Process(IEnumerable<TInput> input)
@@ -50,7 +52,7 @@ namespace PipelineLauncher.PipelineRunner
 
         public Task<IEnumerable<TOutput>> ProcessAsync(TInput input)
         {
-            return ProcessAsync(new[] { input });
+            return ProcessAsync(new[] {input});
         }
 
         public async Task<IEnumerable<TOutput>> ProcessAsync(IEnumerable<TInput> input)
@@ -68,9 +70,9 @@ namespace PipelineLauncher.PipelineRunner
             while (await lastBlock.OutputAvailableAsync())
             {
                 var item = await lastBlock.ReceiveAsync();
-                if (item.Item != null)
+                if (TryRetrieveItem(item, out var output))
                 {
-                    result.Add(item.Item);
+                    result.Add(output);
                 }
 
                 SortingMethod(item);
@@ -81,7 +83,7 @@ namespace PipelineLauncher.PipelineRunner
 
         public IAsyncEnumerable<TOutput> ProcessAsyncEnumerable(TInput input)
         {
-            return ProcessAsyncEnumerable(new[] { input });
+            return ProcessAsyncEnumerable(new[] {input});
         }
 
         public async IAsyncEnumerable<TOutput> ProcessAsyncEnumerable(IEnumerable<TInput> input)
@@ -97,7 +99,7 @@ namespace PipelineLauncher.PipelineRunner
             while (await lastBlock.OutputAvailableAsync())
             {
                 var item = await lastBlock.ReceiveAsync();
-                if (item.Item != null)
+                if (TryRetrieveItem(item, out var output))
                 {
                     yield return item.Item;
                 }
@@ -108,7 +110,7 @@ namespace PipelineLauncher.PipelineRunner
 
         public Task GetCompletionTaskFor(TInput input)
         {
-            return GetCompletionTaskFor(new[] { input });
+            return GetCompletionTaskFor(new[] {input});
         }
 
         public Task GetCompletionTaskFor(IEnumerable<TInput> input)
@@ -122,15 +124,13 @@ namespace PipelineLauncher.PipelineRunner
             var posted = input.Select(x => new PipelineStageItem<TInput>(x)).All(x => firstBlock.Post(x));
             firstBlock.Complete();
 
-            lastBlock.Completion.ContinueWith(x =>
-            {
-                sortingBlock.Complete();
-            });
+            lastBlock.Completion.ContinueWith(x => { sortingBlock.Complete(); });
 
             return sortingBlock.Completion;
         }
 
-        public IAwaitablePipelineRunner<TInput, TOutput> SetupInstantExceptionHandler(Action<ExceptionItemsEventArgs> exceptionHandler)
+        public IAwaitablePipelineRunner<TInput, TOutput> SetupInstantExceptionHandler(
+            Action<ExceptionItemsEventArgs> exceptionHandler)
         {
             StageCreationContext.SetupInstantExceptionHandler(exceptionHandler);
             return this;
@@ -141,7 +141,7 @@ namespace PipelineLauncher.PipelineRunner
             throw items.Exception;
         }
 
-        IAwaitablePipelineRunner<TInput, TOutput> IAwaitablePipelineRunner<TInput, TOutput>.SetupCancellationToken(CancellationToken cancellationToken)
+    IAwaitablePipelineRunner<TInput, TOutput> IAwaitablePipelineRunner<TInput, TOutput>.SetupCancellationToken(CancellationToken cancellationToken)
             => (IAwaitablePipelineRunner<TInput, TOutput>)SetupCancellationToken(cancellationToken);
     }
 }
