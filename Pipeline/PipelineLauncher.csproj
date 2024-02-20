@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp2.1;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>netcoreapp3.1;netcoreapp2.0;netstandard2.0;netstandard2.1;</TargetFrameworks>
     <LangVersion>Latest</LangVersion>
     <RootNamespace>PipelineLauncher</RootNamespace>
     <Authors>Leonid Abasov</Authors>
@@ -9,17 +9,21 @@
     <PackageId>PipelineLauncher</PackageId>
     <Company>Abasov Software</Company>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.6.5</Version>
+    <Version>0.9.86</Version>
     <Product>PipelineLauncher</Product>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="PipelineLauncher.Abstractions" Version="0.0.4" />
+    <PackageReference Include="System.Threading.Tasks.Dataflow" Version="4.11.0" />
   </ItemGroup>
 
   <!--<ItemGroup>
-    <ProjectReference Include="..\PipelineLauncher.Abstractions\PipelineLauncher.Abstractions.csproj" />
+    <PackageReference Include="PipelineLauncher.Abstractions" Version="0.0.3" />
   </ItemGroup>-->
+
+  <ItemGroup>
+    <ProjectReference Include="..\PipelineLauncher.Abstractions\PipelineLauncher.Abstractions.csproj" />
+  </ItemGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DocumentationFile></DocumentationFile>

@@ -1,0 +1,40 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netcoreapp2.1;netstandard2.0</TargetFrameworks>
+    <LangVersion>Latest</LangVersion>
+    <RootNamespace>PipelineLauncher.DataflowLite</RootNamespace>
+    <Authors>Leonid Abasov</Authors>
+    <NeutralLanguage>en</NeutralLanguage>
+    <PackageId>PipelineLauncher.DataflowLite</PackageId>
+    <Company>Abasov Software</Company>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>0.6.4</Version>
+    <Product>PipelineLauncher.DataflowLite</Product>
+  </PropertyGroup>
+
+  <!--<ItemGroup>
+    <PackageReference Include="PipelineLauncher.Abstractions" Version="0.0.3" />
+  </ItemGroup>-->
+
+  <ItemGroup>
+    <!--<ProjectReference Include="..\PipelineLauncher.Abstractions\PipelineLauncher.Abstractions.csproj" />
+    <ProjectReference Include="System" />
+    <ProjectReference Include="System.Core" />
+    <ProjectReference Include="System.Xml.Linq" />
+    <ProjectReference Include="System.Data.DataSetExtensions" />
+    <ProjectReference Include="Microsoft.CSharp" />
+    <ProjectReference Include="System.Data" />
+    <ProjectReference Include="System.Net.Http" />
+    <ProjectReference Include="System.Xml" />-->
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile></DocumentationFile>
+  </PropertyGroup>
+
+</Project>

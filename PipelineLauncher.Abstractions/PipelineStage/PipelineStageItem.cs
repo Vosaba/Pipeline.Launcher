@@ -1,0 +1,4 @@
+﻿namespace PipelineLauncher.Abstractions.PipelineStage
+{
+    
+}

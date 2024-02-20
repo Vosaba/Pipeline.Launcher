@@ -1,18 +1,78 @@
-﻿using PipelineLauncher.Abstractions.Pipeline;
+﻿using PipelineLauncher.Abstractions.Dto;
+using PipelineLauncher.Abstractions.PipelineStage;
+using PipelineLauncher.Abstractions.PipelineStage.Configurations;
+using System;
+using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
+using PipelineLauncher.Abstractions.Stages;
+using PipelineLauncher.Exceptions;
+using PipelineLauncher.PipelineStage;
 
 namespace PipelineLauncher.Stages
 {
-    internal class Stage : IStage
+    /// <summary>
+    /// 
+    /// Represents a Stage to be processed in the pipeline.
+    /// 
+    /// </summary>
+    /// <typeparam name="TInput">The type of the param.</typeparam>
+    /// <typeparam name="TOutput">The type of the result.</typeparam>
+    public abstract class Stage<TInput, TOutput> : IStage<TInput, TOutput>
     {
-        public Stage(IPipelineJob job)
+        public virtual StageConfiguration Configuration => new StageConfiguration();
+
+        /// <summary>
+        /// Performs the Stage using the specified param.
+        /// </summary>
+        /// <param name="input">The param.</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        [DebuggerStepThrough]
+        public virtual async Task<TOutput> ExecuteAsync(TInput input, CancellationToken cancellationToken)
         {
-            Job = job;
+            return await ExecuteAsync(input);
         }
 
-        public IPipelineJob Job { get; }
+        [DebuggerStepThrough]
+        public virtual Task<TOutput> ExecuteAsync(TInput input)
+        {
+            return Task.FromResult(Execute(input));
+        }
 
-        public IStage Next { get; set; }
+        [DebuggerStepThrough]
+        public virtual TOutput Execute(TInput input)
+        {
+            throw new NotImplementedException($"Neither of {nameof(Execute)} methods, are not implemented");
+        }
 
-        public IStage Previous { get; set; }
+        protected TOutput Remove(TInput input)
+        {
+            throw new NonResultStageItemException<TOutput>(new RemoveStageItem<TOutput>(input, GetType()));
+        }
+
+        protected TOutput Skip(TInput input)
+        {
+            throw new NonResultStageItemException<TOutput>(new SkipStageItem<TOutput>(input, GetType(), true));
+        }
+
+        protected TOutput SkipTo<TTargetStage>(TInput input) where TTargetStage : ITargetStage<TInput>
+        {
+            throw new NonResultStageItemException<TOutput>(new SkipStageItemTill<TOutput>(typeof(TTargetStage), input, GetType()));
+        }
+    }
+
+    public abstract class Stage<TInput> : Stage<TInput, TInput>
+    {
+    }
+
+    public abstract class ConditionalStage<TInput, TOutput> : Stage<TInput, TOutput>, IConditionalStage<TInput>
+    {
+        public abstract PredicateResult Predicate(TInput input);
+    }
+
+    public abstract class ConditionalStage<TInput> : Stage<TInput>, IConditionalStage<TInput>
+    {
+        public abstract PredicateResult Predicate(TInput input);
     }
 }
